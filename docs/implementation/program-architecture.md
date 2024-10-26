@@ -14,7 +14,7 @@ Blockchains like Solana don't allow you to revert transactions after they've bee
 
 Conditional tokens are tied to _conditional vaults_. Each conditional vault has a specific _underlying token, settlement authority,_ and _proposal_. In the case of futarchy, the underlying token would be either USDC or the DAO's token, the settlement authority would be the DAO's treasury, and the proposal would be a proposal to the DAO.
 
-<figure><img src="../.gitbook/assets/conditional-vaults.png" alt="Conditional Vault Program" width="563"><figcaption></figcaption></figure>
+<figure><img src="../.gitbook/assets/conditional-vaults (1).png" alt="Conditional Vault Program" width="563"><figcaption></figcaption></figure>
 
 Once a vault is created, anyone can deposit underlying tokens in exchange for conditional tokens. You receive two types of conditional tokens: ones that are redeemable for underlying tokens if the vault is finalized and ones that are redeemable for underlying tokens if the vault is reverted. For example, if you deposit 10 USDC into a vault, you will receive 10 conditional-on-finalize USDC and 10 conditional-on-revert USDC.
 
@@ -40,7 +40,7 @@ So we create two markets per proposal: one where conditional-on-pass META is tra
 
 ### AMM <a href="#amm" id="amm"></a>
 
-Decision markets are facilitated through a constant-product AMM.&#x20;
+Decision markets are facilitated through a constant-product AMM.
 
 Importantly, this AMM provides an on-chain time-weighted average price (TWAP) oracle that can be used by autocrat to determine when to pass or fail proposals. The oracle follows the same design as [Uniswap V2](https://docs.uniswap.org/contracts/v2/concepts/core-concepts/oracles), and uses several additional mechanisms to ensure manipulation-resistance.
 
@@ -56,4 +56,4 @@ The requisite conditional vaults and markets are created at the same time.
 
 After a configurable amount of time (3 days by default), anyone can trigger proposal finalization. In finalization, autocrat checks if the TWAP of the pass market is x% higher than the TWAP of the fail market, where x is a DAO-configured threshold.
 
-&#x20;If it is, it finalizes the pass market, reverts the fail market, and allows the SVM instruction to be executed. If it isn’t, it reverts the pass market, finalizes the fail market, and does not allow the SVM instruction to be executed.
+If it is, it finalizes the pass market, reverts the fail market, and allows the SVM instruction to be executed. If it isn’t, it reverts the pass market, finalizes the fail market, and does not allow the SVM instruction to be executed.
