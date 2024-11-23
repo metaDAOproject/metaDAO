@@ -9,7 +9,7 @@ import {
   Transaction,
   TransactionInstruction,
 } from "@solana/web3.js";
-import { PriceMath } from "./utils/priceMath.js";
+import { PriceMath } from "./utils/ammMath.js";
 import { ProposalInstruction, InitializeDaoParams } from "./types/index.js";
 
 import { Autocrat, IDL as AutocratIDL } from "./types/autocrat.js";

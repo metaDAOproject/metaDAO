@@ -1,5 +1,6 @@
 import {
   AmmClient,
+  AmmMath,
   getAmmAddr,
   getAmmLpMintAddr,
 } from "@metadaoproject/futarchy/v0.4";
@@ -84,7 +85,7 @@ export default function suite() {
     await this.mintTo(USDC, this.payer.publicKey, this.payer, 200 * 10 ** 6);
 
     const storedAmm = await ammClient.getAmm(amm);
-    let sim = ammClient.simulateSwap(
+    let sim = AmmMath.simulateSwap(
       new BN(100 * 10 ** 6),
       { buy: {} },
       storedAmm.baseAmount,

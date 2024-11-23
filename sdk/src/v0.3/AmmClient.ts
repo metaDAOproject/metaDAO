@@ -13,35 +13,13 @@ import {
   getAssociatedTokenAddressSync,
   createAssociatedTokenAccountIdempotentInstruction,
 } from "@solana/spl-token";
-import { PriceMath } from "./utils/priceMath.js";
+import { AmmMath, PriceMath } from "./utils/ammMath.js";
 
 export type SwapType = LowercaseKeys<IdlTypes<AmmIDLType>["SwapType"]>;
 
 export type CreateAmmClientParams = {
   provider: AnchorProvider;
   ammProgramId?: PublicKey;
-};
-
-export type AddLiquiditySimulation = {
-  baseAmount: BN;
-  quoteAmount: BN;
-  expectedLpTokens: BN;
-  minLpTokens?: BN;
-  maxBaseAmount?: BN;
-};
-
-export type SwapSimulation = {
-  expectedOut: BN;
-  newBaseReserves: BN;
-  newQuoteReserves: BN;
-  minExpectedOut?: BN;
-};
-
-export type RemoveLiquiditySimulation = {
-  expectedBaseOut: BN;
-  expectedQuoteOut: BN;
-  minBaseOut?: BN;
-  minQuoteOut?: BN;
 };
 
 export class AmmClient {
@@ -200,7 +178,7 @@ export class AmmClient {
     // let baseAmountCasted: BN | undefined =
     //   baseAmount == undefined ? undefined : new BN(baseAmount);
 
-    let sim = this.simulateAddLiquidity(
+    let sim = AmmMath.simulateAddLiquidity(
       storedAmm.baseAmount,
       storedAmm.quoteAmount,
       Number(lpMintSupply),
@@ -392,130 +370,6 @@ export class AmmClient {
 
   async getAmm(amm: PublicKey): Promise<AmmAccount> {
     return await this.program.account.amm.fetch(amm);
-  }
-
-  getTwap(amm: AmmAccount): BN {
-    return amm.oracle.aggregator.div(
-      amm.oracle.lastUpdatedSlot.sub(amm.createdAtSlot)
-    );
-  }
-
-  simulateAddLiquidity(
-    baseReserves: BN,
-    quoteReserves: BN,
-    lpMintSupply: number,
-    baseAmount?: BN,
-    quoteAmount?: BN,
-    slippageBps?: BN
-  ): AddLiquiditySimulation {
-    if (lpMintSupply == 0) {
-      throw new Error(
-        "This AMM doesn't have existing liquidity so we can't fill in the blanks"
-      );
-    }
-
-    if (baseAmount == undefined && quoteAmount == undefined) {
-      throw new Error("Must specify either a base amount or a quote amount");
-    }
-
-    let expectedLpTokens: BN;
-
-    if (quoteAmount == undefined) {
-      quoteAmount = baseAmount?.mul(quoteReserves).div(baseReserves);
-    }
-    baseAmount = quoteAmount?.mul(baseReserves).div(quoteReserves).addn(1);
-
-    expectedLpTokens = quoteAmount
-      ?.mul(new BN(lpMintSupply))
-      .div(quoteReserves) as BN;
-
-    let minLpTokens, maxBaseAmount;
-    if (slippageBps) {
-      minLpTokens = PriceMath.subtractSlippage(expectedLpTokens, slippageBps);
-      maxBaseAmount = PriceMath.addSlippage(baseAmount as BN, slippageBps);
-    }
-
-    return {
-      quoteAmount: quoteAmount as BN,
-      baseAmount: baseAmount as BN,
-      expectedLpTokens,
-      minLpTokens,
-      maxBaseAmount,
-    };
-  }
-
-  simulateSwap(
-    inputAmount: BN,
-    swapType: SwapType,
-    baseReserves: BN,
-    quoteReserves: BN,
-    slippageBps?: BN
-  ): SwapSimulation {
-    if (baseReserves.eqn(0) || quoteReserves.eqn(0)) {
-      throw new Error("reserves must be non-zero");
-    }
-
-    let inputReserves, outputReserves: BN;
-    if (swapType.buy) {
-      inputReserves = quoteReserves;
-      outputReserves = baseReserves;
-    } else {
-      inputReserves = baseReserves;
-      outputReserves = quoteReserves;
-    }
-
-    let inputAmountWithFee: BN = inputAmount.muln(990);
-
-    let numerator: BN = inputAmountWithFee.mul(outputReserves);
-    let denominator: BN = inputReserves.muln(1000).add(inputAmountWithFee);
-
-    let expectedOut = numerator.div(denominator);
-    let minExpectedOut;
-    if (slippageBps) {
-      minExpectedOut = PriceMath.subtractSlippage(expectedOut, slippageBps);
-    }
-
-    let newBaseReserves, newQuoteReserves: BN;
-    if (swapType.buy) {
-      newBaseReserves = baseReserves.sub(expectedOut);
-      newQuoteReserves = quoteReserves.add(inputAmount);
-    } else {
-      newBaseReserves = baseReserves.add(inputAmount);
-      newQuoteReserves = quoteReserves.sub(expectedOut);
-    }
-
-    return {
-      expectedOut,
-      newBaseReserves,
-      newQuoteReserves,
-      minExpectedOut,
-    };
-  }
-
-  simulateRemoveLiquidity(
-    lpTokensToBurn: BN,
-    baseReserves: BN,
-    quoteReserves: BN,
-    lpTotalSupply: BN,
-    slippageBps?: BN
-  ): RemoveLiquiditySimulation {
-    const expectedBaseOut = lpTokensToBurn.mul(baseReserves).div(lpTotalSupply);
-    const expectedQuoteOut = lpTokensToBurn
-      .mul(quoteReserves)
-      .div(lpTotalSupply);
-
-    let minBaseOut, minQuoteOut;
-    if (slippageBps) {
-      minBaseOut = PriceMath.subtractSlippage(expectedBaseOut, slippageBps);
-      minQuoteOut = PriceMath.subtractSlippage(expectedQuoteOut, slippageBps);
-    }
-
-    return {
-      expectedBaseOut,
-      expectedQuoteOut,
-      minBaseOut,
-      minQuoteOut,
-    };
   }
 
   async getDecimals(mint: PublicKey): Promise<number> {

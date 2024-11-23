@@ -1,6 +1,7 @@
 import {
   ConditionalVaultClient,
   AmmClient,
+  AmmMath,
   getAmmAddr,
   SwapType,
   InstructionUtils,
@@ -139,7 +140,7 @@ export default async function test() {
 
   const storedAmm = await ammClient.fetchAmm(amm);
 
-  let { optimalSwapAmount, userInAfterSwap, expectedOut, minimumExpectedOut } = ammClient.calculateOptimalSwapForMerge(
+  let { optimalSwapAmount, userInAfterSwap, expectedOut, minimumExpectedOut } = AmmMath.calculateOptimalSwapForMerge(
     new BN(yesBalance),
     storedAmm.baseAmount,
     storedAmm.quoteAmount,
@@ -157,7 +158,7 @@ export default async function test() {
 
   //test edge cases for calculateOptimalSwapForMerge
   //small reserves, large balance
-  ({ optimalSwapAmount, userInAfterSwap, expectedOut, minimumExpectedOut } = ammClient.calculateOptimalSwapForMerge(
+  ({ optimalSwapAmount, userInAfterSwap, expectedOut, minimumExpectedOut } = AmmMath.calculateOptimalSwapForMerge(
     new BN(1_000_000_000*1e6),
     new BN(10),
     new BN(20),
@@ -166,7 +167,7 @@ export default async function test() {
   assert.isTrue(Number(expectedOut) - 1 <= Number(userInAfterSwap) && Number(userInAfterSwap) <= Number(expectedOut) + 1);
 
   //large reserves, small balance
-  ({ optimalSwapAmount, userInAfterSwap, expectedOut, minimumExpectedOut } = ammClient.calculateOptimalSwapForMerge(
+  ({ optimalSwapAmount, userInAfterSwap, expectedOut, minimumExpectedOut } = AmmMath.calculateOptimalSwapForMerge(
     new BN(100),
     new BN(1_000_000_000*1e6),
     new BN(2_000_000_000*1e6),
@@ -175,7 +176,7 @@ export default async function test() {
   assert.isTrue(Number(expectedOut) - 1 <= Number(userInAfterSwap) && Number(userInAfterSwap) <= Number(expectedOut) + 1);
 
   //small reserves, small balance
-  ({ optimalSwapAmount, userInAfterSwap, expectedOut, minimumExpectedOut } = ammClient.calculateOptimalSwapForMerge(
+  ({ optimalSwapAmount, userInAfterSwap, expectedOut, minimumExpectedOut } = AmmMath.calculateOptimalSwapForMerge(
     new BN(10),
     new BN(20),
     new BN(30),
@@ -184,7 +185,7 @@ export default async function test() {
   assert.isTrue(Number(expectedOut) - 1 <= Number(userInAfterSwap) && Number(userInAfterSwap) <= Number(expectedOut) + 1);
 
   //large reserves, large balance
-  ({ optimalSwapAmount, userInAfterSwap, expectedOut, minimumExpectedOut } = ammClient.calculateOptimalSwapForMerge(
+  ({ optimalSwapAmount, userInAfterSwap, expectedOut, minimumExpectedOut } = AmmMath.calculateOptimalSwapForMerge(
     new BN(1_000_000_000*1e6),
     new BN(1_000_000_000*1e6),
     new BN(2_000_000_000*1e6),
@@ -193,7 +194,7 @@ export default async function test() {
   assert.isTrue(Number(expectedOut) - 1 <= Number(userInAfterSwap) && Number(userInAfterSwap) <= Number(expectedOut) + 1);
 
   //skewed reserves (one reserve large, one small)
-  ({ optimalSwapAmount, userInAfterSwap, expectedOut, minimumExpectedOut } = ammClient.calculateOptimalSwapForMerge(
+  ({ optimalSwapAmount, userInAfterSwap, expectedOut, minimumExpectedOut } = AmmMath.calculateOptimalSwapForMerge(
     new BN(1_000_000_000*1e6),
     new BN(10),
     new BN(1_000_000_000*1e6),
