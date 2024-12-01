@@ -41,6 +41,7 @@ import {
   getAmmAddr,
   getAmmLpMintAddr,
   getVaultAddr,
+  AmmMath,
 } from "@metadaoproject/futarchy/v0.4";
 import { PriceMath } from "@metadaoproject/futarchy/v0.4";
 import {
@@ -460,9 +461,9 @@ export default function suite() {
       //   PriceMath.getHumanPrice(storedFailAmm.oracle.lastObservation, 9, 6)
       // );
 
-      let passTwap = ammClient.getTwap(storedPassAmm);
+      let passTwap = AmmMath.getTwap(storedPassAmm);
 
-      let failTwap = ammClient.getTwap(storedFailAmm);
+      let failTwap = AmmMath.getTwap(storedFailAmm);
 
       // console.log(PriceMath.getHumanPrice(passTwap, 9, 6));
       // console.log(PriceMath.getHumanPrice(failTwap, 9, 6));
@@ -522,9 +523,9 @@ export default function suite() {
       //   PriceMath.getHumanPrice(storedFailAmm.oracle.lastObservation, 9, 6)
       // );
 
-      let passTwap = ammClient.getTwap(storedPassAmm);
+      // let passTwap = AmmMath.getTwap(storedPassAmm);
 
-      let failTwap = ammClient.getTwap(storedFailAmm);
+      // let failTwap = AmmMath.getTwap(storedFailAmm);
 
       // console.log(PriceMath.getHumanPrice(passTwap, 9, 6));
       // console.log(PriceMath.getHumanPrice(failTwap, 9, 6));

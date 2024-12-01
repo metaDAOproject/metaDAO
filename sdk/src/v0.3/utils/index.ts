@@ -1,6 +1,6 @@
 export * from "./filters.js";
 export * from "./pda.js";
-export * from "./priceMath.js";
+export * from "./ammMath.js";
 export * from "./metadata.js";
 export * from "./cu.js";
 export * from "./instruction.js";

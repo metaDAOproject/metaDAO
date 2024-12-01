@@ -1,4 +1,4 @@
-import { AmmClient } from "@metadaoproject/futarchy/v0.4";
+import { AmmClient, AmmMath } from "@metadaoproject/futarchy/v0.4";
 import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import { createMint, mintTo } from "spl-token-bankrun";
@@ -89,7 +89,7 @@ export default function suite() {
     const expectedTwap = updatedAmm.oracle.aggregator.div(
       updatedAmm.oracle.lastUpdatedSlot.sub(updatedAmm.createdAtSlot)
     );
-    const calculatedTwap = ammClient.getTwap(updatedAmm);
+    const calculatedTwap = AmmMath.getTwap(updatedAmm);
     assert.isTrue(
       calculatedTwap.eq(expectedTwap),
       "Calculated TWAP should match the expected value"

@@ -19,35 +19,13 @@ import {
   getAssociatedTokenAddressSync,
   createAssociatedTokenAccountIdempotentInstruction,
 } from "@solana/spl-token";
-import { PriceMath } from "./utils/priceMath.js";
+import { AmmMath, PriceMath } from "./utils/priceMath.js";
 
 export type SwapType = LowercaseKeys<IdlTypes<AmmIDLType>["SwapType"]>;
 
 export type CreateAmmClientParams = {
   provider: AnchorProvider;
   ammProgramId?: PublicKey;
-};
-
-export type AddLiquiditySimulation = {
-  baseAmount: BN;
-  quoteAmount: BN;
-  expectedLpTokens: BN;
-  minLpTokens?: BN;
-  maxBaseAmount?: BN;
-};
-
-export type SwapSimulation = {
-  expectedOut: BN;
-  newBaseReserves: BN;
-  newQuoteReserves: BN;
-  minExpectedOut?: BN;
-};
-
-export type RemoveLiquiditySimulation = {
-  expectedBaseOut: BN;
-  expectedQuoteOut: BN;
-  minBaseOut?: BN;
-  minQuoteOut?: BN;
 };
 
 export class AmmClient {
@@ -218,7 +196,7 @@ export class AmmClient {
     // let baseAmountCasted: BN | undefined =
     //   baseAmount == undefined ? undefined : new BN(baseAmount);
 
-    let sim = this.simulateAddLiquidity(
+    let sim = AmmMath.simulateAddLiquidity(
       storedAmm.baseAmount,
       storedAmm.quoteAmount,
       Number(lpMintSupply),
@@ -389,215 +367,8 @@ export class AmmClient {
     });
   }
 
-  // getter functions
-
-  // async getLTWAP(ammAddr: PublicKey): Promise<number> {
-  //   const amm = await this.program.account.amm.fetch(ammAddr);
-  //   return amm.twapLastObservationUq64X32
-  //     .div(new BN(2).pow(new BN(32)))
-  //     .toNumber();
-  // }
-
-  getTwap(amm: Amm): BN {
-    return amm.oracle.aggregator.div(
-      amm.oracle.lastUpdatedSlot.sub(amm.createdAtSlot)
-    );
-  }
-
-  simulateAddLiquidity(
-    baseReserves: BN,
-    quoteReserves: BN,
-    lpMintSupply: number,
-    baseAmount?: BN,
-    quoteAmount?: BN,
-    slippageBps?: BN
-  ): AddLiquiditySimulation {
-    if (lpMintSupply == 0) {
-      throw new Error(
-        "This AMM doesn't have existing liquidity so we can't fill in the blanks"
-      );
-    }
-
-    if (baseAmount == undefined && quoteAmount == undefined) {
-      throw new Error("Must specify either a base amount or a quote amount");
-    }
-
-    let expectedLpTokens: BN;
-
-    if (quoteAmount == undefined) {
-      quoteAmount = baseAmount?.mul(quoteReserves).div(baseReserves);
-    }
-    baseAmount = quoteAmount?.mul(baseReserves).div(quoteReserves).addn(1);
-
-    expectedLpTokens = quoteAmount
-      ?.mul(new BN(lpMintSupply))
-      .div(quoteReserves) as BN;
-
-    let minLpTokens, maxBaseAmount;
-    if (slippageBps) {
-      minLpTokens = PriceMath.subtractSlippage(expectedLpTokens, slippageBps);
-      maxBaseAmount = PriceMath.addSlippage(baseAmount as BN, slippageBps);
-    }
-
-    return {
-      quoteAmount: quoteAmount as BN,
-      baseAmount: baseAmount as BN,
-      expectedLpTokens,
-      minLpTokens,
-      maxBaseAmount,
-    };
-  }
-
-  simulateSwapInner(
-    inputAmount: BN,
-    inputReserves: BN,
-    outputReserves: BN
-  ): BN {
-    if (inputReserves.eqn(0) || outputReserves.eqn(0)) {
-      throw new Error("reserves must be non-zero");
-    }
-
-    let inputAmountWithFee: BN = inputAmount.muln(990);
-
-    let numerator: BN = inputAmountWithFee.mul(outputReserves);
-    let denominator: BN = inputReserves.muln(1000).add(inputAmountWithFee);
-
-    return numerator.div(denominator);
-  }
-
-  simulateSwap(
-    inputAmount: BN,
-    swapType: SwapType,
-    baseReserves: BN,
-    quoteReserves: BN,
-    slippageBps?: BN
-  ): SwapSimulation {
-    let inputReserves: BN, outputReserves: BN;
-    if (swapType.buy) {
-      inputReserves = quoteReserves;
-      outputReserves = baseReserves;
-    } else {
-      inputReserves = baseReserves;
-      outputReserves = quoteReserves;
-    }
-
-    let expectedOut = this.simulateSwapInner(
-      inputAmount,
-      inputReserves,
-      outputReserves
-    );
-
-    let minExpectedOut;
-    if (slippageBps) {
-      minExpectedOut = PriceMath.subtractSlippage(expectedOut, slippageBps);
-    }
-
-    let newBaseReserves: BN, newQuoteReserves: BN;
-    if (swapType.buy) {
-      newBaseReserves = baseReserves.sub(expectedOut);
-      newQuoteReserves = quoteReserves.add(inputAmount);
-    } else {
-      newBaseReserves = baseReserves.add(inputAmount);
-      newQuoteReserves = quoteReserves.sub(expectedOut);
-    }
-
-    return {
-      expectedOut,
-      newBaseReserves,
-      newQuoteReserves,
-      minExpectedOut,
-    };
-  }
-
-  simulateRemoveLiquidity(
-    lpTokensToBurn: BN,
-    baseReserves: BN,
-    quoteReserves: BN,
-    lpTotalSupply: BN,
-    slippageBps?: BN
-  ): RemoveLiquiditySimulation {
-    const expectedBaseOut = lpTokensToBurn.mul(baseReserves).div(lpTotalSupply);
-    const expectedQuoteOut = lpTokensToBurn
-      .mul(quoteReserves)
-      .div(lpTotalSupply);
-
-    let minBaseOut, minQuoteOut;
-    if (slippageBps) {
-      minBaseOut = PriceMath.subtractSlippage(expectedBaseOut, slippageBps);
-      minQuoteOut = PriceMath.subtractSlippage(expectedQuoteOut, slippageBps);
-    }
-
-    return {
-      expectedBaseOut,
-      expectedQuoteOut,
-      minBaseOut,
-      minQuoteOut,
-    };
-  }
-
   async getDecimals(mint: PublicKey): Promise<number> {
     return unpackMint(mint, await this.provider.connection.getAccountInfo(mint))
       .decimals;
-  }
-
-  /**
-   * Calculates the optimal swap amount and mergeable tokens without using square roots.
-   * @param userBalanceIn BN – Tokens that a user wants to dispose of.
-   * @param ammReserveIn BN – Amount of tokens in the AMM of the token that the user wants to dispose of.
-   * @param ammReserveOut BN – Amount of tokens in the AMM of the token that the user wants to receive.
-   * @returns An object containing the optimal swap amount, expected quote received, and expected mergeable tokens.
-   */
-
-  calculateOptimalSwapForMerge(
-    userBalanceIn: BN,
-    ammReserveIn: BN,
-    ammReserveOut: BN,
-    slippageBps: BN
-  ): {
-    optimalSwapAmount: BN;
-    userInAfterSwap: BN;
-    expectedOut: BN;
-    minimumExpectedOut: BN;
-  } {
-    // essentially, we want to calculate the swap amount so that the remaining user balance = received token amount
-
-    // solve this system of equations for swapAmount, outputAmount (we only care about swap amount tho)
-    // (baseReserve + swapAmount) * (quoteReserve - outputAmount) = baseReserve * quoteReserve
-    // baseAmount - swapAmount = outputAmount
-
-    //solve equation
-    // (baseReserve + .99*swapAmount) * (quoteReserve - (userTokens - swapAmount)) = baseReserve * quoteReserve
-    // multiplying out the left hand side and subtracting baseReserve * quoteReserve from both sides yields the following:
-    // baseReserve*quoteReserve - baseReserve*userTokens + baseReserve*swapAmount + .99*swapAmount*quoteReserve - .99*swapAmount*userTokens + .99*swapAmount^2 = baseReserve*quoteReserve
-    // .99*swapAmount^2 + baseReserve*swapAmount + .99*swapAmount*quoteReserve - baseReserve*userTokens - .99*swapAmount*userTokens = 0
-    // in the quadratic equation, a = .99, b = (baseReserve + .99*quoteReserve - .99*userTokens), c = -baseReserve*userTokens
-    // x = (-b + sqrt(b^2 - 4ac)) / 2a
-
-    let a = 0.99;
-    let b =
-      Number(ammReserveIn) +
-      0.99 * Number(ammReserveOut) -
-      0.99 * Number(userBalanceIn);
-    let c = -Number(ammReserveIn) * Number(userBalanceIn);
-
-    let x = (-b + Math.sqrt(b ** 2 - 4 * a * c)) / (2 * a);
-    //this should mathematically return a positive number assuming userBalanceIn, ammReserveIn, and ammReserveOut are all positive (which they should be)
-    // -b + Math.sqrt(b ** 2 - 4 * a * c) > 0 because -4*a*c > 0 and sqrt(b**2 + positive number) > b
-
-    const swapAmount = x;
-
-    let expectedOut = this.simulateSwapInner(
-      new BN(swapAmount),
-      ammReserveIn,
-      ammReserveOut
-    );
-    let minimumExpectedOut =
-      Number(expectedOut) - (Number(expectedOut) * Number(slippageBps)) / 10000;
-    return {
-      optimalSwapAmount: new BN(swapAmount),
-      userInAfterSwap: new BN(Number(userBalanceIn) - swapAmount),
-      expectedOut: expectedOut,
-      minimumExpectedOut: new BN(minimumExpectedOut),
-    };
   }
 }
