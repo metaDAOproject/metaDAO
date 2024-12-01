@@ -31,6 +31,7 @@ export type RemoveLiquiditySimulation = {
 
 export class AmmMath {
   // Re-export common methods from v0.3
+  public static getHumanPriceFromReserves = V3AmmMath.getHumanPriceFromReserves;
   public static getAmmPriceFromReserves = V3AmmMath.getAmmPriceFromReserves;
   public static getChainAmount = V3AmmMath.getChainAmount;
   public static getHumanAmount = V3AmmMath.getHumanAmount;
