@@ -68,7 +68,7 @@ export class ConditionalVaultClient {
   async mintConditionalTokens(
     vault: PublicKey,
     uiAmount: number,
-    user?: PublicKey | Keypair
+    user: PublicKey = this.provider.publicKey
   ) {
     const storedVault = await this.getVault(vault);
 
@@ -90,17 +90,9 @@ export class ConditionalVaultClient {
     vault: PublicKey,
     underlyingTokenMint: PublicKey,
     amount: BN,
-    user?: PublicKey | Keypair
+    user: PublicKey = this.provider.publicKey,
+    payer: PublicKey = this.provider.publicKey
   ) {
-    let userPubkey;
-    if (!user) {
-      userPubkey = this.provider.publicKey;
-    } else if (user instanceof Keypair) {
-      userPubkey = user.publicKey;
-    } else {
-      userPubkey = user;
-    }
-
     const [conditionalOnFinalizeTokenMint] = getVaultFinalizeMintAddr(
       this.vaultProgram.programId,
       vault
@@ -112,18 +104,18 @@ export class ConditionalVaultClient {
 
     let userConditionalOnFinalizeTokenAccount = getAssociatedTokenAddressSync(
       conditionalOnFinalizeTokenMint,
-      userPubkey
+      user
     );
 
     let userConditionalOnRevertTokenAccount = getAssociatedTokenAddressSync(
       conditionalOnRevertTokenMint,
-      userPubkey
+      user
     );
 
     let ix = this.vaultProgram.methods
       .mintConditionalTokens(amount)
       .accounts({
-        authority: userPubkey,
+        authority: user,
         vault,
         vaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
           underlyingTokenMint,
@@ -132,7 +124,7 @@ export class ConditionalVaultClient {
         ),
         userUnderlyingTokenAccount: getAssociatedTokenAddressSync(
           underlyingTokenMint,
-          userPubkey,
+          user,
           true
         ),
         conditionalOnFinalizeTokenMint,
@@ -142,21 +134,18 @@ export class ConditionalVaultClient {
       })
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(
-          userPubkey,
+          payer,
           userConditionalOnFinalizeTokenAccount,
-          userPubkey,
+          user,
           conditionalOnFinalizeTokenMint
         ),
         createAssociatedTokenAccountIdempotentInstruction(
-          userPubkey,
+          payer,
           userConditionalOnRevertTokenAccount,
-          userPubkey,
+          user,
           conditionalOnRevertTokenMint
         ),
       ]);
-    if (user instanceof Keypair) {
-      ix = ix.signers([user]);
-    }
 
     return ix;
   }
