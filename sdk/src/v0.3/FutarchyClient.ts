@@ -26,14 +26,19 @@ export class FutarchyClient {
     });
   }
 
-  public static createClient(provider: AnchorProvider): FutarchyClient {
+  public static createClient({
+    provider,
+  }: {
+    provider: AnchorProvider;
+  }): FutarchyClient {
     return new FutarchyClient(provider);
   }
 
   public async createMintAndSwapTx({
     proposal,
     inputAmount,
-    underlyingTokenMint,
+    quoteMint,
+    baseMint,
     user,
     payer,
     swapType,
@@ -41,21 +46,31 @@ export class FutarchyClient {
   }: {
     proposal: PublicKey;
     inputAmount: BN;
-    underlyingTokenMint: PublicKey;
+    quoteMint: PublicKey;
+    baseMint: PublicKey;
     user: PublicKey;
     payer: PublicKey;
     swapType: SwapType;
     outcome: "pass" | "fail";
   }): Promise<Transaction> {
-    const [vault] = getVaultAddr(
+    const [baseVault] = getVaultAddr(
       this.conditionalVaultClient.vaultProgram.programId,
       proposal,
-      underlyingTokenMint
+      baseMint
     );
+    const [quoteVault] = getVaultAddr(
+      this.conditionalVaultClient.vaultProgram.programId,
+      proposal,
+      quoteMint
+    );
+
+    const [underlyingVault, underlyingTokenMint] = swapType.buy
+      ? [quoteVault, quoteMint]
+      : [baseVault, baseMint];
 
     const mintTx = await this.conditionalVaultClient
       .mintConditionalTokensIx(
-        vault,
+        underlyingVault,
         underlyingTokenMint,
         inputAmount,
         user,
@@ -65,20 +80,20 @@ export class FutarchyClient {
 
     const [pUSDC] = getVaultFinalizeMintAddr(
       this.conditionalVaultClient.vaultProgram.programId,
-      vault
+      quoteVault
     );
     const [pTOKE] = getVaultFinalizeMintAddr(
       this.conditionalVaultClient.vaultProgram.programId,
-      vault
+      baseVault
     );
 
     const [fUSDC] = getVaultRevertMintAddr(
       this.conditionalVaultClient.vaultProgram.programId,
-      vault
+      quoteVault
     );
     const [fTOKE] = getVaultRevertMintAddr(
       this.conditionalVaultClient.vaultProgram.programId,
-      vault
+      baseVault
     );
 
     const [passMarket] = getAmmAddr(
@@ -92,7 +107,7 @@ export class FutarchyClient {
       fUSDC
     );
 
-    const [market, baseMint, quoteMint] =
+    const [market, ammBaseMint, ammQuoteMint] =
       outcome === "pass"
         ? [passMarket, pTOKE, pUSDC]
         : [failMarket, fTOKE, fUSDC];
@@ -100,8 +115,8 @@ export class FutarchyClient {
     const swapTx = await this.ammClient
       .swapIx(
         market,
-        baseMint,
-        quoteMint,
+        ammBaseMint,
+        ammQuoteMint,
         swapType,
         inputAmount,
         new BN(0),
