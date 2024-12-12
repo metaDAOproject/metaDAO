@@ -13,10 +13,6 @@ import { PriceMath } from "./utils/ammMath.js";
 import { ProposalInstruction, InitializeDaoParams } from "./types/index.js";
 
 import { Autocrat, IDL as AutocratIDL } from "./types/autocrat.js";
-import {
-  ConditionalVault,
-  IDL as ConditionalVaultIDL,
-} from "./types/conditional_vault.js";
 
 import BN from "bn.js";
 import {

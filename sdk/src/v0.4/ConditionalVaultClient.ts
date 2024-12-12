@@ -128,7 +128,8 @@ export class ConditionalVaultClient {
   initializeVaultIx(
     question: PublicKey,
     underlyingTokenMint: PublicKey,
-    numOutcomes: number
+    numOutcomes: number,
+    payer: PublicKey = this.provider.publicKey
   ) {
     const [vault] = getVaultAddr(
       this.vaultProgram.programId,
@@ -162,7 +163,7 @@ export class ConditionalVaultClient {
       })
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(
-          this.provider.publicKey,
+          payer,
           vaultUnderlyingTokenAccount,
           vault,
           underlyingTokenMint
@@ -247,7 +248,8 @@ export class ConditionalVaultClient {
   getConditionalTokenAccountsAndInstructions(
     vault: PublicKey,
     numOutcomes: number,
-    user: PublicKey
+    user: PublicKey,
+    payer: PublicKey = this.provider.publicKey
   ) {
     const conditionalTokenMintAddrs = this.getConditionalTokenMints(
       vault,
@@ -259,7 +261,7 @@ export class ConditionalVaultClient {
 
     const preInstructions = conditionalTokenMintAddrs.map((mint) =>
       createAssociatedTokenAccountIdempotentInstruction(
-        this.provider.publicKey,
+        payer,
         getAssociatedTokenAddressSync(mint, user),
         user,
         mint
@@ -312,7 +314,8 @@ export class ConditionalVaultClient {
     underlyingTokenMint: PublicKey,
     amount: BN,
     numOutcomes: number,
-    user: PublicKey = this.provider.publicKey
+    user: PublicKey = this.provider.publicKey,
+    payer: PublicKey = this.provider.publicKey
   ) {
     let conditionalTokenMintAddrs = this.getConditionalTokenMints(
       vault,
@@ -346,7 +349,7 @@ export class ConditionalVaultClient {
       .preInstructions(
         conditionalTokenMintAddrs.map((conditionalTokenMint) => {
           return createAssociatedTokenAccountIdempotentInstruction(
-            this.provider.publicKey,
+            payer,
             getAssociatedTokenAddressSync(conditionalTokenMint, user),
             user,
             conditionalTokenMint
@@ -373,7 +376,8 @@ export class ConditionalVaultClient {
     vault: PublicKey,
     underlyingTokenMint: PublicKey,
     numOutcomes: number,
-    user: PublicKey = this.provider.publicKey
+    user: PublicKey = this.provider.publicKey,
+    payer: PublicKey = this.provider.publicKey
   ) {
     let conditionalTokenMintAddrs = [];
     for (let i = 0; i < numOutcomes; i++) {
@@ -412,7 +416,7 @@ export class ConditionalVaultClient {
       .preInstructions(
         conditionalTokenMintAddrs.map((conditionalTokenMint) => {
           return createAssociatedTokenAccountIdempotentInstruction(
-            this.provider.publicKey,
+            payer,
             getAssociatedTokenAddressSync(conditionalTokenMint, user),
             user,
             conditionalTokenMint
@@ -439,34 +443,16 @@ export class ConditionalVaultClient {
     index: number,
     name: string,
     symbol: string,
-    uri: string
-    // underlyingTokenMint: PublicKey,
-    // proposalNumber: number,
-    // onFinalizeUri: string,
-    // onRevertUri: string
+    uri: string,
+    payer: PublicKey = this.provider.publicKey
   ) {
-    // const [underlyingTokenMetadata] = getMetadataAddr(underlyingTokenMint);
-
     const [conditionalTokenMint] = getConditionalTokenMintAddr(
       this.vaultProgram.programId,
       vault,
       index
     );
 
-    // const [conditionalOnFinalizeTokenMint] = getVaultFinalizeMintAddr(
-    //   this.vaultProgram.programId,
-    //   vault
-    // );
-    // const [conditionalOnRevertTokenMint] = getVaultRevertMintAddr(
-    //   this.vaultProgram.programId,
-    //   vault
-    // );
-
     const [conditionalTokenMetadata] = getMetadataAddr(conditionalTokenMint);
-
-    // const [conditionalOnRevertTokenMetadata] = getMetadataAddr(
-    //   conditionalOnRevertTokenMint
-    // );
 
     return this.vaultProgram.methods
       .addMetadataToConditionalTokens({
@@ -475,7 +461,7 @@ export class ConditionalVaultClient {
         uri,
       })
       .accounts({
-        payer: this.provider.publicKey,
+        payer,
         vault,
         conditionalTokenMint,
         conditionalTokenMetadata,

@@ -309,7 +309,9 @@ export class AmmClient {
     quoteMint: PublicKey,
     swapType: SwapType,
     inputAmount: BN,
-    outputAmountMin: BN
+    outputAmountMin: BN,
+    user: PublicKey = this.provider.publicKey,
+    payer: PublicKey = this.provider.publicKey
   ) {
     const receivingToken = swapType.buy ? baseMint : quoteMint;
 
@@ -320,30 +322,19 @@ export class AmmClient {
         outputAmountMin,
       })
       .accounts({
-        user: this.provider.publicKey,
+        user,
         amm,
-        userBaseAccount: getAssociatedTokenAddressSync(
-          baseMint,
-          this.provider.publicKey,
-          true
-        ),
-        userQuoteAccount: getAssociatedTokenAddressSync(
-          quoteMint,
-          this.provider.publicKey,
-          true
-        ),
+        userBaseAccount: getAssociatedTokenAddressSync(baseMint, user, true),
+        userQuoteAccount: getAssociatedTokenAddressSync(quoteMint, user, true),
         vaultAtaBase: getAssociatedTokenAddressSync(baseMint, amm, true),
         vaultAtaQuote: getAssociatedTokenAddressSync(quoteMint, amm, true),
       })
       .preInstructions([
         // create the receiving token account if it doesn't exist
         createAssociatedTokenAccountIdempotentInstruction(
-          this.provider.publicKey,
-          getAssociatedTokenAddressSync(
-            receivingToken,
-            this.provider.publicKey
-          ),
-          this.provider.publicKey,
+          payer,
+          getAssociatedTokenAddressSync(receivingToken, user),
+          user,
           receivingToken
         ),
       ]);

@@ -29,6 +29,19 @@ export type RemoveLiquiditySimulation = {
 };
 
 export class AmmMath {
+  public static getHumanPriceFromReserves(
+    baseReserves: BN,
+    quoteReserves: BN,
+    baseDecimals: number,
+    quoteDecimals: number
+  ): number {
+    return this.getHumanPrice(
+      this.getAmmPriceFromReserves(baseReserves, quoteReserves),
+      baseDecimals,
+      quoteDecimals
+    );
+  }
+
   public static getAmmPriceFromReserves(
     baseReserves: BN,
     quoteReserves: BN
