@@ -43,6 +43,7 @@ export class FutarchyClient {
     payer,
     swapType,
     outcome,
+    conditionalAmount,
   }: {
     proposal: PublicKey;
     inputAmount: BN;
@@ -52,6 +53,7 @@ export class FutarchyClient {
     payer: PublicKey;
     swapType: SwapType;
     outcome: "pass" | "fail";
+    conditionalAmount?: BN;
   }): Promise<Transaction> {
     const [baseVault] = getVaultAddr(
       this.conditionalVaultClient.vaultProgram.programId,
@@ -68,15 +70,29 @@ export class FutarchyClient {
       ? [quoteVault, quoteMint]
       : [baseVault, baseMint];
 
-    const mintTx = await this.conditionalVaultClient
-      .mintConditionalTokensIx(
-        underlyingVault,
-        underlyingTokenMint,
-        inputAmount,
-        user,
-        payer
-      )
-      .transaction();
+    let mintTx: Transaction | undefined;
+
+    // Check to see if we need to mint conditional tokens
+    // If conditionalAmount is not passed we will mint all of the input amount
+    // If conditionalAmount is passed we will mint the difference between the input amount and the conditional amount
+    if (
+      !conditionalAmount ||
+      (conditionalAmount && conditionalAmount.lt(inputAmount))
+    ) {
+      const mintAmount = conditionalAmount
+        ? inputAmount.sub(conditionalAmount)
+        : inputAmount;
+
+      mintTx = await this.conditionalVaultClient
+        .mintConditionalTokensIx(
+          underlyingVault,
+          underlyingTokenMint,
+          mintAmount,
+          user,
+          payer
+        )
+        .transaction();
+    }
 
     const [pUSDC] = getVaultFinalizeMintAddr(
       this.conditionalVaultClient.vaultProgram.programId,
@@ -125,6 +141,6 @@ export class FutarchyClient {
       )
       .transaction();
 
-    return new Transaction().add(mintTx, swapTx);
+    return mintTx ? new Transaction().add(mintTx, swapTx) : swapTx;
   }
 }
