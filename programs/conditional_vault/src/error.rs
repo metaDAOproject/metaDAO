@@ -34,4 +34,5 @@ pub enum VaultError {
     QuestionAlreadyResolved,
     #[msg("Conditional token metadata already set")]
     ConditionalTokenMetadataAlreadySet,
+    InvalidTokenProgram,
 }

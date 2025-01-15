@@ -26,4 +26,6 @@ pub enum AutocratError {
     InsufficientLpTokenBalance,
     #[msg("The LP tokens passed in have less liquidity than the DAO's `min_quote_futarchic_liquidity` or `min_base_futachic_liquidity`")]
     InsufficientLpTokenLock,
+    #[msg("Invalid token program provided")]
+    InvalidTokenProgram,
 }

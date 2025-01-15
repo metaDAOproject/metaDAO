@@ -31,33 +31,34 @@ impl<'info, 'c: 'info> InteractWithVault<'info> {
         let seeds = generate_vault_seeds!(vault);
         let signer = &[&seeds[..]];
 
+        let token_program_id = vault.token_program.id();
+        
         for (conditional_mint, user_conditional_token_account) in conditional_token_mints
             .iter()
             .zip(user_conditional_token_accounts.iter())
         {
             token::burn(
                 CpiContext::new(
-                    accs.token_program.to_account_info(),
+                    ctx.accounts.token_program.to_account_info(),
                     Burn {
                         mint: conditional_mint.to_account_info(),
                         from: user_conditional_token_account.to_account_info(),
-                        authority: accs.authority.to_account_info(),
+                        authority: ctx.accounts.authority.to_account_info(),
                     },
                 ),
                 amount,
             )?;
         }
 
-        // Transfer `amount` from vault to user
         token::transfer(
             CpiContext::new_with_signer(
-                accs.token_program.to_account_info(),
+                ctx.accounts.token_program.to_account_info(),
                 Transfer {
-                    from: accs.vault_underlying_token_account.to_account_info(),
-                    to: accs.user_underlying_token_account.to_account_info(),
-                    authority: accs.vault.to_account_info(),
+                    from: ctx.accounts.vault_underlying_token_account.to_account_info(),
+                    to: ctx.accounts.user_underlying_token_account.to_account_info(),
+                    authority: ctx.accounts.vault.to_account_info(),
                 },
-                signer,
+                &[&seeds[..]],
             ),
             amount,
         )?;

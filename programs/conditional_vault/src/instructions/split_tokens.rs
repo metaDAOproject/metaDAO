@@ -27,15 +27,19 @@ impl<'info, 'c: 'info> InteractWithVault<'info> {
         let seeds = generate_vault_seeds!(vault);
         let signer = &[&seeds[..]];
 
+        let token_program_id = vault.token_program.id();
+
+        let transfer_ctx = CpiContext::new(
+            ctx.accounts.token_program.to_account_info(),
+            Transfer {
+                from: ctx.accounts.user_underlying_token_account.to_account_info(),
+                to: ctx.accounts.vault_underlying_token_account.to_account_info(),
+                authority: ctx.accounts.authority.to_account_info(),
+            },
+        );
+
         token::transfer(
-            CpiContext::new(
-                accs.token_program.to_account_info(),
-                Transfer {
-                    from: accs.user_underlying_token_account.to_account_info(),
-                    to: accs.vault_underlying_token_account.to_account_info(),
-                    authority: accs.authority.to_account_info(),
-                },
-            ),
+            transfer_ctx,
             amount,
         )?;
 

@@ -79,13 +79,20 @@ pub struct InitializeProposal<'info> {
     pub fail_lp_vault_account: Account<'info, TokenAccount>,
     #[account(mut)]
     pub proposer: Signer<'info>,
-    pub token_program: Program<'info, Token>,
+    /// CHECK: Can be either token or token-2022 program
+    pub token_program: AccountInfo<'info>,
     pub system_program: Program<'info, System>,
 }
 
 impl InitializeProposal<'_> {
     pub fn validate(&self) -> Result<()> {
         let clock = Clock::get()?;
+
+        require!(
+            self.token_program.key() == token::ID || 
+            self.token_program.key() == TOKEN_2022_ID,
+            AutocratError::InvalidTokenProgram
+        );
 
         for amm in [&self.pass_amm, &self.fail_amm] {
             // an attacker is able to crank 5 observations before a proposal starts

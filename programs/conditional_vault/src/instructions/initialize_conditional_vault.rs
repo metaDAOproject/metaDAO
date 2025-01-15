@@ -27,7 +27,8 @@ pub struct InitializeConditionalVault<'info> {
     pub vault_underlying_token_account: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
     pub payer: Signer<'info>,
-    pub token_program: Program<'info, Token>,
+    /// CHECK: Can be either token or token-2022 program
+    pub token_program: AccountInfo<'info>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
 }

@@ -8,6 +8,9 @@ use anchor_spl::{
     token::{self, Burn, Mint, MintTo, Token, TokenAccount, Transfer},
 };
 
+use anchor_spl::token_2022::{ID as TOKEN_2022_ID};
+use anchor_spl::token_2022::Token2022;
+
 pub mod error;
 pub mod instructions;
 pub mod state;
@@ -34,6 +37,21 @@ security_txt! {
 }
 
 declare_id!("VLTX1ishMBbcX3rdBWGssxawAo1Q2X2qxYFYqiGodVg");
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq)]
+pub enum TokenProgram {
+    Token,
+    Token2022,
+}
+
+impl TokenProgram {
+    pub fn id(&self) -> Pubkey {
+        match self {
+            TokenProgram::Token => token::ID,
+            TokenProgram::Token2022 => TOKEN_2022_ID,
+        }
+    }
+}
 
 #[program]
 pub mod conditional_vault {

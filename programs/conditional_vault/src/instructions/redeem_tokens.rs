@@ -42,28 +42,24 @@ impl<'info, 'c: 'info> InteractWithVault<'info> {
 
         let mut total_redeemable = 0;
 
-        for (conditional_mint, user_conditional_token_account) in conditional_token_mints
+        let token_program_id = vault.token_program.id();
+        
+        for (i, (conditional_mint, user_conditional_token_account)) in conditional_token_mints
             .iter()
             .zip(user_conditional_token_accounts.iter())
+            .enumerate()
         {
-            // this is safe because we check that every conditional mint is a part of the vault
-            let payout_index = vault
-                .conditional_token_mints
-                .iter()
-                .position(|mint| mint == &conditional_mint.key())
-                .unwrap();
-
-            total_redeemable += ((user_conditional_token_account.amount as u128
-                * question.payout_numerators[payout_index] as u128)
-                / question.payout_denominator as u128) as u64;
+            if payouts[i] == 0 {
+                continue;
+            }
 
             token::burn(
                 CpiContext::new(
-                    accs.token_program.to_account_info(),
+                    ctx.accounts.token_program.to_account_info(),
                     Burn {
                         mint: conditional_mint.to_account_info(),
                         from: user_conditional_token_account.to_account_info(),
-                        authority: accs.authority.to_account_info(),
+                        authority: ctx.accounts.authority.to_account_info(),
                     },
                 ),
                 user_conditional_token_account.amount,
