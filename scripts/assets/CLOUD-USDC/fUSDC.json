@@ -1,0 +1,6 @@
+{
+  "name": "Fail USDC",
+  "symbol": "fUSDC",
+  "description": "A token that redeems back to USDC if the proposal fails",
+  "image": "https://arweave.net/MvDKkY-F7dDAQOlqzlpNNYnGZT9dSGltEzgjLC0R2AY"
+}

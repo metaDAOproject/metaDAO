@@ -1,0 +1,6 @@
+{
+  "name": "Pass USDC",
+  "symbol": "pUSDC",
+  "description": "A token that redeems back to USDC if the proposal passes",
+  "image": "https://arweave.net/4JRlLx374SQGILjAeBtl9pEOnul0TQkW87e04c92Uqg"
+}
