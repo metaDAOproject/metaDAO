@@ -1,10 +1,11 @@
 {
   "name": "@metadaoproject/futarchy",
-  "version": "0.4.0-alpha.33",
+  "version": "0.4.0-alpha.35",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
+  "license": "BSL-1.0",
   "files": [
     "/dist"
   ],
