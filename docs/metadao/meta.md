@@ -2,7 +2,7 @@
 
 MetaDAO is governed by META, whose mint is METADDFL6wWMWEoKTFJwcThTbUmtarRJZjRpzUvkxhr.
 
-On November 15th 2023, 10,000 META was [airdropped to 60 wallets](https://blog.metadao.fi/the-meta-dao-decentralizes-d2d01dd5aa45), with the remaining 990,000 META being sent to MetaDAO's treasury. All other META has entered the circulating supply through market-approved governance proposals.
+On November 15th 2023, 10,000 META was [airdropped to 60 wallets](https://blog.metadao.fi/the-meta-dao-decentralizes-d2d01dd5aa45), with the remaining 990,000 META being sent to MetaDAO's treasury. All META from the treasury has entered the circulating supply through market-approved governance proposals.
 
 <figure><img src="../.gitbook/assets/image.png" alt=""><figcaption></figcaption></figure>
 
