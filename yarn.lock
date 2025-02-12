@@ -629,10 +629,10 @@
     "@ethersproject/properties" "^5.7.0"
     "@ethersproject/strings" "^5.7.0"
 
-"@metadaoproject/futarchy@0.4.0-alpha.22":
-  version "0.4.0-alpha.22"
-  resolved "https://registry.yarnpkg.com/@metadaoproject/futarchy/-/futarchy-0.4.0-alpha.22.tgz#1cabd24ae1c1ae904d7ea93bbb553c7037251087"
-  integrity sha512-x4iMkp9X18tHntW9Eg9yrGLIK0iy/dcXSImnhPGZe7xi7hfaLrzS5or8rf8gINv/5XeasesodRDAnMPXnXb7Vg==
+"@metadaoproject/futarchy@0.4.0-alpha.36":
+  version "0.4.0-alpha.36"
+  resolved "https://registry.yarnpkg.com/@metadaoproject/futarchy/-/futarchy-0.4.0-alpha.36.tgz#81f1def71669a1cfab4f04919313e22af923a97d"
+  integrity sha512-zvVSo0sIN1+Hb++0i88eqnOvXLZSb/fZr0L4PMcz9fL1YRCy0pKKS/C3AJnTu1Bkei2U5FpZvXULXfuCeXglxA==
   dependencies:
     "@coral-xyz/anchor" "^0.29.0"
     "@metaplex-foundation/umi" "^0.9.2"
