@@ -1,6 +1,7 @@
 import conditionalVault from "./conditionalVault/main.test.js";
 import amm from "./amm/main.test.js";
 import autocrat from "./autocrat/autocrat.js";
+import launchpad from "./launchpad/main.test.js";
 
 import { startAnchor } from "solana-bankrun";
 import { BankrunProvider } from "anchor-bankrun";
@@ -9,6 +10,7 @@ import {
   AmmClient,
   AutocratClient,
   ConditionalVaultClient,
+  LaunchpadClient,
 } from "@metadaoproject/futarchy/v0.4";
 // import {
 //   // AmmClient,
@@ -62,18 +64,13 @@ before(async function () {
 
   // umi = createUmi(anchor.AnchorProvider.env().connection);
 
-  // vaultProgram = new Program<ConditionalVault>(
-  //   ConditionalVaultIDL,
-  //   CONDITIONAL_VAULT_PROGRAM_ID,
-  //   provider
-  // );
-
   this.vaultClient = ConditionalVaultClient.createClient({
     provider: provider as any,
   });
   this.autocratClient = AutocratClient.createClient({
     provider: provider as any,
   });
+  this.launchpadClient = LaunchpadClient.createClient({ provider: provider as any });
   this.ammClient = AmmClient.createClient({ provider: provider as any });
   this.payer = provider.wallet.payer;
 
@@ -151,6 +148,7 @@ before(async function () {
 describe("conditional_vault", conditionalVault);
 describe("amm", amm);
 describe("autocrat", autocrat);
+describe("launchpad", launchpad);
 describe("project-wide integration tests", function () {
   it("mint and swap in a single transaction", mintAndSwap);
   it("tests scalar markets (mint, split, swap, redeem) with some fuzzing", scalarMarkets);

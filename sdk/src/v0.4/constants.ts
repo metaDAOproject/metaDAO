@@ -24,3 +24,7 @@ export const MAINNET_USDC = new PublicKey(
 export const USDC_DECIMALS = 6;
 
 export const AUTOCRAT_LUTS: PublicKey[] = [];
+
+export const LAUNCHPAD_PROGRAM_ID = new PublicKey(
+  "AfJJJ5UqxhBKoE3grkKAZZsoXDE9kncbMKvqSHGsCNrE"
+);

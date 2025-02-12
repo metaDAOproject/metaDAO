@@ -1137,6 +1137,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "launchpad"
+version = "0.4.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "autocrat",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
