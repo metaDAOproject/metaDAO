@@ -8,7 +8,7 @@ pub struct Launch {
     pub creator: Pubkey,
     pub usdc_vault: Pubkey,
     pub committed_amount: u64,
-    pub bump: u8,
+    pub pda_bump: u8,
     pub dao: Pubkey,
     pub dao_treasury: Pubkey,
 }

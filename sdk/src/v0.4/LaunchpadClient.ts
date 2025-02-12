@@ -1,9 +1,11 @@
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
-import { PublicKey, Keypair } from "@solana/web3.js";
+import { PublicKey, Keypair, AccountInfo } from "@solana/web3.js";
 import { Launchpad, IDL as LaunchpadIDL } from "./types/launchpad.js";
 import { LAUNCHPAD_PROGRAM_ID } from "./constants.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { BN } from "@coral-xyz/anchor";
+import { Launch } from "./types/index.js";
+import { getLaunchAddr } from "./utils/pda.js";
 
 export type CreateLaunchpadClientParams = {
   provider: AnchorProvider;
@@ -27,6 +29,22 @@ export class LaunchpadClient {
     return new LaunchpadClient(params);
   }
 
+  getProgramId(): PublicKey {
+    return this.launchpad.programId;
+  }
+
+  async getLaunch(launch: PublicKey): Promise<Launch> {
+    return await this.launchpad.account.launch.fetch(launch);
+  }
+
+  async fetchLaunch(launch: PublicKey): Promise<Launch | null> {
+    return await this.launchpad.account.launch.fetchNullable(launch);
+  }
+
+  async deserializeLaunch(accountInfo: AccountInfo<Buffer>): Promise<Launch> {
+    return this.launchpad.coder.accounts.decode("launch", accountInfo.data);
+  }
+
   initializeLaunchIx(
     dao: PublicKey,
     minimumRaiseAmount: BN,
@@ -34,11 +52,7 @@ export class LaunchpadClient {
     usdcMint: PublicKey,
     creator: PublicKey = this.provider.publicKey
   ) {
-    const [launch] = PublicKey.findProgramAddressSync(
-      [Buffer.from("launch"), dao.toBuffer()],
-      this.launchpad.programId
-    );
-
+    const [launch] = getLaunchAddr(this.launchpad.programId, dao);
     const usdcVault = getAssociatedTokenAddressSync(usdcMint, launch, true);
 
     return this.launchpad.methods
@@ -53,9 +67,5 @@ export class LaunchpadClient {
         dao,
         usdcMint,
       });
-  }
-
-  async getLaunch(launch: PublicKey) {
-    return await this.launchpad.account.launch.fetch(launch);
   }
 }

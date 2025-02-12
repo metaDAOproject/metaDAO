@@ -10,6 +10,7 @@ import {
   toWeb3JsPublicKey,
 } from "@metaplex-foundation/umi-web3js-adapters";
 import { MPL_TOKEN_METADATA_PROGRAM_ID } from "../constants.js";
+import { LAUNCHPAD_PROGRAM_ID } from "../constants.js";
 
 export const getEventAuthorityAddr = (programId: PublicKey) => {
   return PublicKey.findProgramAddressSync(
@@ -161,3 +162,13 @@ export const getAmmLpMintAddr = (
     programId
   );
 };
+
+export function getLaunchAddr(
+  programId: PublicKey = LAUNCHPAD_PROGRAM_ID,
+  dao: PublicKey
+): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("launch"), dao.toBuffer()],
+    programId
+  );
+}

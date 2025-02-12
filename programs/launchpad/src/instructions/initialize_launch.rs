@@ -73,7 +73,7 @@ impl InitializeLaunch<'_> {
             dao_treasury,
             usdc_vault: ctx.accounts.usdc_vault.key(),
             committed_amount: 0,
-            bump: ctx.bumps.launch,
+            pda_bump: ctx.bumps.launch,
         });
 
         Ok(())

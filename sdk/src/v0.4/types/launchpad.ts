@@ -87,7 +87,7 @@ export type Launchpad = {
             type: "u64";
           },
           {
-            name: "bump";
+            name: "pdaBump";
             type: "u8";
           },
           {
@@ -228,7 +228,7 @@ export const IDL: Launchpad = {
             type: "u64",
           },
           {
-            name: "bump",
+            name: "pdaBump",
             type: "u8",
           },
           {

@@ -5,6 +5,7 @@ import { PublicKey, Keypair } from "@solana/web3.js";
 import { assert } from "chai";
 import {
   AutocratClient,
+  getLaunchAddr,
   LaunchpadClient,
 } from "@metadaoproject/futarchy/v0.4";
 import { createMint, mintTo } from "spl-token-bankrun";
@@ -21,7 +22,9 @@ export default function suite() {
   before(async function () {
     autocratClient = this.autocratClient;
     launchpadClient = this.launchpadClient;
+  });
 
+  beforeEach(async function () {
     // Create test tokens
     META = await createMint(this.banksClient, this.payer, this.payer.publicKey, null, 9);
     USDC = await createMint(this.banksClient, this.payer, this.payer.publicKey, null, 6);
@@ -39,38 +42,41 @@ export default function suite() {
       const minRaise = new BN(1000_000000); // 1000 USDC
       const maxRaise = new BN(5000_000000); // 5000 USDC
       
-      const launch = await launchpadClient.initializeLaunchIx(
+      await launchpadClient.initializeLaunchIx(
         dao,
         minRaise,
         maxRaise,
         USDC
       ).rpc();
 
-      console.log("launch", launch);
+      const [launchAddr, pdaBump] = getLaunchAddr(launchpadClient.getProgramId(), dao);
 
-    //   const launchAccount = await launchpadClient.getLaunch(launch);
-    //   assert.equal(launchAccount.minimumRaiseAmount.toString(), minRaise.toString());
-    //   assert.equal(launchAccount.maximumRaiseAmount.toString(), maxRaise.toString());
-    //   assert.equal(launchAccount.isApproved, false);
-    //   assert.ok(launchAccount.dao.equals(dao));
-    //   assert.ok(launchAccount.daoTreasury.equals(daoTreasury));
-    //   assert.equal(launchAccount.committedAmount.toString(), "0");
+      const launch = await launchpadClient.fetchLaunch(launchAddr);
+
+      assert.equal(launch.minimumRaiseAmount.toString(), minRaise.toString());
+      assert.equal(launch.maximumRaiseAmount.toString(), maxRaise.toString());
+      assert.equal(launch.isApproved, false);
+      assert.ok(launch.dao.equals(dao));
+      assert.ok(launch.daoTreasury.equals(daoTreasury));
+      assert.equal(launch.committedAmount.toString(), "0");
+      assert.equal(launch.pdaBump, pdaBump);
     });
 
-    // it("fails when minimum raise is greater than maximum", async function () {
-    //   const minRaise = 5000_000000; // 5000 USDC
-    //   const maxRaise = 1000_000000; // 1000 USDC
+    it("fails when minimum raise is greater than maximum", async function () {
+      const minRaise = new BN(5000_000000); // 5000 USDC
+      const maxRaise = new BN(1000_000000); // 1000 USDC
 
-    //   try {
-    //     await launchpadClient.initializeLaunch(
-    //       dao,
-    //       minRaise,
-    //       maxRaise
-    //     );
-    //     assert.fail("Should have thrown error");
-    //   } catch (e) {
-    //     assert.include(e.message, "InvalidRaiseAmount");
-    //   }
-    // });
+      try {
+        await launchpadClient.initializeLaunchIx(
+          dao,
+          minRaise,
+          maxRaise,
+          USDC
+        ).rpc();
+        assert.fail("Should have thrown error");
+      } catch (e) {
+        assert.include(e.message, "InvalidRaiseAmount");
+      }
+    });
   });
 }
