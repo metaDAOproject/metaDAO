@@ -5,14 +5,16 @@ use autocrat::ID as AUTOCRAT_PROGRAM_ID;
 use autocrat::Dao;
 
 use crate::state::Launch;
+use crate::events::{LaunchInitializedEvent, CommonFields};
 use crate::error::LaunchpadError;
 
-#[derive(AnchorSerialize, AnchorDeserialize)]
+#[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub struct InitializeLaunchArgs {
     pub minimum_raise_amount: u64,
     pub maximum_raise_amount: u64,
 }
 
+#[event_cpi]
 #[derive(Accounts)]
 pub struct InitializeLaunch<'info> {
     #[account(
@@ -35,12 +37,18 @@ pub struct InitializeLaunch<'info> {
     #[account(mut)]
     pub creator: Signer<'info>,
     
+    pub dao: Account<'info, Dao>,
+
+    #[account(
+        constraint = dao_treasury.key() == dao.treasury
+    )]
+    /// CHECK: This is the DAO treasury
+    pub dao_treasury: AccountInfo<'info>,
+    
+    /// CHECK: This is USDC mint
     #[account(
         constraint = dao.usdc_mint == usdc_mint.key()
     )]
-    pub dao: Account<'info, Dao>,
-    
-    /// CHECK: This is USDC mint
     pub usdc_mint: AccountInfo<'info>,
     
     pub token_program: Program<'info, Token>,
@@ -49,16 +57,20 @@ pub struct InitializeLaunch<'info> {
 }
 
 impl InitializeLaunch<'_> {
-    pub fn handle(
-        ctx: Context<Self>,
-        args: InitializeLaunchArgs,
-    ) -> Result<()> {
+    pub fn validate(&self, args: InitializeLaunchArgs) -> Result<()> {
         require_gte!(
             args.maximum_raise_amount,
             args.minimum_raise_amount,
             LaunchpadError::InvalidRaiseAmount
         );
 
+        Ok(())
+    }
+
+    pub fn handle(
+        ctx: Context<Self>,
+        args: InitializeLaunchArgs,
+    ) -> Result<()> {
         let (dao_treasury, _) = Pubkey::find_program_address(
             &[ctx.accounts.dao.key().as_ref()],
             &AUTOCRAT_PROGRAM_ID
@@ -73,6 +85,20 @@ impl InitializeLaunch<'_> {
             dao_treasury,
             usdc_vault: ctx.accounts.usdc_vault.key(),
             committed_amount: 0,
+            pda_bump: ctx.bumps.launch,
+        });
+
+        let clock = Clock::get()?;
+        emit!(LaunchInitializedEvent {
+            common: CommonFields {
+                slot: clock.slot,
+                unix_timestamp: clock.unix_timestamp,
+            },
+            launch: ctx.accounts.launch.key(),
+            dao: ctx.accounts.dao.key(),
+            dao_treasury: ctx.accounts.dao_treasury.key(),
+            creator: ctx.accounts.creator.key(),
+            usdc_mint: ctx.accounts.usdc_mint.key(),
             pda_bump: ctx.bumps.launch,
         });
 

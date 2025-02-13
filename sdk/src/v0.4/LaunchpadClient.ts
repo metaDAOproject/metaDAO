@@ -5,16 +5,21 @@ import { LAUNCHPAD_PROGRAM_ID } from "./constants.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { BN } from "@coral-xyz/anchor";
 import { Launch } from "./types/index.js";
-import { getLaunchAddr } from "./utils/pda.js";
+import { getDaoTreasuryAddr, getLaunchAddr } from "./utils/pda.js";
+import { AutocratClient } from "./AutocratClient.js";
 
 export type CreateLaunchpadClientParams = {
   provider: AnchorProvider;
   launchpadProgramId?: PublicKey;
+  autocratProgramId?: PublicKey;
+  conditionalVaultProgramId?: PublicKey;
+  ammProgramId?: PublicKey;
 };
 
 export class LaunchpadClient {
   public launchpad: Program<Launchpad>;
   public provider: AnchorProvider;
+  public autocratClient: AutocratClient;
 
   private constructor(params: CreateLaunchpadClientParams) {
     this.provider = params.provider;
@@ -23,6 +28,12 @@ export class LaunchpadClient {
       params.launchpadProgramId || LAUNCHPAD_PROGRAM_ID,
       this.provider
     );
+    this.autocratClient = AutocratClient.createClient({
+      provider: this.provider,
+      autocratProgramId: params.autocratProgramId,
+      conditionalVaultProgramId: params.conditionalVaultProgramId,
+      ammProgramId: params.ammProgramId,
+    });
   }
 
   static createClient(params: CreateLaunchpadClientParams): LaunchpadClient {
@@ -54,6 +65,10 @@ export class LaunchpadClient {
   ) {
     const [launch] = getLaunchAddr(this.launchpad.programId, dao);
     const usdcVault = getAssociatedTokenAddressSync(usdcMint, launch, true);
+    const [daoTreasury] = getDaoTreasuryAddr(
+      this.autocratClient.getProgramId(),
+      dao
+    );
 
     return this.launchpad.methods
       .initializeLaunch({
@@ -63,6 +78,7 @@ export class LaunchpadClient {
       .accounts({
         launch,
         usdcVault,
+        daoTreasury,
         creator,
         dao,
         usdcMint,

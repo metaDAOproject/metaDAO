@@ -26,6 +26,11 @@ export type Launchpad = {
           isSigner: false;
         },
         {
+          name: "daoTreasury";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "usdcMint";
           isMut: false;
           isSigner: false;
@@ -42,6 +47,16 @@ export type Launchpad = {
         },
         {
           name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
           isMut: false;
           isSigner: false;
         }
@@ -104,6 +119,22 @@ export type Launchpad = {
   ];
   types: [
     {
+      name: "CommonFields";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "slot";
+            type: "u64";
+          },
+          {
+            name: "unixTimestamp";
+            type: "i64";
+          }
+        ];
+      };
+    },
+    {
       name: "InitializeLaunchArgs";
       type: {
         kind: "struct";
@@ -118,6 +149,50 @@ export type Launchpad = {
           }
         ];
       };
+    }
+  ];
+  events: [
+    {
+      name: "LaunchInitializedEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "launch";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "dao";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "daoTreasury";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "creator";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "usdcMint";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "pdaBump";
+          type: "u8";
+          index: false;
+        }
+      ];
     }
   ];
   errors: [
@@ -167,6 +242,11 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
+          name: "daoTreasury",
+          isMut: false,
+          isSigner: false,
+        },
+        {
           name: "usdcMint",
           isMut: false,
           isSigner: false,
@@ -183,6 +263,16 @@ export const IDL: Launchpad = {
         },
         {
           name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
           isMut: false,
           isSigner: false,
         },
@@ -245,6 +335,22 @@ export const IDL: Launchpad = {
   ],
   types: [
     {
+      name: "CommonFields",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "slot",
+            type: "u64",
+          },
+          {
+            name: "unixTimestamp",
+            type: "i64",
+          },
+        ],
+      },
+    },
+    {
       name: "InitializeLaunchArgs",
       type: {
         kind: "struct",
@@ -259,6 +365,50 @@ export const IDL: Launchpad = {
           },
         ],
       },
+    },
+  ],
+  events: [
+    {
+      name: "LaunchInitializedEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "launch",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "dao",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "daoTreasury",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "creator",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "usdcMint",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "pdaBump",
+          type: "u8",
+          index: false,
+        },
+      ],
     },
   ],
   errors: [
