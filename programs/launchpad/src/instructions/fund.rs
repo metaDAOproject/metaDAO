@@ -1,12 +1,16 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer, MintTo};
 
-use crate::state::Launch;
+use crate::state::{Launch, LaunchState};
 use crate::error::LaunchpadError;
 
 #[derive(Accounts)]
 pub struct Fund<'info> {
-    #[account(mut, has_one = token_mint)]
+    #[account(
+        mut, 
+        has_one = token_mint,
+        constraint = launch.state == LaunchState::Live @ LaunchpadError::InvalidLaunchState
+    )]
     pub launch: Account<'info, Launch>,
 
     #[account(

@@ -4,7 +4,7 @@ use anchor_spl::associated_token::AssociatedToken;
 use autocrat::ID as AUTOCRAT_PROGRAM_ID;
 use autocrat::Dao;
 
-use crate::state::Launch;
+use crate::state::{Launch, LaunchState};
 use crate::events::{LaunchInitializedEvent, CommonFields};
 use crate::error::LaunchpadError;
 
@@ -47,6 +47,13 @@ pub struct InitializeLaunch<'info> {
     )]
     /// CHECK: This is the DAO treasury
     pub dao_treasury: AccountInfo<'info>,
+
+    #[account(
+        associated_token::mint = usdc_mint,
+        associated_token::authority = dao_treasury
+    )]
+    pub treasury_usdc_account: Account<'info, TokenAccount>,
+
     
     /// CHECK: This is USDC mint
     #[account(
@@ -68,9 +75,8 @@ pub struct InitializeLaunch<'info> {
 }
 
 impl InitializeLaunch<'_> {
-    pub fn validate(&self, args: InitializeLaunchArgs) -> Result<()> {
+    pub fn validate(&self, _args: InitializeLaunchArgs) -> Result<()> {
         require_eq!(self.token_mint.supply, 0, LaunchpadError::SupplyNonZero);
-
 
         Ok(())
     }
@@ -89,11 +95,13 @@ impl InitializeLaunch<'_> {
             dao: ctx.accounts.dao.key(),
             creator: ctx.accounts.creator.key(),
             dao_treasury,
+            treasury_usdc_account: ctx.accounts.treasury_usdc_account.key(),
             usdc_vault: ctx.accounts.usdc_vault.key(),
             committed_amount: 0,
             token_mint: ctx.accounts.token_mint.key(),
             pda_bump: ctx.bumps.launch,
             seq_num: 0,
+            state: LaunchState::Live,
         });
 
         let clock = Clock::get()?;

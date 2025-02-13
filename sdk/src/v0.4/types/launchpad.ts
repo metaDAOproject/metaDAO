@@ -36,6 +36,11 @@ export type Launchpad = {
           isSigner: false;
         },
         {
+          name: "treasuryUsdcAccount";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "usdcMint";
           isMut: false;
           isSigner: false;
@@ -125,6 +130,32 @@ export type Launchpad = {
           type: "u64";
         }
       ];
+    },
+    {
+      name: "completeLaunch";
+      accounts: [
+        {
+          name: "launch";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "usdcVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "treasuryUsdcAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [];
     }
   ];
   accounts: [
@@ -178,6 +209,11 @@ export type Launchpad = {
             type: "publicKey";
           },
           {
+            name: "treasuryUsdcAccount";
+            docs: ["The DAO treasury's USDC account."];
+            type: "publicKey";
+          },
+          {
             name: "committedAmount";
             docs: ["The amount of USDC that has been committed by the users."];
             type: "u64";
@@ -188,6 +224,12 @@ export type Launchpad = {
               "The sequence number of this launch. Useful for sorting events."
             ];
             type: "u64";
+          },
+          {
+            name: "state";
+            type: {
+              defined: "LaunchState";
+            };
           }
         ];
       };
@@ -218,6 +260,23 @@ export type Launchpad = {
           {
             name: "minimumRaiseAmount";
             type: "u64";
+          }
+        ];
+      };
+    },
+    {
+      name: "LaunchState";
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "Live";
+          },
+          {
+            name: "Complete";
+          },
+          {
+            name: "Refunding";
           }
         ];
       };
@@ -275,13 +334,18 @@ export type Launchpad = {
   errors: [
     {
       code: 6000;
-      name: "SupplyNonZero";
-      msg: "Supply must be 0 at time of launch initialization";
+      name: "InvalidAmount";
+      msg: "Invalid amount";
     },
     {
       code: 6001;
-      name: "InvalidAmount";
-      msg: "Amount must be greater than 0";
+      name: "SupplyNonZero";
+      msg: "Supply must be zero";
+    },
+    {
+      code: 6002;
+      name: "InvalidLaunchState";
+      msg: "Invalid launch state";
     }
   ];
 };
@@ -320,6 +384,11 @@ export const IDL: Launchpad = {
         },
         {
           name: "daoTreasury",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "treasuryUsdcAccount",
           isMut: false,
           isSigner: false,
         },
@@ -414,6 +483,32 @@ export const IDL: Launchpad = {
         },
       ],
     },
+    {
+      name: "completeLaunch",
+      accounts: [
+        {
+          name: "launch",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "usdcVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "treasuryUsdcAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
   ],
   accounts: [
     {
@@ -466,6 +561,11 @@ export const IDL: Launchpad = {
             type: "publicKey",
           },
           {
+            name: "treasuryUsdcAccount",
+            docs: ["The DAO treasury's USDC account."],
+            type: "publicKey",
+          },
+          {
             name: "committedAmount",
             docs: ["The amount of USDC that has been committed by the users."],
             type: "u64",
@@ -476,6 +576,12 @@ export const IDL: Launchpad = {
               "The sequence number of this launch. Useful for sorting events.",
             ],
             type: "u64",
+          },
+          {
+            name: "state",
+            type: {
+              defined: "LaunchState",
+            },
           },
         ],
       },
@@ -506,6 +612,23 @@ export const IDL: Launchpad = {
           {
             name: "minimumRaiseAmount",
             type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "LaunchState",
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "Live",
+          },
+          {
+            name: "Complete",
+          },
+          {
+            name: "Refunding",
           },
         ],
       },
@@ -563,13 +686,18 @@ export const IDL: Launchpad = {
   errors: [
     {
       code: 6000,
-      name: "SupplyNonZero",
-      msg: "Supply must be 0 at time of launch initialization",
+      name: "InvalidAmount",
+      msg: "Invalid amount",
     },
     {
       code: 6001,
-      name: "InvalidAmount",
-      msg: "Amount must be greater than 0",
+      name: "SupplyNonZero",
+      msg: "Supply must be zero",
+    },
+    {
+      code: 6002,
+      name: "InvalidLaunchState",
+      msg: "Invalid launch state",
     },
   ],
 };

@@ -1,5 +1,12 @@
 use anchor_lang::prelude::*;
 
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq)]
+pub enum LaunchState {
+    Live,
+    Complete,
+    Refunding,
+}
+
 #[account]
 pub struct Launch {
     /// The minimum amount of USDC that must be raised, otherwise
@@ -17,8 +24,11 @@ pub struct Launch {
     pub dao: Pubkey,
     /// The DAO's treasury address.
     pub dao_treasury: Pubkey,
+    /// The DAO treasury's USDC account.
+    pub treasury_usdc_account: Pubkey,
     /// The amount of USDC that has been committed by the users.
     pub committed_amount: u64,
     /// The sequence number of this launch. Useful for sorting events.
     pub seq_num: u64,
+    pub state: LaunchState,
 }

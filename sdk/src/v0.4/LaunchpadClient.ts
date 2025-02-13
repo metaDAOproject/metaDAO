@@ -74,6 +74,11 @@ export class LaunchpadClient {
       this.autocratClient.getProgramId(),
       dao
     );
+    const treasuryUsdcAccount = getAssociatedTokenAddressSync(
+      usdcMint,
+      daoTreasury,
+      true
+    );
 
     return this.launchpad.methods
       .initializeLaunch({
@@ -84,6 +89,7 @@ export class LaunchpadClient {
         usdcVault,
         tokenVault,
         daoTreasury,
+        treasuryUsdcAccount,
         creator,
         dao,
         usdcMint,
@@ -100,6 +106,12 @@ export class LaunchpadClient {
           creator,
           getAssociatedTokenAddressSync(usdcMint, launch, true),
           launch,
+          usdcMint
+        ),
+        createAssociatedTokenAccountIdempotentInstruction(
+          creator,
+          getAssociatedTokenAddressSync(usdcMint, daoTreasury, true),
+          daoTreasury,
           usdcMint
         ),
       ]);
