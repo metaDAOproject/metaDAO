@@ -137,4 +137,23 @@ export class LaunchpadClient {
       funderTokenAccount,
     });
   }
+
+  completeLaunchIx(
+    launch: PublicKey,
+    usdcMint: PublicKey,
+    daoTreasury: PublicKey
+  ) {
+    const usdcVault = getAssociatedTokenAddressSync(usdcMint, launch, true);
+    const treasuryUsdcAccount = getAssociatedTokenAddressSync(
+      usdcMint,
+      daoTreasury,
+      true
+    );
+
+    return this.launchpad.methods.completeLaunch().accounts({
+      launch,
+      usdcVault,
+      treasuryUsdcAccount,
+    });
+  }
 }

@@ -9,14 +9,12 @@ pub struct CompleteLaunch<'info> {
     #[account(
         mut,
         constraint = launch.state == LaunchState::Live @ LaunchpadError::InvalidLaunchState,
-        has_one = treasury_usdc_account
+        has_one = treasury_usdc_account,
+        has_one = usdc_vault
     )]
     pub launch: Account<'info, Launch>,
 
-    #[account(
-        mut,
-        constraint = usdc_vault.key() == launch.usdc_vault
-    )]
+    #[account(mut)]
     pub usdc_vault: Account<'info, TokenAccount>,
 
     #[account(mut)]

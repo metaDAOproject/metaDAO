@@ -1,0 +1,124 @@
+import { PublicKey } from "@solana/web3.js";
+import { assert } from "chai";
+import {
+  AutocratClient,
+  getLaunchAddr,
+  LaunchpadClient,
+} from "@metadaoproject/futarchy/v0.4";
+import { createMint } from "spl-token-bankrun";
+import { BN } from "bn.js";
+import { createSetAuthorityInstruction, AuthorityType, getAssociatedTokenAddressSync } from "@solana/spl-token";
+
+export default function suite() {
+  let autocratClient: AutocratClient;
+  let launchpadClient: LaunchpadClient;
+  let dao: PublicKey;
+  let daoTreasury: PublicKey;
+  let META: PublicKey;
+  let USDC: PublicKey;
+  let launch: PublicKey;
+  let usdcVault: PublicKey;
+  let treasuryUsdcAccount: PublicKey;
+
+  const minRaise = new BN(1000_000000); // 1000 USDC
+
+  before(async function () {
+    autocratClient = this.autocratClient;
+    launchpadClient = this.launchpadClient;
+  });
+
+  beforeEach(async function () {
+    // Create test tokens
+    META = await createMint(this.banksClient, this.payer, this.payer.publicKey, null, 6);
+    USDC = await createMint(this.banksClient, this.payer, this.payer.publicKey, null, 6);
+
+    // Initialize DAO
+    dao = await autocratClient.initializeDao(META, 400, 5, 5000, USDC);
+    [daoTreasury] = PublicKey.findProgramAddressSync(
+      [dao.toBuffer()],
+      autocratClient.autocrat.programId
+    );
+
+    // Get accounts
+    [launch] = getLaunchAddr(launchpadClient.getProgramId(), dao);
+    usdcVault = getAssociatedTokenAddressSync(USDC, launch, true);
+    treasuryUsdcAccount = getAssociatedTokenAddressSync(USDC, daoTreasury, true);
+
+    // Initialize launch
+    await launchpadClient.initializeLaunchIx(
+      dao,
+      minRaise,
+      new BN(5000_000000),
+      USDC,
+      META
+    ).preInstructions([
+      createSetAuthorityInstruction(
+        META,
+        this.payer.publicKey,
+        AuthorityType.MintTokens,
+        launch
+      )
+    ]).rpc();
+  });
+
+  it("completes launch successfully when minimum raise is met", async function () {
+    // Fund the launch with exactly minimum raise
+    const userUsdcAccount = await this.createTokenAccount(USDC, this.payer.publicKey);
+    const userTokenAccount = await this.createTokenAccount(META, this.payer.publicKey);
+    // await this.mintTo(USDC, userUsdcAccount, this.payer, minRaise.toNumber());
+    await this.mintTo(USDC, this.payer.publicKey, this.payer, minRaise.toNumber());
+
+    await launchpadClient.fundIx(
+      launch,
+      minRaise,
+      USDC,
+      META
+    ).rpc();
+
+    // Complete the launch
+    await launchpadClient.completeLaunchIx(launch, USDC, daoTreasury).rpc();
+
+    const launchAccount = await launchpadClient.fetchLaunch(launch);
+    const treasuryBalance = await this.getTokenBalance(USDC, daoTreasury);
+
+    assert.exists(launchAccount.state.complete);
+    assert.equal(treasuryBalance.toString(), minRaise.toString());
+  });
+
+  it("moves to refunding state when minimum raise is not met", async function () {
+    // Fund the launch with less than minimum raise
+    const userUsdcAccount = await this.createTokenAccount(USDC, this.payer.publicKey);
+    const userTokenAccount = await this.createTokenAccount(META, this.payer.publicKey);
+    const partialAmount = minRaise.divn(2);
+    await this.mintTo(USDC, this.payer.publicKey, this.payer, partialAmount.toNumber());
+
+    await launchpadClient.fundIx(
+      launch,
+      partialAmount,
+      USDC,
+      META
+    ).rpc();
+
+    // Complete the launch
+    await launchpadClient.completeLaunchIx(launch, USDC, daoTreasury).rpc();
+
+    const launchAccount = await launchpadClient.fetchLaunch(launch);
+    const treasuryBalance = await this.getTokenBalance(USDC, daoTreasury);
+
+    assert.exists(launchAccount.state.refunding);
+    assert.equal(treasuryBalance.toString(), "0");
+  });
+
+  it("fails when launch is not in live state", async function () {
+    // Complete launch first time
+    await launchpadClient.completeLaunchIx(launch, USDC, daoTreasury).rpc();
+
+    // Try to complete again
+    try {
+      await launchpadClient.completeLaunchIx(launch, USDC, daoTreasury).rpc();
+      assert.fail("Should have thrown error");
+    } catch (e) {
+      assert.include(e.message, "InvalidLaunchState");
+    }
+  });
+} 
