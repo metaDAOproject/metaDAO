@@ -1,6 +1,3 @@
-import * as anchor from "@coral-xyz/anchor";
-import { BankrunProvider } from "anchor-bankrun";
-import { startAnchor } from "solana-bankrun";
 import { PublicKey, Keypair } from "@solana/web3.js";
 import { assert } from "chai";
 import {
@@ -10,6 +7,8 @@ import {
 } from "@metadaoproject/futarchy/v0.4";
 import { createMint, mintTo } from "spl-token-bankrun";
 import { BN } from "bn.js";
+import { createMintToInstruction, createTransferInstruction, getAssociatedTokenAddressSync } from "@solana/spl-token";
+import * as token from "@solana/spl-token";
 
 export default function suite() {
   let autocratClient: AutocratClient;
@@ -26,7 +25,7 @@ export default function suite() {
 
   beforeEach(async function () {
     // Create test tokens
-    META = await createMint(this.banksClient, this.payer, this.payer.publicKey, null, 9);
+    META = await createMint(this.banksClient, this.payer, this.payer.publicKey, null, 6);
     USDC = await createMint(this.banksClient, this.payer, this.payer.publicKey, null, 6);
 
     // Initialize DAO first since we need it for the launch
@@ -35,48 +34,85 @@ export default function suite() {
       [dao.toBuffer()],
       autocratClient.autocrat.programId
     );
+
   });
 
-  describe("#initialize_launch", async function () {
-    it("initializes a launch with valid parameters", async function () {
-      const minRaise = new BN(1000_000000); // 1000 USDC
-      const maxRaise = new BN(5000_000000); // 5000 USDC
-      
+  it("initializes a launch with valid parameters", async function () {
+    const minRaise = new BN(1000_000000); // 1000 USDC
+    const maxRaise = new BN(5000_000000); // 5000 USDC
+
+    const [launchAddr, pdaBump] = getLaunchAddr(launchpadClient.getProgramId(), dao);
+
+    await launchpadClient.initializeLaunchIx(
+      dao,
+      minRaise,
+      maxRaise,
+      USDC,
+      META
+    ).preInstructions([
+      token.createSetAuthorityInstruction(
+        META,
+        this.payer.publicKey,
+        token.AuthorityType.MintTokens,
+        launchAddr
+      ),
+    ]).rpc();
+
+    const launch = await launchpadClient.fetchLaunch(launchAddr);
+
+    assert.equal(launch.minimumRaiseAmount.toString(), minRaise.toString());
+    assert.ok(launch.dao.equals(dao));
+    assert.ok(launch.daoTreasury.equals(daoTreasury));
+    assert.equal(launch.committedAmount.toString(), "0");
+    assert.equal(launch.pdaBump, pdaBump);
+  });
+
+  it("fails when vault doesn't have mint authority", async function () {
+    const minRaise = new BN(1000_000000); // 1000 USDC
+    const maxRaise = new BN(5000_000000); // 5000 USDC
+
+    try {
       await launchpadClient.initializeLaunchIx(
         dao,
         minRaise,
         maxRaise,
-        USDC
+        USDC,
+        META
       ).rpc();
+      assert.fail("Should have thrown error");
+    } catch (e) {
+      assert.include(e.message, "ConstraintMintMintAuthority");
+    }
+  });
 
-      const [launchAddr, pdaBump] = getLaunchAddr(launchpadClient.getProgramId(), dao);
+  it("fails when supply has already been minted", async function () {
+    const minRaise = new BN(1000_000000); // 1000 USDC
+    const maxRaise = new BN(5000_000000); // 5000 USDC
 
-      const launch = await launchpadClient.fetchLaunch(launchAddr);
+    await this.createTokenAccount(META, this.payer.publicKey);
 
-      assert.equal(launch.minimumRaiseAmount.toString(), minRaise.toString());
-      assert.equal(launch.maximumRaiseAmount.toString(), maxRaise.toString());
-      assert.equal(launch.isApproved, false);
-      assert.ok(launch.dao.equals(dao));
-      assert.ok(launch.daoTreasury.equals(daoTreasury));
-      assert.equal(launch.committedAmount.toString(), "0");
-      assert.equal(launch.pdaBump, pdaBump);
-    });
+    await this.mintTo(META, this.payer.publicKey, this.payer, 1000n);
 
-    it("fails when minimum raise is greater than maximum", async function () {
-      const minRaise = new BN(5000_000000); // 5000 USDC
-      const maxRaise = new BN(1000_000000); // 1000 USDC
+    const [launchAddr, pdaBump] = getLaunchAddr(launchpadClient.getProgramId(), dao);
 
-      try {
-        await launchpadClient.initializeLaunchIx(
-          dao,
-          minRaise,
-          maxRaise,
-          USDC
-        ).rpc();
-        assert.fail("Should have thrown error");
-      } catch (e) {
-        assert.include(e.message, "InvalidRaiseAmount");
-      }
-    });
+    try {
+      await launchpadClient.initializeLaunchIx(
+        dao,
+        minRaise,
+        maxRaise,
+        USDC,
+        META
+      ).preInstructions([
+        token.createSetAuthorityInstruction(
+          META,
+          this.payer.publicKey,
+          token.AuthorityType.MintTokens,
+          launchAddr
+        )
+      ]).rpc();
+      assert.fail("Should have thrown error");
+    } catch (e) {
+      assert.include(e.message, "SupplyNonZero");
+    }
   });
 }

@@ -12,7 +12,12 @@ export type Launchpad = {
         },
         {
           name: "usdcVault";
-          isMut: true;
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenVault";
+          isMut: false;
           isSigner: false;
         },
         {
@@ -32,6 +37,11 @@ export type Launchpad = {
         },
         {
           name: "usdcMint";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenMint";
           isMut: false;
           isSigner: false;
         },
@@ -69,6 +79,52 @@ export type Launchpad = {
           };
         }
       ];
+    },
+    {
+      name: "fund";
+      accounts: [
+        {
+          name: "launch";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "usdcVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "funder";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "funderUsdcAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "funderTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "amount";
+          type: "u64";
+        }
+      ];
     }
   ];
   accounts: [
@@ -79,39 +135,59 @@ export type Launchpad = {
         fields: [
           {
             name: "minimumRaiseAmount";
+            docs: [
+              "The minimum amount of USDC that must be raised, otherwise",
+              "everyone can get their USDC back."
+            ];
             type: "u64";
-          },
-          {
-            name: "maximumRaiseAmount";
-            type: "u64";
-          },
-          {
-            name: "isApproved";
-            type: "bool";
           },
           {
             name: "creator";
+            docs: ["The creator of the launch."];
             type: "publicKey";
           },
           {
             name: "usdcVault";
+            docs: [
+              "The USDC vault that will hold the USDC raised until the launch is over."
+            ];
             type: "publicKey";
           },
           {
-            name: "committedAmount";
-            type: "u64";
+            name: "tokenMint";
+            docs: [
+              "The token that will be minted to funders and that will control the DAO."
+            ];
+            type: "publicKey";
           },
           {
             name: "pdaBump";
+            docs: ["The PDA bump."];
             type: "u8";
           },
           {
             name: "dao";
+            docs: [
+              "The DAO that will receive the USDC raised once the launch is over."
+            ];
             type: "publicKey";
           },
           {
             name: "daoTreasury";
+            docs: ["The DAO's treasury address."];
             type: "publicKey";
+          },
+          {
+            name: "committedAmount";
+            docs: ["The amount of USDC that has been committed by the users."];
+            type: "u64";
+          },
+          {
+            name: "seqNum";
+            docs: [
+              "The sequence number of this launch. Useful for sorting events."
+            ];
+            type: "u64";
           }
         ];
       };
@@ -141,10 +217,6 @@ export type Launchpad = {
         fields: [
           {
             name: "minimumRaiseAmount";
-            type: "u64";
-          },
-          {
-            name: "maximumRaiseAmount";
             type: "u64";
           }
         ];
@@ -178,6 +250,11 @@ export type Launchpad = {
           index: false;
         },
         {
+          name: "tokenMint";
+          type: "publicKey";
+          index: false;
+        },
+        {
           name: "creator";
           type: "publicKey";
           index: false;
@@ -198,18 +275,13 @@ export type Launchpad = {
   errors: [
     {
       code: 6000;
-      name: "InvalidRaiseAmount";
-      msg: "Maximum raise amount must be greater than minimum";
+      name: "SupplyNonZero";
+      msg: "Supply must be 0 at time of launch initialization";
     },
     {
       code: 6001;
-      name: "LaunchNotApproved";
-      msg: "Launch has not been approved";
-    },
-    {
-      code: 6002;
-      name: "ExceedsMaximumRaise";
-      msg: "Amount would exceed maximum raise amount";
+      name: "InvalidAmount";
+      msg: "Amount must be greater than 0";
     }
   ];
 };
@@ -228,7 +300,12 @@ export const IDL: Launchpad = {
         },
         {
           name: "usdcVault",
-          isMut: true,
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenVault",
+          isMut: false,
           isSigner: false,
         },
         {
@@ -248,6 +325,11 @@ export const IDL: Launchpad = {
         },
         {
           name: "usdcMint",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenMint",
           isMut: false,
           isSigner: false,
         },
@@ -286,6 +368,52 @@ export const IDL: Launchpad = {
         },
       ],
     },
+    {
+      name: "fund",
+      accounts: [
+        {
+          name: "launch",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "usdcVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "funder",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "funderUsdcAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "funderTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [
+        {
+          name: "amount",
+          type: "u64",
+        },
+      ],
+    },
   ],
   accounts: [
     {
@@ -295,39 +423,59 @@ export const IDL: Launchpad = {
         fields: [
           {
             name: "minimumRaiseAmount",
+            docs: [
+              "The minimum amount of USDC that must be raised, otherwise",
+              "everyone can get their USDC back.",
+            ],
             type: "u64",
-          },
-          {
-            name: "maximumRaiseAmount",
-            type: "u64",
-          },
-          {
-            name: "isApproved",
-            type: "bool",
           },
           {
             name: "creator",
+            docs: ["The creator of the launch."],
             type: "publicKey",
           },
           {
             name: "usdcVault",
+            docs: [
+              "The USDC vault that will hold the USDC raised until the launch is over.",
+            ],
             type: "publicKey",
           },
           {
-            name: "committedAmount",
-            type: "u64",
+            name: "tokenMint",
+            docs: [
+              "The token that will be minted to funders and that will control the DAO.",
+            ],
+            type: "publicKey",
           },
           {
             name: "pdaBump",
+            docs: ["The PDA bump."],
             type: "u8",
           },
           {
             name: "dao",
+            docs: [
+              "The DAO that will receive the USDC raised once the launch is over.",
+            ],
             type: "publicKey",
           },
           {
             name: "daoTreasury",
+            docs: ["The DAO's treasury address."],
             type: "publicKey",
+          },
+          {
+            name: "committedAmount",
+            docs: ["The amount of USDC that has been committed by the users."],
+            type: "u64",
+          },
+          {
+            name: "seqNum",
+            docs: [
+              "The sequence number of this launch. Useful for sorting events.",
+            ],
+            type: "u64",
           },
         ],
       },
@@ -357,10 +505,6 @@ export const IDL: Launchpad = {
         fields: [
           {
             name: "minimumRaiseAmount",
-            type: "u64",
-          },
-          {
-            name: "maximumRaiseAmount",
             type: "u64",
           },
         ],
@@ -394,6 +538,11 @@ export const IDL: Launchpad = {
           index: false,
         },
         {
+          name: "tokenMint",
+          type: "publicKey",
+          index: false,
+        },
+        {
           name: "creator",
           type: "publicKey",
           index: false,
@@ -414,18 +563,13 @@ export const IDL: Launchpad = {
   errors: [
     {
       code: 6000,
-      name: "InvalidRaiseAmount",
-      msg: "Maximum raise amount must be greater than minimum",
+      name: "SupplyNonZero",
+      msg: "Supply must be 0 at time of launch initialization",
     },
     {
       code: 6001,
-      name: "LaunchNotApproved",
-      msg: "Launch has not been approved",
-    },
-    {
-      code: 6002,
-      name: "ExceedsMaximumRaise",
-      msg: "Amount would exceed maximum raise amount",
+      name: "InvalidAmount",
+      msg: "Amount must be greater than 0",
     },
   ],
 };

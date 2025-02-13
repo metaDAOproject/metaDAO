@@ -2,10 +2,8 @@ use anchor_lang::prelude::*;
 
 #[error_code]
 pub enum LaunchpadError {
-    #[msg("Maximum raise amount must be greater than minimum")]
-    InvalidRaiseAmount,
-    #[msg("Launch has not been approved")]
-    LaunchNotApproved,
-    #[msg("Amount would exceed maximum raise amount")]
-    ExceedsMaximumRaise,
+    #[msg("Supply must be 0 at time of launch initialization")]
+    SupplyNonZero,
+    #[msg("Amount must be greater than 0")]
+    InvalidAmount,
 } 

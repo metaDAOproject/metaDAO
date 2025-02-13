@@ -2,13 +2,23 @@ use anchor_lang::prelude::*;
 
 #[account]
 pub struct Launch {
+    /// The minimum amount of USDC that must be raised, otherwise
+    /// everyone can get their USDC back.
     pub minimum_raise_amount: u64,
-    pub maximum_raise_amount: u64,
-    pub is_approved: bool,
+    /// The creator of the launch.
     pub creator: Pubkey,
+    /// The USDC vault that will hold the USDC raised until the launch is over.
     pub usdc_vault: Pubkey,
-    pub committed_amount: u64,
+    /// The token that will be minted to funders and that will control the DAO.
+    pub token_mint: Pubkey,
+    /// The PDA bump.
     pub pda_bump: u8,
+    /// The DAO that will receive the USDC raised once the launch is over.
     pub dao: Pubkey,
+    /// The DAO's treasury address.
     pub dao_treasury: Pubkey,
+    /// The amount of USDC that has been committed by the users.
+    pub committed_amount: u64,
+    /// The sequence number of this launch. Useful for sorting events.
+    pub seq_num: u64,
 }

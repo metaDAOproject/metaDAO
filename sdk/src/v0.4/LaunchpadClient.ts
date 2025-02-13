@@ -2,7 +2,10 @@ import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { PublicKey, Keypair, AccountInfo } from "@solana/web3.js";
 import { Launchpad, IDL as LaunchpadIDL } from "./types/launchpad.js";
 import { LAUNCHPAD_PROGRAM_ID } from "./constants.js";
-import { getAssociatedTokenAddressSync } from "@solana/spl-token";
+import {
+  createAssociatedTokenAccountIdempotentInstruction,
+  getAssociatedTokenAddressSync,
+} from "@solana/spl-token";
 import { BN } from "@coral-xyz/anchor";
 import { Launch } from "./types/index.js";
 import { getDaoTreasuryAddr, getLaunchAddr } from "./utils/pda.js";
@@ -61,10 +64,12 @@ export class LaunchpadClient {
     minimumRaiseAmount: BN,
     maximumRaiseAmount: BN,
     usdcMint: PublicKey,
+    tokenMint: PublicKey,
     creator: PublicKey = this.provider.publicKey
   ) {
     const [launch] = getLaunchAddr(this.launchpad.programId, dao);
     const usdcVault = getAssociatedTokenAddressSync(usdcMint, launch, true);
+    const tokenVault = getAssociatedTokenAddressSync(tokenMint, launch, true);
     const [daoTreasury] = getDaoTreasuryAddr(
       this.autocratClient.getProgramId(),
       dao
@@ -73,15 +78,51 @@ export class LaunchpadClient {
     return this.launchpad.methods
       .initializeLaunch({
         minimumRaiseAmount,
-        maximumRaiseAmount,
       })
       .accounts({
         launch,
         usdcVault,
+        tokenVault,
         daoTreasury,
         creator,
         dao,
         usdcMint,
-      });
+        tokenMint,
+      })
+      .preInstructions([
+        createAssociatedTokenAccountIdempotentInstruction(
+          creator,
+          getAssociatedTokenAddressSync(tokenMint, launch, true),
+          launch,
+          tokenMint
+        ),
+        createAssociatedTokenAccountIdempotentInstruction(
+          creator,
+          getAssociatedTokenAddressSync(usdcMint, launch, true),
+          launch,
+          usdcMint
+        ),
+      ]);
+  }
+
+  fundIx(
+    launch: PublicKey,
+    amount: BN,
+    usdcMint: PublicKey,
+    tokenMint: PublicKey,
+    funder: PublicKey = this.provider.publicKey
+  ) {
+    const usdcVault = getAssociatedTokenAddressSync(usdcMint, launch, true);
+    const funderUsdcAccount = getAssociatedTokenAddressSync(usdcMint, funder);
+    const funderTokenAccount = getAssociatedTokenAddressSync(tokenMint, funder);
+
+    return this.launchpad.methods.fund(amount).accounts({
+      launch,
+      usdcVault,
+      tokenMint,
+      funder,
+      funderUsdcAccount,
+      funderTokenAccount,
+    });
   }
 }

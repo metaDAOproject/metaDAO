@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, TokenAccount};
+use anchor_spl::token::{Mint, Token, TokenAccount};
 use anchor_spl::associated_token::AssociatedToken;
 use autocrat::ID as AUTOCRAT_PROGRAM_ID;
 use autocrat::Dao;
@@ -11,7 +11,6 @@ use crate::error::LaunchpadError;
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub struct InitializeLaunchArgs {
     pub minimum_raise_amount: u64,
-    pub maximum_raise_amount: u64,
 }
 
 #[event_cpi]
@@ -27,12 +26,16 @@ pub struct InitializeLaunch<'info> {
     pub launch: Account<'info, Launch>,
 
     #[account(
-        init,
-        payer = creator,
         associated_token::mint = usdc_mint,
         associated_token::authority = launch
     )]
     pub usdc_vault: Account<'info, TokenAccount>,
+
+    #[account(
+        associated_token::mint = token_mint,
+        associated_token::authority = launch
+    )]
+    pub token_vault: Account<'info, TokenAccount>,
 
     #[account(mut)]
     pub creator: Signer<'info>,
@@ -47,9 +50,17 @@ pub struct InitializeLaunch<'info> {
     
     /// CHECK: This is USDC mint
     #[account(
-        constraint = dao.usdc_mint == usdc_mint.key()
+        constraint = dao.usdc_mint == usdc_mint.key(),
+        mint::decimals = 6,
     )]
-    pub usdc_mint: AccountInfo<'info>,
+    pub usdc_mint: Account<'info, Mint>,
+
+    /// CHECK: This is USDC mint
+    #[account(
+        mint::decimals = 6,
+        mint::authority = launch,
+    )]
+    pub token_mint: Account<'info, Mint>,
     
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -58,11 +69,8 @@ pub struct InitializeLaunch<'info> {
 
 impl InitializeLaunch<'_> {
     pub fn validate(&self, args: InitializeLaunchArgs) -> Result<()> {
-        require_gte!(
-            args.maximum_raise_amount,
-            args.minimum_raise_amount,
-            LaunchpadError::InvalidRaiseAmount
-        );
+        require_eq!(self.token_mint.supply, 0, LaunchpadError::SupplyNonZero);
+
 
         Ok(())
     }
@@ -78,14 +86,14 @@ impl InitializeLaunch<'_> {
 
         ctx.accounts.launch.set_inner(Launch {
             minimum_raise_amount: args.minimum_raise_amount,
-            maximum_raise_amount: args.maximum_raise_amount,
-            is_approved: false,
             dao: ctx.accounts.dao.key(),
             creator: ctx.accounts.creator.key(),
             dao_treasury,
             usdc_vault: ctx.accounts.usdc_vault.key(),
             committed_amount: 0,
+            token_mint: ctx.accounts.token_mint.key(),
             pda_bump: ctx.bumps.launch,
+            seq_num: 0,
         });
 
         let clock = Clock::get()?;
@@ -99,6 +107,7 @@ impl InitializeLaunch<'_> {
             dao_treasury: ctx.accounts.dao_treasury.key(),
             creator: ctx.accounts.creator.key(),
             usdc_mint: ctx.accounts.usdc_mint.key(),
+            token_mint: ctx.accounts.token_mint.key(),
             pda_bump: ctx.bumps.launch,
         });
 

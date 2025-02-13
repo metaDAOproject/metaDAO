@@ -21,6 +21,7 @@ pub struct LaunchInitializedEvent {
     pub launch: Pubkey,
     pub dao: Pubkey,
     pub dao_treasury: Pubkey,
+    pub token_mint: Pubkey,
     pub creator: Pubkey,
     pub usdc_mint: Pubkey,
     pub pda_bump: u8,
