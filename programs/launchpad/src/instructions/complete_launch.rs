@@ -225,6 +225,8 @@ impl CompleteLaunch<'_> {
                 token_1_vault,
                 creator_token_0,
                 creator_token_1,
+                init_amount_0,
+                init_amount_1,
             ) = if ctx.accounts.token_mint.key() < ctx.accounts.usdc_mint.key() {
                 (
                     ctx.accounts.token_mint.to_account_info(),
@@ -233,6 +235,8 @@ impl CompleteLaunch<'_> {
                     ctx.accounts.pool_usdc_vault.to_account_info(),
                     ctx.accounts.launch_token_vault.to_account_info(),
                     ctx.accounts.launch_usdc_vault.to_account_info(),
+                    token_to_lp,
+                    usdc_to_lp,
                 )
             } else {
                 (
@@ -242,6 +246,8 @@ impl CompleteLaunch<'_> {
                     ctx.accounts.pool_token_vault.to_account_info(),
                     ctx.accounts.launch_usdc_vault.to_account_info(),
                     ctx.accounts.launch_token_vault.to_account_info(),
+                    usdc_to_lp,
+                    token_to_lp,
                 )
             };
 
@@ -269,8 +275,8 @@ impl CompleteLaunch<'_> {
             };
 
             let ix = instruction::Initialize {
-                init_amount_0: token_to_lp,
-                init_amount_1: usdc_to_lp,
+                init_amount_0,
+                init_amount_1,
                 open_time: 0,
             };
             let mut ix_data = Vec::with_capacity(256);

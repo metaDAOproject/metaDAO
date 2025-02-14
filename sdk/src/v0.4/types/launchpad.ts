@@ -1,6 +1,13 @@
 export type Launchpad = {
   version: "0.4.0";
   name: "launchpad";
+  docs: [
+    "TODO:",
+    "- Add a `refund` instruction that allows funders to get their USDC back if the launch fails",
+    "- Add a `start_launch` instruction that allows the creator to start the launch",
+    "- Make it 1,000 tokens per USDC rather than 10,000",
+    "- Test on devnet"
+  ];
   instructions: [
     {
       name: "initializeLaunch";
@@ -255,6 +262,52 @@ export type Launchpad = {
         }
       ];
       args: [];
+    },
+    {
+      name: "refund";
+      accounts: [
+        {
+          name: "launch";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "launchUsdcVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "launchTreasury";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "funder";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "funderUsdcAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "funderTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [];
     }
   ];
   accounts: [
@@ -471,6 +524,11 @@ export type Launchpad = {
       code: 6003;
       name: "LaunchPeriodNotOver";
       msg: "Launch period not over";
+    },
+    {
+      code: 6004;
+      name: "LaunchNotRefunding";
+      msg: "Launch needs to be in refunding state to get a refund";
     }
   ];
 };
@@ -478,6 +536,13 @@ export type Launchpad = {
 export const IDL: Launchpad = {
   version: "0.4.0",
   name: "launchpad",
+  docs: [
+    "TODO:",
+    "- Add a `refund` instruction that allows funders to get their USDC back if the launch fails",
+    "- Add a `start_launch` instruction that allows the creator to start the launch",
+    "- Make it 1,000 tokens per USDC rather than 10,000",
+    "- Test on devnet",
+  ],
   instructions: [
     {
       name: "initializeLaunch",
@@ -733,6 +798,52 @@ export const IDL: Launchpad = {
       ],
       args: [],
     },
+    {
+      name: "refund",
+      accounts: [
+        {
+          name: "launch",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "launchUsdcVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "launchTreasury",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "funder",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "funderUsdcAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "funderTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
   ],
   accounts: [
     {
@@ -948,6 +1059,11 @@ export const IDL: Launchpad = {
       code: 6003,
       name: "LaunchPeriodNotOver",
       msg: "Launch period not over",
+    },
+    {
+      code: 6004,
+      name: "LaunchNotRefunding",
+      msg: "Launch needs to be in refunding state to get a refund",
     },
   ],
 };

@@ -20,6 +20,12 @@ use instructions::*;
 
 declare_id!("AfJJJ5UqxhBKoE3grkKAZZsoXDE9kncbMKvqSHGsCNrE");
 
+/// TODO:
+/// - Add a `refund` instruction that allows funders to get their USDC back if the launch fails
+/// - Add a `start_launch` instruction that allows the creator to start the launch
+/// - Make it 1,000 tokens per USDC rather than 10,000
+/// - Test on devnet
+
 #[program]
 pub mod launchpad {
     use super::*;
@@ -40,5 +46,10 @@ pub mod launchpad {
     #[access_control(ctx.accounts.validate())]
     pub fn complete_launch(ctx: Context<CompleteLaunch>) -> Result<()> {
         CompleteLaunch::handle(ctx)
+    }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn refund(ctx: Context<Refund>) -> Result<()> {
+        Refund::handle(ctx)
     }
 }

@@ -257,4 +257,34 @@ export class LaunchpadClient {
       })
       .signers([poolStateKp]);
   }
+
+  refundIx(
+    launch: PublicKey,
+    usdcMint: PublicKey,
+    tokenMint: PublicKey,
+    funder: PublicKey = this.provider.publicKey
+  ) {
+    const [launchTreasury] = getLaunchTreasuryAddr(
+      this.launchpad.programId,
+      launch
+    );
+
+    const launchUsdcVault = getAssociatedTokenAddressSync(
+      usdcMint,
+      launchTreasury,
+      true
+    );
+    const funderUsdcAccount = getAssociatedTokenAddressSync(usdcMint, funder);
+    const funderTokenAccount = getAssociatedTokenAddressSync(tokenMint, funder);
+
+    return this.launchpad.methods.refund().accounts({
+      launch,
+      launchTreasury,
+      launchUsdcVault,
+      funder,
+      funderUsdcAccount,
+      funderTokenAccount,
+      tokenMint,
+    });
+  }
 }

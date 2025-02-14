@@ -10,4 +10,6 @@ pub enum LaunchpadError {
     InvalidLaunchState,
     #[msg("Launch period not over")]
     LaunchPeriodNotOver,
+    #[msg("Launch needs to be in refunding state to get a refund")]
+    LaunchNotRefunding,
 } 
