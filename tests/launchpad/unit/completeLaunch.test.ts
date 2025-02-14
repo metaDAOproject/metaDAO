@@ -62,6 +62,8 @@ export default function suite() {
         launch
       )
     ]).rpc();
+
+    await launchpadClient.startLaunchIx(launch).rpc();
   });
 
   it("completes launch successfully when minimum raise is met and time has passed", async function () {

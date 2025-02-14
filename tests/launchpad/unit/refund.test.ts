@@ -65,6 +65,8 @@ export default function suite() {
       )
     ]).rpc();
 
+    await launchpadClient.startLaunchIx(launch).rpc();
+
     // Setup funder accounts
     await this.createTokenAccount(META, this.payer.publicKey);
     await this.createTokenAccount(USDC, this.payer.publicKey);

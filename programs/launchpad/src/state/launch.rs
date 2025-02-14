@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq)]
 pub enum LaunchState {
+    Initialized,
     Live,
     Complete,
     Refunding,
@@ -36,6 +37,8 @@ pub struct Launch {
     pub committed_amount: u64,
     /// The sequence number of this launch. Useful for sorting events.
     pub seq_num: u64,
+    /// The state of the launch.
     pub state: LaunchState,
-    pub slot_initialized: u64,
+    /// The slot when the launch was started.
+    pub slot_started: u64,
 }

@@ -24,7 +24,6 @@ pub const TOKENS_PER_USDC: u64 = 1_000;
 
 /// TODO:
 /// - Add a `start_launch` instruction that allows the creator to start the launch
-/// - Test on devnet
 
 #[program]
 pub mod launchpad {
@@ -36,6 +35,11 @@ pub mod launchpad {
         args: InitializeLaunchArgs,
     ) -> Result<()> {
         InitializeLaunch::handle(ctx, args)
+    }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn start_launch(ctx: Context<StartLaunch>) -> Result<()> {
+        StartLaunch::handle(ctx)
     }
 
     #[access_control(ctx.accounts.validate(amount))]

@@ -141,6 +141,16 @@ export class LaunchpadClient {
       ]);
   }
 
+  startLaunchIx(
+    launch: PublicKey,
+    creator: PublicKey = this.provider.publicKey
+  ) {
+    return this.launchpad.methods.startLaunch().accounts({
+      launch,
+      creator,
+    });
+  }
+
   fundIx(
     launch: PublicKey,
     amount: BN,

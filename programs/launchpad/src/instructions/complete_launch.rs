@@ -16,7 +16,6 @@ use raydium_cpmm_cpi::{
 pub struct CompleteLaunch<'info> {
     #[account(
         mut,
-        constraint = launch.state == LaunchState::Live @ LaunchpadError::InvalidLaunchState,
         has_one = treasury_usdc_account,
         has_one = launch_usdc_vault,
         has_one = launch_token_vault,
@@ -149,7 +148,12 @@ impl CompleteLaunch<'_> {
         const REQUIRED_SLOTS: u64 = SLOTS_PER_DAY * 5;
 
         require!(
-            clock.slot >= self.launch.slot_initialized.saturating_add(REQUIRED_SLOTS),
+            self.launch.state == LaunchState::Live,
+            LaunchpadError::InvalidLaunchState
+        );
+
+        require!(
+            clock.slot >= self.launch.slot_started.saturating_add(REQUIRED_SLOTS),
             LaunchpadError::LaunchPeriodNotOver
         );
 

@@ -3,9 +3,7 @@ export type Launchpad = {
   name: "launchpad";
   docs: [
     "TODO:",
-    "- Add a `start_launch` instruction that allows the creator to start the launch",
-    "- Make it 1,000 tokens per USDC rather than 10,000",
-    "- Test on devnet"
+    "- Add a `start_launch` instruction that allows the creator to start the launch"
   ];
   instructions: [
     {
@@ -95,6 +93,22 @@ export type Launchpad = {
           };
         }
       ];
+    },
+    {
+      name: "startLaunch";
+      accounts: [
+        {
+          name: "launch";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "creator";
+          isMut: false;
+          isSigner: true;
+        }
+      ];
+      args: [];
     },
     {
       name: "fund";
@@ -395,12 +409,14 @@ export type Launchpad = {
           },
           {
             name: "state";
+            docs: ["The state of the launch."];
             type: {
               defined: "LaunchState";
             };
           },
           {
-            name: "slotInitialized";
+            name: "slotStarted";
+            docs: ["The slot when the launch was started."];
             type: "u64";
           }
         ];
@@ -441,6 +457,9 @@ export type Launchpad = {
       type: {
         kind: "enum";
         variants: [
+          {
+            name: "Initialized";
+          },
           {
             name: "Live";
           },
@@ -528,6 +547,11 @@ export type Launchpad = {
       code: 6004;
       name: "LaunchNotRefunding";
       msg: "Launch needs to be in refunding state to get a refund";
+    },
+    {
+      code: 6005;
+      name: "LaunchNotInitialized";
+      msg: "Launch must be initialized to be started";
     }
   ];
 };
@@ -538,8 +562,6 @@ export const IDL: Launchpad = {
   docs: [
     "TODO:",
     "- Add a `start_launch` instruction that allows the creator to start the launch",
-    "- Make it 1,000 tokens per USDC rather than 10,000",
-    "- Test on devnet",
   ],
   instructions: [
     {
@@ -629,6 +651,22 @@ export const IDL: Launchpad = {
           },
         },
       ],
+    },
+    {
+      name: "startLaunch",
+      accounts: [
+        {
+          name: "launch",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "creator",
+          isMut: false,
+          isSigner: true,
+        },
+      ],
+      args: [],
     },
     {
       name: "fund",
@@ -929,12 +967,14 @@ export const IDL: Launchpad = {
           },
           {
             name: "state",
+            docs: ["The state of the launch."],
             type: {
               defined: "LaunchState",
             },
           },
           {
-            name: "slotInitialized",
+            name: "slotStarted",
+            docs: ["The slot when the launch was started."],
             type: "u64",
           },
         ],
@@ -975,6 +1015,9 @@ export const IDL: Launchpad = {
       type: {
         kind: "enum",
         variants: [
+          {
+            name: "Initialized",
+          },
           {
             name: "Live",
           },
@@ -1062,6 +1105,11 @@ export const IDL: Launchpad = {
       code: 6004,
       name: "LaunchNotRefunding",
       msg: "Launch needs to be in refunding state to get a refund",
+    },
+    {
+      code: 6005,
+      name: "LaunchNotInitialized",
+      msg: "Launch must be initialized to be started",
     },
   ],
 };

@@ -68,6 +68,8 @@ export default function suite() {
       )
     ]).rpc();
 
+    await launchpadClient.startLaunchIx(launch).rpc();
+
     await this.createTokenAccount(META, this.payer.publicKey);
     await this.createTokenAccount(USDC, this.payer.publicKey);
     await this.mintTo(USDC, this.payer.publicKey, this.payer, 100_000000);
