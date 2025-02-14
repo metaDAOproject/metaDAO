@@ -15,7 +15,7 @@ pub struct Fund<'info> {
 
     #[account(
         mut,
-        constraint = usdc_vault.key() == launch.usdc_vault
+        constraint = usdc_vault.key() == launch.launch_usdc_vault
     )]
     pub usdc_vault: Account<'info, TokenAccount>,
 

@@ -11,6 +11,11 @@ export type Launchpad = {
           isSigner: false;
         },
         {
+          name: "launchTreasury";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "usdcVault";
           isMut: false;
           isSigner: false;
@@ -140,17 +145,27 @@ export type Launchpad = {
           isSigner: false;
         },
         {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "launchTreasury";
+          isMut: true;
+          isSigner: false;
+        },
+        {
           name: "authority";
           isMut: false;
           isSigner: false;
         },
         {
-          name: "creator";
+          name: "launchUsdcVault";
           isMut: true;
-          isSigner: true;
+          isSigner: false;
         },
         {
-          name: "usdcVault";
+          name: "launchTokenVault";
           isMut: true;
           isSigner: false;
         },
@@ -171,13 +186,13 @@ export type Launchpad = {
           isSigner: true;
         },
         {
-          name: "token0Mint";
-          isMut: false;
+          name: "tokenMint";
+          isMut: true;
           isSigner: false;
           docs: ["Token_0 mint, the key must smaller then token_1 mint."];
         },
         {
-          name: "token1Mint";
+          name: "usdcMint";
           isMut: false;
           isSigner: false;
           docs: ["Token_1 mint, the key must grater then token_0 mint."];
@@ -188,29 +203,17 @@ export type Launchpad = {
           isSigner: false;
         },
         {
-          name: "creatorToken0";
-          isMut: true;
-          isSigner: false;
-          docs: ["payer token0 account"];
-        },
-        {
-          name: "creatorToken1";
-          isMut: true;
-          isSigner: false;
-          docs: ["creator token1 account"];
-        },
-        {
-          name: "creatorLpToken";
+          name: "lpVault";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "token0Vault";
+          name: "poolTokenVault";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "token1Vault";
+          name: "poolUsdcVault";
           isMut: true;
           isSigner: false;
         },
@@ -274,10 +277,27 @@ export type Launchpad = {
             type: "publicKey";
           },
           {
-            name: "usdcVault";
+            name: "launchTreasury";
+            docs: [
+              "The launch treasury address. Needed because Raydium pools need a SOL payer."
+            ];
+            type: "publicKey";
+          },
+          {
+            name: "launchTreasuryPdaBump";
+            docs: ["The PDA bump for the launch treasury."];
+            type: "u8";
+          },
+          {
+            name: "launchUsdcVault";
             docs: [
               "The USDC vault that will hold the USDC raised until the launch is over."
             ];
+            type: "publicKey";
+          },
+          {
+            name: "launchTokenVault";
+            docs: ["The token vault, used to send tokens to Raydium."];
             type: "publicKey";
           },
           {
@@ -468,6 +488,11 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
+          name: "launchTreasury",
+          isMut: false,
+          isSigner: false,
+        },
+        {
           name: "usdcVault",
           isMut: false,
           isSigner: false,
@@ -597,17 +622,27 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
+          name: "payer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "launchTreasury",
+          isMut: true,
+          isSigner: false,
+        },
+        {
           name: "authority",
           isMut: false,
           isSigner: false,
         },
         {
-          name: "creator",
+          name: "launchUsdcVault",
           isMut: true,
-          isSigner: true,
+          isSigner: false,
         },
         {
-          name: "usdcVault",
+          name: "launchTokenVault",
           isMut: true,
           isSigner: false,
         },
@@ -628,13 +663,13 @@ export const IDL: Launchpad = {
           isSigner: true,
         },
         {
-          name: "token0Mint",
-          isMut: false,
+          name: "tokenMint",
+          isMut: true,
           isSigner: false,
           docs: ["Token_0 mint, the key must smaller then token_1 mint."],
         },
         {
-          name: "token1Mint",
+          name: "usdcMint",
           isMut: false,
           isSigner: false,
           docs: ["Token_1 mint, the key must grater then token_0 mint."],
@@ -645,29 +680,17 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
-          name: "creatorToken0",
-          isMut: true,
-          isSigner: false,
-          docs: ["payer token0 account"],
-        },
-        {
-          name: "creatorToken1",
-          isMut: true,
-          isSigner: false,
-          docs: ["creator token1 account"],
-        },
-        {
-          name: "creatorLpToken",
+          name: "lpVault",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "token0Vault",
+          name: "poolTokenVault",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "token1Vault",
+          name: "poolUsdcVault",
           isMut: true,
           isSigner: false,
         },
@@ -731,10 +754,27 @@ export const IDL: Launchpad = {
             type: "publicKey",
           },
           {
-            name: "usdcVault",
+            name: "launchTreasury",
+            docs: [
+              "The launch treasury address. Needed because Raydium pools need a SOL payer.",
+            ],
+            type: "publicKey",
+          },
+          {
+            name: "launchTreasuryPdaBump",
+            docs: ["The PDA bump for the launch treasury."],
+            type: "u8",
+          },
+          {
+            name: "launchUsdcVault",
             docs: [
               "The USDC vault that will hold the USDC raised until the launch is over.",
             ],
+            type: "publicKey",
+          },
+          {
+            name: "launchTokenVault",
+            docs: ["The token vault, used to send tokens to Raydium."],
             type: "publicKey",
           },
           {

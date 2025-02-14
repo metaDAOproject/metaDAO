@@ -25,15 +25,18 @@ pub struct InitializeLaunch<'info> {
     )]
     pub launch: Account<'info, Launch>,
 
+    /// CHECK: This is the launch treasury
+    pub launch_treasury: UncheckedAccount<'info>,
+
     #[account(
         associated_token::mint = usdc_mint,
-        associated_token::authority = launch
+        associated_token::authority = launch_treasury
     )]
     pub usdc_vault: Account<'info, TokenAccount>,
 
     #[account(
         associated_token::mint = token_mint,
-        associated_token::authority = launch
+        associated_token::authority = launch_treasury
     )]
     pub token_vault: Account<'info, TokenAccount>,
 
@@ -91,13 +94,21 @@ impl InitializeLaunch<'_> {
             &AUTOCRAT_PROGRAM_ID
         );
 
+        // We need a launch treasury because it needs to be the SOL payer for the raydium pool,
+        // and it doesn't work with PDAs that have data
+        let (launch_treasury, launch_treasury_pda_bump) =
+            Pubkey::find_program_address(&[b"launch_treasury", ctx.accounts.launch.key().as_ref()], ctx.program_id);
+
         ctx.accounts.launch.set_inner(Launch {
             minimum_raise_amount: args.minimum_raise_amount,
             dao: ctx.accounts.dao.key(),
             creator: ctx.accounts.creator.key(),
             dao_treasury,
             treasury_usdc_account: ctx.accounts.treasury_usdc_account.key(),
-            usdc_vault: ctx.accounts.usdc_vault.key(),
+            launch_treasury,
+            launch_treasury_pda_bump,
+            launch_usdc_vault: ctx.accounts.usdc_vault.key(),
+            launch_token_vault: ctx.accounts.token_vault.key(),
             committed_amount: 0,
             token_mint: ctx.accounts.token_mint.key(),
             pda_bump: ctx.bumps.launch,

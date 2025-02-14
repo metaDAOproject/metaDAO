@@ -4,10 +4,12 @@ import {
   AutocratClient,
   getLaunchAddr,
   LaunchpadClient,
+  RAYDIUM_CP_SWAP_PROGRAM_ID,
 } from "@metadaoproject/futarchy/v0.4";
 import { createMint } from "spl-token-bankrun";
 import { BN } from "bn.js";
 import { createSetAuthorityInstruction, AuthorityType, getAssociatedTokenAddressSync } from "@solana/spl-token";
+import * as anchor from "@coral-xyz/anchor";
 
 export default function suite() {
   let autocratClient: AutocratClient;
@@ -79,7 +81,7 @@ export default function suite() {
     await this.advanceBySlots(SLOTS_PER_DAY * 7n);
 
     // Complete the launch
-    await launchpadClient.completeLaunchIx(launch, USDC, daoTreasury).rpc();
+    await launchpadClient.completeLaunchIx(launch, USDC, META, daoTreasury).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 })]).rpc();
 
     const launchAccount = await launchpadClient.fetchLaunch(launch);
     const treasuryBalance = await this.getTokenBalance(USDC, daoTreasury);
@@ -103,7 +105,7 @@ export default function suite() {
 
     // Try to complete immediately (should fail)
     try {
-      await launchpadClient.completeLaunchIx(launch, USDC, daoTreasury).rpc();
+      await launchpadClient.completeLaunchIx(launch, USDC, META, daoTreasury).rpc();
       assert.fail("Should have thrown error");
     } catch (e) {
       assert.include(e.message, "LaunchPeriodNotOver");
@@ -113,7 +115,7 @@ export default function suite() {
     await this.advanceBySlots(SLOTS_PER_DAY * 3n);
 
     try {
-      await launchpadClient.completeLaunchIx(launch, USDC, daoTreasury).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 })]).rpc();
+      await launchpadClient.completeLaunchIx(launch, USDC, META, daoTreasury).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 })]).rpc();
       assert.fail("Should have thrown error");
     } catch (e) {
       assert.include(e.message, "LaunchPeriodNotOver");
@@ -138,7 +140,7 @@ export default function suite() {
     await this.advanceBySlots(SLOTS_PER_DAY * 7n);
 
     // Complete the launch
-    await launchpadClient.completeLaunchIx(launch, USDC, daoTreasury).rpc();
+    await launchpadClient.completeLaunchIx(launch, USDC, META, daoTreasury).rpc();
 
     const launchAccount = await launchpadClient.fetchLaunch(launch);
     const treasuryBalance = await this.getTokenBalance(USDC, daoTreasury);
@@ -152,12 +154,12 @@ export default function suite() {
     await this.advanceBySlots(SLOTS_PER_DAY * 7n);
 
     // Complete launch first time
-    await launchpadClient.completeLaunchIx(launch, USDC, daoTreasury).rpc();
+    await launchpadClient.completeLaunchIx(launch, USDC, META, daoTreasury).rpc();
 
     // Try to complete again
     try {
       // CU price so that the VM doesn't think it's a duplicate tx
-      await launchpadClient.completeLaunchIx(launch, USDC, daoTreasury).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 })]).rpc();
+      await launchpadClient.completeLaunchIx(launch, USDC, META, daoTreasury).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }), ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 })]).rpc();
       assert.fail("Should have thrown error");
     } catch (e) {
       assert.include(e.message, "InvalidLaunchState");

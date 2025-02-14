@@ -3,7 +3,10 @@ import { PublicKey, Keypair, AccountInfo } from "@solana/web3.js";
 import { Launchpad, IDL as LaunchpadIDL } from "./types/launchpad.js";
 import {
   LAUNCHPAD_PROGRAM_ID,
+  RAYDIUM_AUTHORITY,
+  RAYDIUM_CONFIG,
   RAYDIUM_CP_SWAP_PROGRAM_ID,
+  RAYDIUM_CREATE_POOL_FEE_RECEIVE,
 } from "./constants.js";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
@@ -11,8 +14,13 @@ import {
 } from "@solana/spl-token";
 import { BN } from "@coral-xyz/anchor";
 import { Launch } from "./types/index.js";
-import { getDaoTreasuryAddr, getLaunchAddr } from "./utils/pda.js";
+import {
+  getDaoTreasuryAddr,
+  getLaunchAddr,
+  getLaunchTreasuryAddr,
+} from "./utils/pda.js";
 import { AutocratClient } from "./AutocratClient.js";
+import * as anchor from "@coral-xyz/anchor";
 
 export type CreateLaunchpadClientParams = {
   provider: AnchorProvider;
@@ -71,8 +79,20 @@ export class LaunchpadClient {
     creator: PublicKey = this.provider.publicKey
   ) {
     const [launch] = getLaunchAddr(this.launchpad.programId, dao);
-    const usdcVault = getAssociatedTokenAddressSync(usdcMint, launch, true);
-    const tokenVault = getAssociatedTokenAddressSync(tokenMint, launch, true);
+    const [launchTreasury] = getLaunchTreasuryAddr(
+      this.launchpad.programId,
+      launch
+    );
+    const usdcVault = getAssociatedTokenAddressSync(
+      usdcMint,
+      launchTreasury,
+      true
+    );
+    const tokenVault = getAssociatedTokenAddressSync(
+      tokenMint,
+      launchTreasury,
+      true
+    );
     const [daoTreasury] = getDaoTreasuryAddr(
       this.autocratClient.getProgramId(),
       dao
@@ -89,6 +109,7 @@ export class LaunchpadClient {
       })
       .accounts({
         launch,
+        launchTreasury,
         usdcVault,
         tokenVault,
         daoTreasury,
@@ -101,14 +122,14 @@ export class LaunchpadClient {
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(
           creator,
-          getAssociatedTokenAddressSync(tokenMint, launch, true),
-          launch,
+          getAssociatedTokenAddressSync(tokenMint, launchTreasury, true),
+          launchTreasury,
           tokenMint
         ),
         createAssociatedTokenAccountIdempotentInstruction(
           creator,
-          getAssociatedTokenAddressSync(usdcMint, launch, true),
-          launch,
+          getAssociatedTokenAddressSync(usdcMint, launchTreasury, true),
+          launchTreasury,
           usdcMint
         ),
         createAssociatedTokenAccountIdempotentInstruction(
@@ -127,7 +148,15 @@ export class LaunchpadClient {
     tokenMint: PublicKey,
     funder: PublicKey = this.provider.publicKey
   ) {
-    const usdcVault = getAssociatedTokenAddressSync(usdcMint, launch, true);
+    const [launchTreasury] = getLaunchTreasuryAddr(
+      this.launchpad.programId,
+      launch
+    );
+    const usdcVault = getAssociatedTokenAddressSync(
+      usdcMint,
+      launchTreasury,
+      true
+    );
     const funderUsdcAccount = getAssociatedTokenAddressSync(usdcMint, funder);
     const funderTokenAccount = getAssociatedTokenAddressSync(tokenMint, funder);
 
@@ -144,20 +173,88 @@ export class LaunchpadClient {
   completeLaunchIx(
     launch: PublicKey,
     usdcMint: PublicKey,
+    tokenMint: PublicKey,
     daoTreasury: PublicKey
   ) {
-    const usdcVault = getAssociatedTokenAddressSync(usdcMint, launch, true);
+    const [launchTreasury] = getLaunchTreasuryAddr(
+      this.launchpad.programId,
+      launch
+    );
+    const launchUsdcVault = getAssociatedTokenAddressSync(
+      usdcMint,
+      launchTreasury,
+      true
+    );
+    const launchTokenVault = getAssociatedTokenAddressSync(
+      tokenMint,
+      launchTreasury,
+      true
+    );
     const treasuryUsdcAccount = getAssociatedTokenAddressSync(
       usdcMint,
       daoTreasury,
       true
     );
 
-    return this.launchpad.methods.completeLaunch().accounts({
-      launch,
-      usdcVault,
-      treasuryUsdcAccount,
-      cpSwapProgram: RAYDIUM_CP_SWAP_PROGRAM_ID,
-    });
+    const poolStateKp = Keypair.generate();
+
+    const [lpMint] = PublicKey.findProgramAddressSync(
+      [
+        anchor.utils.bytes.utf8.encode("pool_lp_mint"),
+        poolStateKp.publicKey.toBuffer(),
+      ],
+      RAYDIUM_CP_SWAP_PROGRAM_ID
+    );
+
+    const lpVault = getAssociatedTokenAddressSync(lpMint, launchTreasury, true);
+
+    const [poolTokenVault] = PublicKey.findProgramAddressSync(
+      [
+        anchor.utils.bytes.utf8.encode("pool_vault"),
+        poolStateKp.publicKey.toBuffer(),
+        tokenMint.toBuffer(),
+      ],
+      RAYDIUM_CP_SWAP_PROGRAM_ID
+    );
+
+    const [poolUsdcVault] = PublicKey.findProgramAddressSync(
+      [
+        anchor.utils.bytes.utf8.encode("pool_vault"),
+        poolStateKp.publicKey.toBuffer(),
+        usdcMint.toBuffer(),
+      ],
+      RAYDIUM_CP_SWAP_PROGRAM_ID
+    );
+
+    const [observationState] = PublicKey.findProgramAddressSync(
+      [
+        anchor.utils.bytes.utf8.encode("observation"),
+        poolStateKp.publicKey.toBuffer(),
+      ],
+      RAYDIUM_CP_SWAP_PROGRAM_ID
+    );
+
+    return this.launchpad.methods
+      .completeLaunch()
+      .accounts({
+        launch,
+        launchTreasury,
+        launchUsdcVault,
+        launchTokenVault,
+        usdcMint,
+        tokenMint,
+        lpMint,
+        lpVault,
+        poolTokenVault,
+        poolUsdcVault,
+        poolState: poolStateKp.publicKey,
+        observationState,
+        treasuryUsdcAccount,
+        cpSwapProgram: RAYDIUM_CP_SWAP_PROGRAM_ID,
+        authority: RAYDIUM_AUTHORITY,
+        ammConfig: RAYDIUM_CONFIG,
+        createPoolFee: RAYDIUM_CREATE_POOL_FEE_RECEIVE,
+      })
+      .signers([poolStateKp]);
   }
 }

@@ -1,4 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
+import * as anchor from "@coral-xyz/anchor";
 
 export const AUTOCRAT_PROGRAM_ID = new PublicKey(
   "autowMzCbM29YXMgVG3T62Hkgo7RcyrvgQQkd54fDQL"
@@ -31,4 +32,16 @@ export const AUTOCRAT_LUTS: PublicKey[] = [];
 
 export const LAUNCHPAD_PROGRAM_ID = new PublicKey(
   "AfJJJ5UqxhBKoE3grkKAZZsoXDE9kncbMKvqSHGsCNrE"
+);
+
+export const RAYDIUM_AUTHORITY = PublicKey.findProgramAddressSync(
+  [anchor.utils.bytes.utf8.encode("vault_and_lp_mint_auth_seed")],
+  RAYDIUM_CP_SWAP_PROGRAM_ID
+)[0];
+
+export const RAYDIUM_CONFIG = new PublicKey(
+  "D4FPEruKEHrG5TenZ2mpDGEfu1iUvTiqBxvpU8HLBvC2"
+);
+export const RAYDIUM_CREATE_POOL_FEE_RECEIVE = new PublicKey(
+  "DNXgeM9EiiaAbaWvwjHj9fQQLAX5ZsfHyvmYUNRAdNC8"
 );

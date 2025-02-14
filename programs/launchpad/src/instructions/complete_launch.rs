@@ -1,12 +1,12 @@
-use anchor_lang::prelude::*;
+use anchor_lang::Discriminator;
+use anchor_lang::{prelude::*, system_program};
 use anchor_spl::associated_token::AssociatedToken;
-use anchor_spl::token::{self, Token, TokenAccount, Transfer, Mint};
+use anchor_spl::token::{self, Mint, MintTo, Token, TokenAccount, Transfer};
 
-use crate::state::{Launch, LaunchState};
 use crate::error::LaunchpadError;
+use crate::state::{Launch, LaunchState};
 use raydium_cpmm_cpi::{
-    cpi,
-    instruction,
+    cpi, instruction,
     program::RaydiumCpmm,
     states::{AmmConfig, OBSERVATION_SEED, POOL_LP_MINT_SEED, POOL_VAULT_SEED},
 };
@@ -17,9 +17,18 @@ pub struct CompleteLaunch<'info> {
         mut,
         constraint = launch.state == LaunchState::Live @ LaunchpadError::InvalidLaunchState,
         has_one = treasury_usdc_account,
-        has_one = usdc_vault
+        has_one = launch_usdc_vault,
+        has_one = launch_token_vault,
+        has_one = launch_treasury,
     )]
     pub launch: Account<'info, Launch>,
+
+    #[account(mut)]
+    pub payer: Signer<'info>,
+
+    /// CHECK: just a signer
+    #[account(mut)]
+    pub launch_treasury: UncheckedAccount<'info>,
 
     /// CHECK: pool vault and lp mint authority
     #[account(
@@ -31,11 +40,19 @@ pub struct CompleteLaunch<'info> {
     )]
     pub authority: UncheckedAccount<'info>,
 
-    #[account(mut)]
-    pub creator: Signer<'info>,
+    #[account(
+        mut,
+        token::mint = usdc_mint,
+        token::authority = launch_treasury,
+    )]
+    pub launch_usdc_vault: Account<'info, TokenAccount>,
 
-    #[account(mut)]
-    pub usdc_vault: Account<'info, TokenAccount>,
+    #[account(
+        mut,
+        token::mint = token_mint,
+        token::authority = launch_treasury,
+    )]
+    pub launch_token_vault: Account<'info, TokenAccount>,
 
     #[account(mut)]
     pub treasury_usdc_account: Account<'info, TokenAccount>,
@@ -44,19 +61,15 @@ pub struct CompleteLaunch<'info> {
     pub amm_config: Box<Account<'info, AmmConfig>>,
 
     /// CHECK: Initialize an account to store the pool state, init by cp-swap
-    #[account(
-        mut,
-    )]  
+    #[account(mut)]
     pub pool_state: Signer<'info>,
 
     /// Token_0 mint, the key must smaller then token_1 mint.
-    #[account(
-        constraint = token_0_mint.key() < token_1_mint.key(),
-    )]
-    pub token_0_mint: Box<Account<'info, Mint>>,
+    #[account(mut)]
+    pub token_mint: Box<Account<'info, Mint>>,
 
     /// Token_1 mint, the key must grater then token_0 mint.
-    pub token_1_mint: Box<Account<'info, Mint>>,
+    pub usdc_mint: Box<Account<'info, Mint>>,
 
     /// CHECK: pool lp mint, init by cp-swap
     #[account(
@@ -70,25 +83,9 @@ pub struct CompleteLaunch<'info> {
     )]
     pub lp_mint: UncheckedAccount<'info>,
 
-    /// payer token0 account
-    #[account(
-        mut,
-        token::mint = token_0_mint,
-        token::authority = creator,
-    )]
-    pub creator_token_0: Box<Account<'info, TokenAccount>>,
-
-    /// creator token1 account
-    #[account(
-        mut,
-        token::mint = token_1_mint,
-        token::authority = creator,
-    )]
-    pub creator_token_1: Box<Account<'info, TokenAccount>>,
-
     /// CHECK: creator lp ATA token account, init by cp-swap
     #[account(mut)]
-    pub creator_lp_token: UncheckedAccount<'info>,
+    pub lp_vault: UncheckedAccount<'info>,
 
     /// CHECK: Token_0 vault for the pool, init by cp-swap
     #[account(
@@ -96,12 +93,12 @@ pub struct CompleteLaunch<'info> {
         seeds = [
             POOL_VAULT_SEED.as_bytes(),
             pool_state.key().as_ref(),
-            token_0_mint.key().as_ref()
+            token_mint.key().as_ref()
         ],
         seeds::program = cp_swap_program,
         bump,
     )]
-    pub token_0_vault: UncheckedAccount<'info>,
+    pub pool_token_vault: UncheckedAccount<'info>,
 
     /// CHECK: Token_1 vault for the pool, init by cp-swap
     #[account(
@@ -109,12 +106,12 @@ pub struct CompleteLaunch<'info> {
         seeds = [
             POOL_VAULT_SEED.as_bytes(),
             pool_state.key().as_ref(),
-            token_1_mint.key().as_ref()
+            usdc_mint.key().as_ref()
         ],
         seeds::program = cp_swap_program,
         bump,
     )]
-    pub token_1_vault: UncheckedAccount<'info>,
+    pub pool_usdc_vault: UncheckedAccount<'info>,
 
     /// create pool fee account
     #[account(
@@ -145,7 +142,7 @@ pub struct CompleteLaunch<'info> {
 impl CompleteLaunch<'_> {
     pub fn validate(&self) -> Result<()> {
         let clock = Clock::get()?;
-        
+
         // 7 days in slots (assuming 400ms per slot)
         const SLOTS_PER_DAY: u64 = 216_000; // (24 * 60 * 60 * 1000) / 400
         const REQUIRED_SLOTS: u64 = SLOTS_PER_DAY * 5;
@@ -161,29 +158,62 @@ impl CompleteLaunch<'_> {
     pub fn handle(ctx: Context<Self>) -> Result<()> {
         let launch = &mut ctx.accounts.launch;
 
-        let launch_usdc_balance = ctx.accounts.usdc_vault.amount;
+        let launch_usdc_balance = ctx.accounts.launch_usdc_vault.amount;
 
         if launch_usdc_balance >= launch.minimum_raise_amount {
-            // Transfer USDC to DAO treasury
-            let seeds = &[
-                b"launch",
-                launch.dao.as_ref(),
-                &[launch.pda_bump],
-            ];
-            let signer = &[&seeds[..]];
-
             let usdc_to_lp = launch_usdc_balance.saturating_div(10);
             let usdc_to_dao = launch_usdc_balance.saturating_sub(usdc_to_lp);
-
             let token_to_lp = usdc_to_lp.saturating_mul(10_000);
+
+            let dao_key = launch.dao;
+
+            let seeds = &[b"launch", dao_key.as_ref(), &[launch.pda_bump]];
+            let signer = &[&seeds[..]];
+
+            token::mint_to(
+                CpiContext::new_with_signer(
+                    ctx.accounts.token_program.to_account_info(),
+                    MintTo {
+                        mint: ctx.accounts.token_mint.to_account_info(),
+                        to: ctx.accounts.launch_token_vault.to_account_info(),
+                        authority: launch.to_account_info(),
+                    },
+                    signer,
+                ),
+                token_to_lp,
+            )?;
+
+            system_program::transfer(
+                CpiContext::new(
+                    ctx.accounts.system_program.to_account_info(),
+                    system_program::Transfer {
+                        from: ctx.accounts.payer.to_account_info(),
+                        to: ctx.accounts.launch_treasury.to_account_info(),
+                    },
+                ),
+                10_000_000_000,
+            )?;
+            msg!("payer: {}", ctx.accounts.payer.key());
+
+
+            let launch = &mut ctx.accounts.launch;
+
+            let launch_key = launch.key();
+
+            let seeds = &[
+                b"launch_treasury",
+                launch_key.as_ref(),
+                &[launch.launch_treasury_pda_bump],
+            ];
+            let signer = &[&seeds[..]];
 
             token::transfer(
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
                     Transfer {
-                        from: ctx.accounts.usdc_vault.to_account_info(),
+                        from: ctx.accounts.launch_usdc_vault.to_account_info(),
                         to: ctx.accounts.treasury_usdc_account.to_account_info(),
-                        authority: launch.to_account_info(),
+                        authority: ctx.accounts.launch_treasury.to_account_info(),
                     },
                     signer,
                 ),
@@ -191,18 +221,18 @@ impl CompleteLaunch<'_> {
             )?;
 
             let cpi_accounts = cpi::accounts::Initialize {
-                creator: ctx.accounts.creator.to_account_info(),
+                creator: ctx.accounts.launch_treasury.to_account_info(),
                 amm_config: ctx.accounts.amm_config.to_account_info(),
                 authority: ctx.accounts.authority.to_account_info(),
                 pool_state: ctx.accounts.pool_state.to_account_info(),
-                token_0_mint: ctx.accounts.token_0_mint.to_account_info(),
-                token_1_mint: ctx.accounts.token_1_mint.to_account_info(),
+                token_0_mint: ctx.accounts.token_mint.to_account_info(),
+                token_1_mint: ctx.accounts.usdc_mint.to_account_info(),
                 lp_mint: ctx.accounts.lp_mint.to_account_info(),
-                creator_token_0: ctx.accounts.creator_token_0.to_account_info(),
-                creator_token_1: ctx.accounts.creator_token_1.to_account_info(),
-                creator_lp_token: ctx.accounts.creator_lp_token.to_account_info(),
-                token_0_vault: ctx.accounts.token_0_vault.to_account_info(),
-                token_1_vault: ctx.accounts.token_1_vault.to_account_info(),
+                creator_token_0: ctx.accounts.launch_token_vault.to_account_info(),
+                creator_token_1: ctx.accounts.launch_usdc_vault.to_account_info(),
+                creator_lp_token: ctx.accounts.lp_vault.to_account_info(),
+                token_0_vault: ctx.accounts.pool_token_vault.to_account_info(),
+                token_1_vault: ctx.accounts.pool_usdc_vault.to_account_info(),
                 create_pool_fee: ctx.accounts.create_pool_fee.to_account_info(),
                 observation_state: ctx.accounts.observation_state.to_account_info(),
                 token_program: ctx.accounts.token_program.to_account_info(),
@@ -212,10 +242,33 @@ impl CompleteLaunch<'_> {
                 system_program: ctx.accounts.system_program.to_account_info(),
                 rent: ctx.accounts.rent.to_account_info(),
             };
-            let cpi_context = CpiContext::new(ctx.accounts.cp_swap_program.to_account_info(), cpi_accounts);
-            cpi::initialize(cpi_context, 1, 1, 0)?;
 
+            let ix = instruction::Initialize {
+                init_amount_0: token_to_lp,
+                init_amount_1: usdc_to_lp,
+                open_time: 0,
+            };
+            let mut ix_data = Vec::with_capacity(256);
+            ix_data.extend_from_slice(&instruction::Initialize::discriminator());
+            AnchorSerialize::serialize(&ix, &mut ix_data)?;
 
+            let ix = solana_program::instruction::Instruction {
+                program_id: ctx.accounts.cp_swap_program.key(),
+                accounts: cpi_accounts
+                    .to_account_metas(None)
+                    .into_iter()
+                    .zip(cpi_accounts.to_account_infos())
+                    .map(|mut pair| {
+                        pair.0.is_signer = pair.1.is_signer;
+                        if pair.0.pubkey == ctx.accounts.launch_treasury.key() {
+                            pair.0.is_signer = true;
+                        }
+                        pair.0
+                    })
+                    .collect(),
+                data: ix_data,
+            };
+            solana_program::program::invoke_signed(&ix, &cpi_accounts.to_account_infos(), signer)?;
 
             launch.state = LaunchState::Complete;
         } else {
@@ -224,4 +277,4 @@ impl CompleteLaunch<'_> {
 
         Ok(())
     }
-} 
+}

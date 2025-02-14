@@ -11,6 +11,7 @@ import {
   AutocratClient,
   ConditionalVaultClient,
   LaunchpadClient,
+  RAYDIUM_CREATE_POOL_FEE_RECEIVE,
 } from "@metadaoproject/futarchy/v0.4";
 // import {
 //   // AmmClient,
@@ -31,6 +32,8 @@ import * as token from "@solana/spl-token";
 import { assert } from "chai";
 import { MPL_TOKEN_METADATA_PROGRAM_ID as UMI_MPL_TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
 import { toWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
+import * as fs from "fs";
+import { RAYDIUM_CONFIG } from "@metadaoproject/futarchy/v0.4";
 
 const MPL_TOKEN_METADATA_PROGRAM_ID = toWeb3JsPublicKey(
   UMI_MPL_TOKEN_METADATA_PROGRAM_ID
@@ -48,7 +51,6 @@ before(async function () {
 
   this.context = await startAnchor(
     "./",
-    // [],
     [
       // even though the program is loaded into the test validator, we need
       // to tell banks test client to load it as well
@@ -61,7 +63,26 @@ before(async function () {
         programId: RAYDIUM_CP_SWAP_PROGRAM_ID,
       }
     ],
-    []
+    [
+      {
+        address: RAYDIUM_CONFIG,
+        info: {
+          data: fs.readFileSync("./tests/fixtures/raydium-amm-config"),
+          executable: false,
+          owner: RAYDIUM_CP_SWAP_PROGRAM_ID,
+          lamports: 1_000_000_000,
+        }
+      },
+      {
+        address: RAYDIUM_CREATE_POOL_FEE_RECEIVE,
+        info: {
+          data: fs.readFileSync("./tests/fixtures/raydium-create-pool-fee-receive"),
+          executable: false,
+          owner: token.TOKEN_PROGRAM_ID,
+          lamports: 6858_402_039_280
+        }
+      }
+    ]
   );
   this.banksClient = this.context.banksClient;
   let provider = new BankrunProvider(this.context);
