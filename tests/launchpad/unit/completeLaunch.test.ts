@@ -156,7 +156,8 @@ export default function suite() {
 
     // Try to complete again
     try {
-      await launchpadClient.completeLaunchIx(launch, USDC, daoTreasury).rpc();
+      // CU price so that the VM doesn't think it's a duplicate tx
+      await launchpadClient.completeLaunchIx(launch, USDC, daoTreasury).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 })]).rpc();
       assert.fail("Should have thrown error");
     } catch (e) {
       assert.include(e.message, "InvalidLaunchState");
