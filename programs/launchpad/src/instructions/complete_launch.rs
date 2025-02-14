@@ -11,7 +11,9 @@ use raydium_cpmm_cpi::{
     program::RaydiumCpmm,
     states::{AmmConfig, OBSERVATION_SEED, POOL_LP_MINT_SEED, POOL_VAULT_SEED},
 };
+use crate::events::{LaunchCompletedEvent, CommonFields};
 
+#[event_cpi]
 #[derive(Accounts)]
 pub struct CompleteLaunch<'info> {
     #[account(
@@ -199,7 +201,6 @@ impl CompleteLaunch<'_> {
                 3_000_000_000,
             )?;
 
-            let launch = &mut ctx.accounts.launch;
 
             let launch_key = launch.key();
 
@@ -310,6 +311,14 @@ impl CompleteLaunch<'_> {
         } else {
             launch.state = LaunchState::Refunding;
         }
+
+        let clock = Clock::get()?;
+        emit_cpi!(LaunchCompletedEvent {
+            common: CommonFields::new(&clock),
+            launch: launch.key(),
+            final_state: launch.state,
+            total_committed: launch.committed_amount,
+        });
 
         Ok(())
     }

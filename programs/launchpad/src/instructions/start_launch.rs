@@ -1,7 +1,9 @@
 use anchor_lang::prelude::*;
 use crate::state::{Launch, LaunchState};
 use crate::error::LaunchpadError;
+use crate::events::{LaunchStartedEvent, CommonFields};
 
+#[event_cpi]
 #[derive(Accounts)]
 pub struct StartLaunch<'info> {
     #[account(
@@ -29,6 +31,13 @@ impl StartLaunch<'_> {
 
         launch.state = LaunchState::Live;
         launch.slot_started = clock.slot;
+
+        emit_cpi!(LaunchStartedEvent {
+            common: CommonFields::new(&clock),
+            launch: ctx.accounts.launch.key(),
+            creator: ctx.accounts.creator.key(),
+            slot_started: clock.slot,
+        });
 
         Ok(())
     }

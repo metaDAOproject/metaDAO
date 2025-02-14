@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use crate::state::LaunchState;
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct CommonFields {
@@ -25,4 +26,38 @@ pub struct LaunchInitializedEvent {
     pub creator: Pubkey,
     pub usdc_mint: Pubkey,
     pub pda_bump: u8,
+}
+
+#[event]
+pub struct LaunchStartedEvent {
+    pub common: CommonFields,
+    pub launch: Pubkey,
+    pub creator: Pubkey,
+    pub slot_started: u64,
+}
+
+#[event]
+pub struct LaunchFundedEvent {
+    pub common: CommonFields,
+    pub launch: Pubkey,
+    pub funder: Pubkey,
+    pub amount: u64,
+    pub total_committed: u64,
+}
+
+#[event]
+pub struct LaunchCompletedEvent {
+    pub common: CommonFields,
+    pub launch: Pubkey,
+    pub final_state: LaunchState,
+    pub total_committed: u64,
+}
+
+#[event]
+pub struct LaunchRefundedEvent {
+    pub common: CommonFields,
+    pub launch: Pubkey,
+    pub funder: Pubkey,
+    pub usdc_refunded: u64,
+    pub tokens_burned: u64,
 }

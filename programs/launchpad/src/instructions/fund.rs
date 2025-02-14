@@ -4,7 +4,9 @@ use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer, MintTo};
 use crate::state::{Launch, LaunchState};
 use crate::error::LaunchpadError;
 use crate::TOKENS_PER_USDC;
+use crate::events::{LaunchFundedEvent, CommonFields};
 
+#[event_cpi]
 #[derive(Accounts)]
 pub struct Fund<'info> {
     #[account(
@@ -85,6 +87,15 @@ impl Fund<'_> {
 
         // Update committed amount
         ctx.accounts.launch.committed_amount += amount;
+
+        let clock = Clock::get()?;
+        emit_cpi!(LaunchFundedEvent {
+            common: CommonFields::new(&clock),
+            launch: ctx.accounts.launch.key(),
+            funder: ctx.accounts.funder.key(),
+            amount,
+            total_committed: ctx.accounts.launch.committed_amount,
+        });
 
         Ok(())
     }

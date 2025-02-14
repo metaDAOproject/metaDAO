@@ -106,6 +106,16 @@ export type Launchpad = {
           name: "creator";
           isMut: false;
           isSigner: true;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
         }
       ];
       args: [];
@@ -145,6 +155,16 @@ export type Launchpad = {
         },
         {
           name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
           isMut: false;
           isSigner: false;
         }
@@ -272,6 +292,16 @@ export type Launchpad = {
           name: "rent";
           isMut: false;
           isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
         }
       ];
       args: [];
@@ -316,6 +346,16 @@ export type Launchpad = {
         },
         {
           name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
           isMut: false;
           isSigner: false;
         }
@@ -520,6 +560,126 @@ export type Launchpad = {
           index: false;
         }
       ];
+    },
+    {
+      name: "LaunchStartedEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "launch";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "creator";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "slotStarted";
+          type: "u64";
+          index: false;
+        }
+      ];
+    },
+    {
+      name: "LaunchFundedEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "launch";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "funder";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "amount";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "totalCommitted";
+          type: "u64";
+          index: false;
+        }
+      ];
+    },
+    {
+      name: "LaunchCompletedEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "launch";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "finalState";
+          type: {
+            defined: "LaunchState";
+          };
+          index: false;
+        },
+        {
+          name: "totalCommitted";
+          type: "u64";
+          index: false;
+        }
+      ];
+    },
+    {
+      name: "LaunchRefundedEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "launch";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "funder";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "usdcRefunded";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "tokensBurned";
+          type: "u64";
+          index: false;
+        }
+      ];
     }
   ];
   errors: [
@@ -665,6 +825,16 @@ export const IDL: Launchpad = {
           isMut: false,
           isSigner: true,
         },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
       ],
       args: [],
     },
@@ -703,6 +873,16 @@ export const IDL: Launchpad = {
         },
         {
           name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
           isMut: false,
           isSigner: false,
         },
@@ -831,6 +1011,16 @@ export const IDL: Launchpad = {
           isMut: false,
           isSigner: false,
         },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
       ],
       args: [],
     },
@@ -874,6 +1064,16 @@ export const IDL: Launchpad = {
         },
         {
           name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
           isMut: false,
           isSigner: false,
         },
@@ -1075,6 +1275,126 @@ export const IDL: Launchpad = {
         {
           name: "pdaBump",
           type: "u8",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "LaunchStartedEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "launch",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "creator",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "slotStarted",
+          type: "u64",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "LaunchFundedEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "launch",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "funder",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "amount",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "totalCommitted",
+          type: "u64",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "LaunchCompletedEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "launch",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "finalState",
+          type: {
+            defined: "LaunchState",
+          },
+          index: false,
+        },
+        {
+          name: "totalCommitted",
+          type: "u64",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "LaunchRefundedEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "launch",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "funder",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "usdcRefunded",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "tokensBurned",
+          type: "u64",
           index: false,
         },
       ],

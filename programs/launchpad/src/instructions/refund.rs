@@ -4,7 +4,9 @@ use anchor_spl::token::{self, Token, TokenAccount, Transfer, Burn, Mint};
 use crate::state::{Launch, LaunchState};
 use crate::error::LaunchpadError;
 use crate::TOKENS_PER_USDC;
+use crate::events::{LaunchRefundedEvent, CommonFields};
 
+#[event_cpi]
 #[derive(Accounts)]
 pub struct Refund<'info> {
     #[account(
@@ -84,6 +86,15 @@ impl Refund<'_> {
             ),
             user_token_balance,
         )?;
+
+        let clock = Clock::get()?;
+        emit_cpi!(LaunchRefundedEvent {
+            common: CommonFields::new(&clock),
+            launch: ctx.accounts.launch.key(),
+            funder: ctx.accounts.funder.key(),
+            usdc_refunded: user_token_balance.saturating_div(TOKENS_PER_USDC),
+            tokens_burned: user_token_balance,
+        });
 
         Ok(())
     }
