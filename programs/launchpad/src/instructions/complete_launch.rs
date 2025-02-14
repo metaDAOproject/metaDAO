@@ -3,6 +3,7 @@ use anchor_lang::{prelude::*, system_program};
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{self, Mint, MintTo, Token, TokenAccount, Transfer};
 
+use crate::TOKENS_PER_USDC;
 use crate::error::LaunchpadError;
 use crate::state::{Launch, LaunchState};
 use raydium_cpmm_cpi::{
@@ -163,7 +164,7 @@ impl CompleteLaunch<'_> {
         if launch_usdc_balance >= launch.minimum_raise_amount {
             let usdc_to_lp = launch_usdc_balance.saturating_div(10);
             let usdc_to_dao = launch_usdc_balance.saturating_sub(usdc_to_lp);
-            let token_to_lp = usdc_to_lp.saturating_mul(10_000);
+            let token_to_lp = usdc_to_lp.saturating_mul(TOKENS_PER_USDC);
 
             let dao_key = launch.dao;
 

@@ -3,6 +3,7 @@ use anchor_spl::token::{self, Token, TokenAccount, Transfer, Burn, Mint};
 
 use crate::state::{Launch, LaunchState};
 use crate::error::LaunchpadError;
+use crate::TOKENS_PER_USDC;
 
 #[derive(Accounts)]
 pub struct Refund<'info> {
@@ -68,7 +69,7 @@ impl Refund<'_> {
                 },
                 signer,
             ),
-            user_token_balance / 10_000,
+            user_token_balance.saturating_div(TOKENS_PER_USDC),
         )?;
 
         // Burn tokens

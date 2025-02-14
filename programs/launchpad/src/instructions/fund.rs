@@ -3,6 +3,7 @@ use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer, MintTo};
 
 use crate::state::{Launch, LaunchState};
 use crate::error::LaunchpadError;
+use crate::TOKENS_PER_USDC;
 
 #[derive(Accounts)]
 pub struct Fund<'info> {
@@ -58,7 +59,7 @@ impl Fund<'_> {
         // Transfer tokens from vault to funder (10,000 * USDC amount)
         // We don't need to worry about decimals because both USDC and token
         // have 6 decimals
-        let token_amount = amount * 10_000;
+        let token_amount = amount * TOKENS_PER_USDC;
 
         let dao_key = ctx.accounts.launch.dao;
 

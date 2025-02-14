@@ -3,7 +3,6 @@ export type Launchpad = {
   name: "launchpad";
   docs: [
     "TODO:",
-    "- Add a `refund` instruction that allows funders to get their USDC back if the launch fails",
     "- Add a `start_launch` instruction that allows the creator to start the launch",
     "- Make it 1,000 tokens per USDC rather than 10,000",
     "- Test on devnet"
@@ -538,7 +537,6 @@ export const IDL: Launchpad = {
   name: "launchpad",
   docs: [
     "TODO:",
-    "- Add a `refund` instruction that allows funders to get their USDC back if the launch fails",
     "- Add a `start_launch` instruction that allows the creator to start the launch",
     "- Make it 1,000 tokens per USDC rather than 10,000",
     "- Test on devnet",

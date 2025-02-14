@@ -91,6 +91,6 @@ export default function suite() {
     assert.equal(usdcVaultAccount.amount.toString(), fundAmount.toString());
 
     const storedFunderTokenAccount = await getAccount(this.banksClient, funderTokenAccount);
-    assert.equal(storedFunderTokenAccount.amount.toString(), fundAmount.muln(10_000).toString());
+    assert.equal(storedFunderTokenAccount.amount.toString(), fundAmount.muln(1_000).toString());
   });
 } 
