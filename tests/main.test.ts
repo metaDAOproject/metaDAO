@@ -3,7 +3,7 @@ import amm from "./amm/main.test.js";
 import autocrat from "./autocrat/autocrat.js";
 import launchpad from "./launchpad/main.test.js";
 
-import { startAnchor } from "solana-bankrun";
+import { Clock, startAnchor } from "solana-bankrun";
 import { BankrunProvider } from "anchor-bankrun";
 import * as anchor from "@coral-xyz/anchor";
 import {
@@ -143,6 +143,22 @@ before(async function () {
       amount
     );
   };
+
+  this.advanceBySlots = async (
+    slots: bigint
+  ) => {
+    const currentClock = await this.context.banksClient.getClock();
+    this.context.setClock(
+      new Clock(
+        currentClock.slot + slots,
+        currentClock.epochStartTimestamp,
+        currentClock.epoch,
+        currentClock.leaderScheduleEpoch,
+        50n
+      )
+    );
+  };
+
 });
 
 describe("conditional_vault", conditionalVault);

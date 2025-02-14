@@ -230,6 +230,10 @@ export type Launchpad = {
             type: {
               defined: "LaunchState";
             };
+          },
+          {
+            name: "slotInitialized";
+            type: "u64";
           }
         ];
       };
@@ -346,6 +350,11 @@ export type Launchpad = {
       code: 6002;
       name: "InvalidLaunchState";
       msg: "Invalid launch state";
+    },
+    {
+      code: 6003;
+      name: "LaunchPeriodNotOver";
+      msg: "Launch period not over";
     }
   ];
 };
@@ -583,6 +592,10 @@ export const IDL: Launchpad = {
               defined: "LaunchState",
             },
           },
+          {
+            name: "slotInitialized",
+            type: "u64",
+          },
         ],
       },
     },
@@ -698,6 +711,11 @@ export const IDL: Launchpad = {
       code: 6002,
       name: "InvalidLaunchState",
       msg: "Invalid launch state",
+    },
+    {
+      code: 6003,
+      name: "LaunchPeriodNotOver",
+      msg: "Launch period not over",
     },
   ],
 };

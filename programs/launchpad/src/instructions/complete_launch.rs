@@ -25,6 +25,17 @@ pub struct CompleteLaunch<'info> {
 
 impl CompleteLaunch<'_> {
     pub fn validate(&self) -> Result<()> {
+        let clock = Clock::get()?;
+        
+        // 7 days in slots (assuming 400ms per slot)
+        const SLOTS_PER_DAY: u64 = 216_000; // (24 * 60 * 60 * 1000) / 400
+        const REQUIRED_SLOTS: u64 = SLOTS_PER_DAY * 5;
+
+        require!(
+            clock.slot >= self.launch.slot_initialized.saturating_add(REQUIRED_SLOTS),
+            LaunchpadError::LaunchPeriodNotOver
+        );
+
         Ok(())
     }
 

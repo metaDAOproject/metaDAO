@@ -85,6 +85,7 @@ impl InitializeLaunch<'_> {
         ctx: Context<Self>,
         args: InitializeLaunchArgs,
     ) -> Result<()> {
+        let clock = Clock::get()?;
         let (dao_treasury, _) = Pubkey::find_program_address(
             &[ctx.accounts.dao.key().as_ref()],
             &AUTOCRAT_PROGRAM_ID
@@ -102,6 +103,7 @@ impl InitializeLaunch<'_> {
             pda_bump: ctx.bumps.launch,
             seq_num: 0,
             state: LaunchState::Live,
+            slot_initialized: clock.slot,
         });
 
         let clock = Clock::get()?;

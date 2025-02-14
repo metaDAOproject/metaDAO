@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3.js";
+import { ComputeBudgetProgram, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import {
   AutocratClient,
@@ -21,6 +21,7 @@ export default function suite() {
   let treasuryUsdcAccount: PublicKey;
 
   const minRaise = new BN(1000_000000); // 1000 USDC
+  const SLOTS_PER_DAY = 216_000n; // (24 * 60 * 60 * 1000) / 400
 
   before(async function () {
     autocratClient = this.autocratClient;
@@ -61,11 +62,10 @@ export default function suite() {
     ]).rpc();
   });
 
-  it("completes launch successfully when minimum raise is met", async function () {
+  it("completes launch successfully when minimum raise is met and time has passed", async function () {
     // Fund the launch with exactly minimum raise
     const userUsdcAccount = await this.createTokenAccount(USDC, this.payer.publicKey);
     const userTokenAccount = await this.createTokenAccount(META, this.payer.publicKey);
-    // await this.mintTo(USDC, userUsdcAccount, this.payer, minRaise.toNumber());
     await this.mintTo(USDC, this.payer.publicKey, this.payer, minRaise.toNumber());
 
     await launchpadClient.fundIx(
@@ -74,6 +74,9 @@ export default function suite() {
       USDC,
       META
     ).rpc();
+
+    // Advance clock past 7 days
+    await this.advanceBySlots(SLOTS_PER_DAY * 7n);
 
     // Complete the launch
     await launchpadClient.completeLaunchIx(launch, USDC, daoTreasury).rpc();
@@ -85,7 +88,39 @@ export default function suite() {
     assert.equal(treasuryBalance.toString(), minRaise.toString());
   });
 
-  it("moves to refunding state when minimum raise is not met", async function () {
+  it("fails when launch period has not passed", async function () {
+    // Fund the launch with exactly minimum raise
+    const userUsdcAccount = await this.createTokenAccount(USDC, this.payer.publicKey);
+    const userTokenAccount = await this.createTokenAccount(META, this.payer.publicKey);
+    await this.mintTo(USDC, this.payer.publicKey, this.payer, minRaise.toNumber());
+
+    await launchpadClient.fundIx(
+      launch,
+      minRaise,
+      USDC,
+      META
+    ).rpc();
+
+    // Try to complete immediately (should fail)
+    try {
+      await launchpadClient.completeLaunchIx(launch, USDC, daoTreasury).rpc();
+      assert.fail("Should have thrown error");
+    } catch (e) {
+      assert.include(e.message, "LaunchPeriodNotOver");
+    }
+
+    // Advance by 6 days (still not enough)
+    await this.advanceBySlots(SLOTS_PER_DAY * 3n);
+
+    try {
+      await launchpadClient.completeLaunchIx(launch, USDC, daoTreasury).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 })]).rpc();
+      assert.fail("Should have thrown error");
+    } catch (e) {
+      assert.include(e.message, "LaunchPeriodNotOver");
+    }
+  });
+
+  it("moves to refunding state when minimum raise is not met after period", async function () {
     // Fund the launch with less than minimum raise
     const userUsdcAccount = await this.createTokenAccount(USDC, this.payer.publicKey);
     const userTokenAccount = await this.createTokenAccount(META, this.payer.publicKey);
@@ -99,6 +134,9 @@ export default function suite() {
       META
     ).rpc();
 
+    // Advance clock past 7 days
+    await this.advanceBySlots(SLOTS_PER_DAY * 7n);
+
     // Complete the launch
     await launchpadClient.completeLaunchIx(launch, USDC, daoTreasury).rpc();
 
@@ -110,6 +148,9 @@ export default function suite() {
   });
 
   it("fails when launch is not in live state", async function () {
+    // Advance clock past 7 days
+    await this.advanceBySlots(SLOTS_PER_DAY * 7n);
+
     // Complete launch first time
     await launchpadClient.completeLaunchIx(launch, USDC, daoTreasury).rpc();
 

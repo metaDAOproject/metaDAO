@@ -8,4 +8,6 @@ pub enum LaunchpadError {
     SupplyNonZero,
     #[msg("Invalid launch state")]
     InvalidLaunchState,
+    #[msg("Launch period not over")]
+    LaunchPeriodNotOver,
 } 
