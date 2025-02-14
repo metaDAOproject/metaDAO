@@ -193,8 +193,6 @@ impl CompleteLaunch<'_> {
                 ),
                 10_000_000_000,
             )?;
-            msg!("payer: {}", ctx.accounts.payer.key());
-
 
             let launch = &mut ctx.accounts.launch;
 
@@ -220,19 +218,40 @@ impl CompleteLaunch<'_> {
                 usdc_to_dao,
             )?;
 
+            let (
+                token_0_mint,
+                token_1_mint,
+                token_0_vault,
+                token_1_vault,
+                creator_token_0,
+                creator_token_1,
+            ) = if ctx.accounts.token_mint.key() < ctx.accounts.usdc_mint.key() {
+                (
+                    ctx.accounts.token_mint.to_account_info(),
+                    ctx.accounts.usdc_mint.to_account_info(),
+                    ctx.accounts.pool_token_vault.to_account_info(),
+                    ctx.accounts.pool_usdc_vault.to_account_info(),
+                    ctx.accounts.launch_token_vault.to_account_info(),
+                    ctx.accounts.launch_usdc_vault.to_account_info(),
+                )
+            } else {
+                (
+                    ctx.accounts.usdc_mint.to_account_info(),
+                    ctx.accounts.token_mint.to_account_info(),
+                    ctx.accounts.pool_usdc_vault.to_account_info(),
+                    ctx.accounts.pool_token_vault.to_account_info(),
+                    ctx.accounts.launch_usdc_vault.to_account_info(),
+                    ctx.accounts.launch_token_vault.to_account_info(),
+                )
+            };
+
             let cpi_accounts = cpi::accounts::Initialize {
                 creator: ctx.accounts.launch_treasury.to_account_info(),
                 amm_config: ctx.accounts.amm_config.to_account_info(),
                 authority: ctx.accounts.authority.to_account_info(),
                 pool_state: ctx.accounts.pool_state.to_account_info(),
-                token_0_mint: ctx.accounts.token_mint.to_account_info(),
-                token_1_mint: ctx.accounts.usdc_mint.to_account_info(),
                 lp_mint: ctx.accounts.lp_mint.to_account_info(),
-                creator_token_0: ctx.accounts.launch_token_vault.to_account_info(),
-                creator_token_1: ctx.accounts.launch_usdc_vault.to_account_info(),
                 creator_lp_token: ctx.accounts.lp_vault.to_account_info(),
-                token_0_vault: ctx.accounts.pool_token_vault.to_account_info(),
-                token_1_vault: ctx.accounts.pool_usdc_vault.to_account_info(),
                 create_pool_fee: ctx.accounts.create_pool_fee.to_account_info(),
                 observation_state: ctx.accounts.observation_state.to_account_info(),
                 token_program: ctx.accounts.token_program.to_account_info(),
@@ -241,6 +260,12 @@ impl CompleteLaunch<'_> {
                 associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
                 system_program: ctx.accounts.system_program.to_account_info(),
                 rent: ctx.accounts.rent.to_account_info(),
+                token_0_mint,
+                token_1_mint,
+                token_0_vault,
+                token_1_vault,
+                creator_token_0,
+                creator_token_1,
             };
 
             let ix = instruction::Initialize {
