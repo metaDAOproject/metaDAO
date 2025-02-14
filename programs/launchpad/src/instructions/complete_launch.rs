@@ -3,6 +3,12 @@ use anchor_spl::token::{self, Token, TokenAccount, Transfer};
 
 use crate::state::{Launch, LaunchState};
 use crate::error::LaunchpadError;
+use raydium_cpmm_cpi::{
+    cpi,
+    instruction,
+    program::RaydiumCpmm,
+    states::{AmmConfig, OBSERVATION_SEED, POOL_LP_MINT_SEED, POOL_VAULT_SEED},
+};
 
 #[derive(Accounts)]
 pub struct CompleteLaunch<'info> {
@@ -20,6 +26,7 @@ pub struct CompleteLaunch<'info> {
     #[account(mut)]
     pub treasury_usdc_account: Account<'info, TokenAccount>,
 
+    pub cp_swap_program: Program<'info, RaydiumCpmm>,
     pub token_program: Program<'info, Token>,
 }
 
@@ -42,7 +49,9 @@ impl CompleteLaunch<'_> {
     pub fn handle(ctx: Context<Self>) -> Result<()> {
         let launch = &mut ctx.accounts.launch;
 
-        if launch.committed_amount >= launch.minimum_raise_amount {
+        let treasury_usdc_balance = ctx.accounts.treasury_usdc_account.amount;
+
+        if treasury_usdc_balance >= launch.minimum_raise_amount {
             // Transfer USDC to DAO treasury
             let seeds = &[
                 b"launch",
@@ -50,6 +59,11 @@ impl CompleteLaunch<'_> {
                 &[launch.pda_bump],
             ];
             let signer = &[&seeds[..]];
+
+            let usdc_to_lp = treasury_usdc_balance.saturating_div(10);
+            let usdc_to_dao = treasury_usdc_balance.saturating_sub(usdc_to_lp);
+
+            let token_to_lp = usdc_to_lp.saturating_mul(10_000);
 
             token::transfer(
                 CpiContext::new_with_signer(
@@ -61,8 +75,10 @@ impl CompleteLaunch<'_> {
                     },
                     signer,
                 ),
-                launch.committed_amount,
+                usdc_to_dao,
             )?;
+
+
 
             launch.state = LaunchState::Complete;
         } else {

@@ -35,6 +35,7 @@ import { toWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
 const MPL_TOKEN_METADATA_PROGRAM_ID = toWeb3JsPublicKey(
   UMI_MPL_TOKEN_METADATA_PROGRAM_ID
 );
+const RAYDIUM_CP_SWAP_PROGRAM_ID = new PublicKey("CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C");
 
 import mintAndSwap from "./integration/mintAndSwap.test.js";
 import scalarMarkets from "./integration/scalarMarkets.test.js";
@@ -55,6 +56,10 @@ before(async function () {
         name: "mpl_token_metadata",
         programId: MPL_TOKEN_METADATA_PROGRAM_ID,
       },
+      {
+        name: "raydium_cp_swap",
+        programId: RAYDIUM_CP_SWAP_PROGRAM_ID,
+      }
     ],
     []
   );
