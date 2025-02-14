@@ -14,6 +14,10 @@ export const MPL_TOKEN_METADATA_PROGRAM_ID = new PublicKey(
   "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
 );
 
+export const RAYDIUM_CP_SWAP_PROGRAM_ID = new PublicKey(
+  "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C"
+);
+
 export const META_MINT = new PublicKey(
   "3gN1WVEJwSHNWjo7hr87DgZp6zkf8kWgAJD29DmfE2Gr"
 );

@@ -140,6 +140,16 @@ export type Launchpad = {
           isSigner: false;
         },
         {
+          name: "authority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "creator";
+          isMut: true;
+          isSigner: true;
+        },
+        {
           name: "usdcVault";
           isMut: true;
           isSigner: false;
@@ -150,7 +160,93 @@ export type Launchpad = {
           isSigner: false;
         },
         {
+          name: "ammConfig";
+          isMut: false;
+          isSigner: false;
+          docs: ["Which config the pool belongs to."];
+        },
+        {
+          name: "poolState";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "token0Mint";
+          isMut: false;
+          isSigner: false;
+          docs: ["Token_0 mint, the key must smaller then token_1 mint."];
+        },
+        {
+          name: "token1Mint";
+          isMut: false;
+          isSigner: false;
+          docs: ["Token_1 mint, the key must grater then token_0 mint."];
+        },
+        {
+          name: "lpMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "creatorToken0";
+          isMut: true;
+          isSigner: false;
+          docs: ["payer token0 account"];
+        },
+        {
+          name: "creatorToken1";
+          isMut: true;
+          isSigner: false;
+          docs: ["creator token1 account"];
+        },
+        {
+          name: "creatorLpToken";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "token0Vault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "token1Vault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "createPoolFee";
+          isMut: true;
+          isSigner: false;
+          docs: ["create pool fee account"];
+        },
+        {
+          name: "observationState";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "cpSwapProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "rent";
           isMut: false;
           isSigner: false;
         }
@@ -501,6 +597,16 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
+          name: "authority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "creator",
+          isMut: true,
+          isSigner: true,
+        },
+        {
           name: "usdcVault",
           isMut: true,
           isSigner: false,
@@ -511,7 +617,93 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
+          name: "ammConfig",
+          isMut: false,
+          isSigner: false,
+          docs: ["Which config the pool belongs to."],
+        },
+        {
+          name: "poolState",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "token0Mint",
+          isMut: false,
+          isSigner: false,
+          docs: ["Token_0 mint, the key must smaller then token_1 mint."],
+        },
+        {
+          name: "token1Mint",
+          isMut: false,
+          isSigner: false,
+          docs: ["Token_1 mint, the key must grater then token_0 mint."],
+        },
+        {
+          name: "lpMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "creatorToken0",
+          isMut: true,
+          isSigner: false,
+          docs: ["payer token0 account"],
+        },
+        {
+          name: "creatorToken1",
+          isMut: true,
+          isSigner: false,
+          docs: ["creator token1 account"],
+        },
+        {
+          name: "creatorLpToken",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "token0Vault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "token1Vault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "createPoolFee",
+          isMut: true,
+          isSigner: false,
+          docs: ["create pool fee account"],
+        },
+        {
+          name: "observationState",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "cpSwapProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
           name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "rent",
           isMut: false,
           isSigner: false,
         },

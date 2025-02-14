@@ -85,7 +85,7 @@ export default function suite() {
     const treasuryBalance = await this.getTokenBalance(USDC, daoTreasury);
 
     assert.exists(launchAccount.state.complete);
-    assert.equal(treasuryBalance.toString(), minRaise.toString());
+    assert.equal(treasuryBalance.toString(), minRaise.muln(9).divn(10).toString());
   });
 
   it("fails when launch period has not passed", async function () {

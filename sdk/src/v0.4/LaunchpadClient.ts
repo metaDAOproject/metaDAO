@@ -1,7 +1,10 @@
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { PublicKey, Keypair, AccountInfo } from "@solana/web3.js";
 import { Launchpad, IDL as LaunchpadIDL } from "./types/launchpad.js";
-import { LAUNCHPAD_PROGRAM_ID } from "./constants.js";
+import {
+  LAUNCHPAD_PROGRAM_ID,
+  RAYDIUM_CP_SWAP_PROGRAM_ID,
+} from "./constants.js";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
   getAssociatedTokenAddressSync,
@@ -154,6 +157,7 @@ export class LaunchpadClient {
       launch,
       usdcVault,
       treasuryUsdcAccount,
+      cpSwapProgram: RAYDIUM_CP_SWAP_PROGRAM_ID,
     });
   }
 }
