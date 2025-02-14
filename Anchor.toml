@@ -17,7 +17,7 @@ url = "https://api.apr.dev"
 
 [provider]
 cluster = "Localnet"
-wallet = "/home/user/.config/solana/id.json"
+wallet = "~/.config/solana/id.json"
 
 [scripts]
 add-v03-metadata = "yarn run tsx scripts/addV03Metadata.ts"
