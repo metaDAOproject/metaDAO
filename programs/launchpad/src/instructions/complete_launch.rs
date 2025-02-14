@@ -191,7 +191,7 @@ impl CompleteLaunch<'_> {
                         to: ctx.accounts.launch_treasury.to_account_info(),
                     },
                 ),
-                10_000_000_000,
+                3_000_000_000,
             )?;
 
             let launch = &mut ctx.accounts.launch;
