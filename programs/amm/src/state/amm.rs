@@ -246,18 +246,27 @@ impl Amm {
             initial_observation: oracle.initial_observation,
         };
 
-        require!(new_oracle.last_updated_slot > oracle.last_updated_slot, AmmError::AssertFailed);
+        require!(
+            new_oracle.last_updated_slot > oracle.last_updated_slot,
+            AmmError::AssertFailed
+        );
         // assert that the new observation is between price and last observation
         match price.cmp(&oracle.last_observation) {
             Ordering::Greater => {
-                require!(new_observation >= oracle.last_observation, AmmError::AssertFailed);
+                require!(
+                    new_observation >= oracle.last_observation,
+                    AmmError::AssertFailed
+                );
                 require!(new_observation <= price, AmmError::AssertFailed);
             }
             Ordering::Equal => {
                 require!(new_observation == price, AmmError::AssertFailed);
             }
             Ordering::Less => {
-                require!(new_observation <= oracle.last_observation, AmmError::AssertFailed);
+                require!(
+                    new_observation <= oracle.last_observation,
+                    AmmError::AssertFailed
+                );
                 require!(new_observation >= price, AmmError::AssertFailed);
             }
         }
@@ -341,10 +350,13 @@ mod simple_amm_tests {
         };
 
         // minute hasn't passed since last slot
-        assert_eq!(amm.update_twap(1), None);
+        assert_eq!(amm.update_twap(1), Err(AmmError::AssertFailed.into()));
         assert_eq!(amm.oracle.last_updated_slot, 0);
 
-        assert_eq!(amm.update_twap(ONE_MINUTE_IN_SLOTS), Some(10 * PRICE_SCALE));
+        assert_eq!(
+            amm.update_twap(ONE_MINUTE_IN_SLOTS),
+            Ok(Some(10 * PRICE_SCALE))
+        );
     }
 
     #[test]
@@ -360,15 +372,15 @@ mod simple_amm_tests {
 
         let slots_until_overflow = u128::MAX / (u64::MAX as u128 * PRICE_SCALE);
 
-        amm.update_twap(slots_until_overflow as u64);
-        require!(amm.oracle.aggregator > MAX_PRICE * 18_400_000);
+        let _ = amm.update_twap(slots_until_overflow as u64);
+        assert!(amm.oracle.aggregator > MAX_PRICE * 18_400_000);
         assert_ne!(amm.oracle.aggregator, u128::MAX);
 
-        amm_clone.update_twap(slots_until_overflow as u64 + 1);
+        let _ = amm_clone.update_twap(slots_until_overflow as u64 + 1);
         assert_eq!(amm_clone.oracle.aggregator, u128::MAX);
 
         // check that it wraps over
-        amm_clone.update_twap(slots_until_overflow as u64 + 1 + ONE_MINUTE_IN_SLOTS);
+        let _ = amm_clone.update_twap(slots_until_overflow as u64 + 1 + ONE_MINUTE_IN_SLOTS);
         assert_eq!(
             amm_clone.oracle.aggregator,
             ONE_MINUTE_IN_SLOTS as u128 * MAX_PRICE - 1

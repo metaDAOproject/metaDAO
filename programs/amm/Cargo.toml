@@ -14,8 +14,20 @@ no-idl = []
 no-log-ix-name = []
 cpi = ["no-entrypoint"]
 default = []
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
+anchor-debug = []
+custom-heap = []
+custom-panic = []
 
 [dependencies]
-anchor-lang = { version = "0.29.0", features = ["init-if-needed", "event-cpi"] }
-anchor-spl = "0.29.0"
-solana-security-txt = "1.1.1"
+anchor-lang = { workspace = true, features = ["init-if-needed", "event-cpi"] }
+anchor-spl = { workspace = true }
+solana-security-txt = { workspace = true }
+
+[dev-dependencies]
+ahash = { workspace = true }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = [
+    'cfg(target_os, values("solana"))',
+] }
