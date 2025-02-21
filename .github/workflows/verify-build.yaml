@@ -4,21 +4,21 @@ on:
   workflow_dispatch:
     inputs:
       program_name:
-        description: 'Program name'
+        description: "Program name"
         required: true
         type: string
       program_id:
-        description: 'Program ID'
+        description: "Program ID"
         required: true
         type: string
       anchor-version:
-        description: 'Anchor version'
+        description: "Anchor version"
         required: true
-        default: '0.29.0'
+        default: "0.30.1"
       solana-cli-version:
-        description: 'Solana CLI version'
+        description: "Solana CLI version"
         required: true
-        default: '1.17.16'
+        default: "1.18.26"
 
 jobs:
   verify-build:
