@@ -1,7 +1,5 @@
 [workspace]
-members = [
-    "programs/*"
-]
+members = ["programs/*"]
 resolver = "2"
 
 [profile.release]
@@ -12,3 +10,9 @@ codegen-units = 1
 opt-level = 3
 incremental = false
 codegen-units = 1
+
+[workspace.dependencies]
+anchor-lang = { version = "0.30.1" }
+anchor-spl = { version = "0.30.1" }
+solana-security-txt = { version = "1.1.1" }
+ahash = "=0.8.7" # Used to fix a version mismatch: https://solana.stackexchange.com/questions/15692/errore0635-unknown-feature-stdsimd
