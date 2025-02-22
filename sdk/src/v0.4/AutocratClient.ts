@@ -1,10 +1,9 @@
-import { AnchorProvider, IdlTypes, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, Program } from "@coral-xyz/anchor-0.30.1";
 import {
   AccountInfo,
   AccountMeta,
   AddressLookupTableAccount,
   ComputeBudgetProgram,
-  Connection,
   Keypair,
   PublicKey,
   Transaction,
@@ -13,11 +12,8 @@ import {
 import { PriceMath } from "./utils/priceMath.js";
 import { ProposalInstruction, InitializeDaoParams } from "./types/index.js";
 
-import { Autocrat, IDL as AutocratIDL } from "./types/autocrat.js";
-import {
-  ConditionalVault,
-  IDL as ConditionalVaultIDL,
-} from "./types/conditional_vault.js";
+import { Autocrat } from "./types/autocrat.js";
+import AutocratIDL from "./idl/autocrat.json";
 
 import BN from "bn.js";
 import {
@@ -39,8 +35,6 @@ import {
   getProposalAddr,
   getQuestionAddr,
   getVaultAddr,
-  getVaultFinalizeMintAddr,
-  getVaultRevertMintAddr,
 } from "./utils/index.js";
 import { ConditionalVaultClient } from "./ConditionalVaultClient.js";
 import { AmmClient } from "./AmmClient.js";
@@ -79,11 +73,7 @@ export class AutocratClient {
     luts: AddressLookupTableAccount[]
   ) {
     this.provider = provider;
-    this.autocrat = new Program<Autocrat>(
-      AutocratIDL,
-      autocratProgramId,
-      provider
-    );
+    this.autocrat = new Program<Autocrat>(AutocratIDL as Autocrat, provider);
     this.vaultClient = ConditionalVaultClient.createClient({
       provider,
       conditionalVaultProgramId,
@@ -607,7 +597,7 @@ export class AutocratClient {
         failLpTokensToLock,
         nonce,
       })
-      .accounts({
+      .accountsPartial({
         question,
         proposal,
         dao,
@@ -688,7 +678,7 @@ export class AutocratClient {
 
     const [vaultEventAuthority] = getEventAuthorityAddr(vaultProgramId);
 
-    return this.autocrat.methods.finalizeProposal().accounts({
+    return this.autocrat.methods.finalizeProposal().accountsPartial({
       proposal,
       passAmm,
       failAmm,
@@ -728,7 +718,7 @@ export class AutocratClient {
     const [daoTreasury] = getDaoTreasuryAddr(this.autocrat.programId, dao);
     return this.autocrat.methods
       .executeProposal()
-      .accounts({
+      .accountsPartial({
         proposal,
         dao,
         // daoTreasury,

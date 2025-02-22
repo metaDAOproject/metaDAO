@@ -1,237 +1,113 @@
+/**
+ * Program IDL in camelCase format in order to be used in JS/TS.
+ *
+ * Note that this is only a type helper and is not the actual IDL. The original
+ * IDL can be found at `target/idl/autocrat_migrator.json`.
+ */
 export type AutocratMigrator = {
-  version: "0.1.0";
-  name: "autocrat_migrator";
+  address: "MigRDW6uxyNMDBD8fX2njCRyJC4YZk2Rx9pDUZiAESt";
+  metadata: {
+    name: "autocratMigrator";
+    version: "0.1.0";
+    spec: "0.1.0";
+    description: "Created with Anchor";
+  };
   instructions: [
     {
       name: "multiTransfer2";
+      discriminator: [6, 45, 88, 213, 180, 15, 246, 159];
       accounts: [
         {
           name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
+          address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
         },
         {
           name: "authority";
-          isMut: true;
-          isSigner: true;
+          writable: true;
+          signer: true;
         },
         {
           name: "from0";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "to0";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "from1";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "to1";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "systemProgram";
-          isMut: false;
-          isSigner: false;
+          address: "11111111111111111111111111111111";
         },
         {
           name: "lamportReceiver";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         }
       ];
       args: [];
     },
     {
       name: "multiTransfer4";
+      discriminator: [29, 178, 202, 118, 127, 161, 104, 136];
       accounts: [
         {
           name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
+          address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
         },
         {
           name: "authority";
-          isMut: true;
-          isSigner: true;
+          writable: true;
+          signer: true;
         },
         {
           name: "from0";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "to0";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "from1";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "to1";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "from2";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "to2";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "from3";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "to3";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "systemProgram";
-          isMut: false;
-          isSigner: false;
+          address: "11111111111111111111111111111111";
         },
         {
           name: "lamportReceiver";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         }
       ];
       args: [];
     }
   ];
-};
-
-export const IDL: AutocratMigrator = {
-  version: "0.1.0",
-  name: "autocrat_migrator",
-  instructions: [
-    {
-      name: "multiTransfer2",
-      accounts: [
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "authority",
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: "from0",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "to0",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "from1",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "to1",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "lamportReceiver",
-          isMut: true,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
-      name: "multiTransfer4",
-      accounts: [
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "authority",
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: "from0",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "to0",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "from1",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "to1",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "from2",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "to2",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "from3",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "to3",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "lamportReceiver",
-          isMut: true,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-  ],
 };

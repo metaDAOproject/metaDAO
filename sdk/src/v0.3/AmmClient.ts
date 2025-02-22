@@ -1,5 +1,5 @@
-import { AnchorProvider, IdlTypes, Program } from "@coral-xyz/anchor";
-import { AddressLookupTableAccount, Keypair, PublicKey } from "@solana/web3.js";
+import { AnchorProvider, IdlTypes, Program } from "@coral-xyz/anchor-0.29.0";
+import { AddressLookupTableAccount, PublicKey } from "@solana/web3.js";
 
 import { Amm as AmmIDLType, IDL as AmmIDL } from "./types/amm.js";
 
@@ -8,7 +8,6 @@ import { AMM_PROGRAM_ID } from "./constants.js";
 import { AmmAccount, LowercaseKeys } from "./types/index.js";
 import { getAmmLpMintAddr, getAmmAddr } from "./utils/pda.js";
 import {
-  MintLayout,
   unpackMint,
   getAssociatedTokenAddressSync,
   createAssociatedTokenAccountIdempotentInstruction,

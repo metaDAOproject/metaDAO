@@ -1,4 +1,4 @@
-import { AnchorProvider } from "@coral-xyz/anchor";
+import { AnchorProvider } from "@coral-xyz/anchor-0.29.0";
 import { PublicKey, Transaction } from "@solana/web3.js";
 import BN from "bn.js";
 import { AmmClient, SwapType } from "./AmmClient.js";

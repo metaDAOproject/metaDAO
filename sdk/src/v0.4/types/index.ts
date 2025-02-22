@@ -1,40 +1,43 @@
-import { Autocrat as AutocratProgram, IDL as AutocratIDL } from "./autocrat.js";
+import { Autocrat as AutocratProgram } from "./autocrat.js";
+import AutocratIDL from "../idl/autocrat.json";
 export { AutocratProgram, AutocratIDL };
 
-import { Amm as AmmProgram, IDL as AmmIDL } from "./amm.js";
+import { Amm as AmmProgram } from "./amm.js";
+import AmmIDL from "../idl/amm.json";
 export { AmmProgram, AmmIDL };
 
-import {
-  ConditionalVault as ConditionalVaultProgram,
-  IDL as ConditionalVaultIDL,
-} from "./conditional_vault.js";
+import { ConditionalVault as ConditionalVaultProgram } from "./conditional_vault.js";
+import ConditionalVaultIDL from "../idl/conditional_vault.json";
 export { ConditionalVaultProgram, ConditionalVaultIDL };
 
 export { LowercaseKeys } from "./utils.js";
 
-import type { IdlAccounts, IdlTypes, IdlEvents } from "@coral-xyz/anchor";
-import { PublicKey } from "@solana/web3.js";
+import type {
+  IdlAccounts,
+  IdlTypes,
+  IdlEvents,
+} from "@coral-xyz/anchor-0.30.1";
 
 export type Question = IdlAccounts<ConditionalVaultProgram>["question"];
 export type ConditionalVault =
   IdlAccounts<ConditionalVaultProgram>["conditionalVault"];
 
 export type InitializeDaoParams =
-  IdlTypes<AutocratProgram>["InitializeDaoParams"];
-export type UpdateDaoParams = IdlTypes<AutocratProgram>["UpdateDaoParams"];
+  IdlTypes<AutocratProgram>["initializeDaoParams"];
+export type UpdateDaoParams = IdlTypes<AutocratProgram>["updateDaoParams"];
 export type ProposalInstruction =
-  IdlTypes<AutocratProgram>["ProposalInstruction"];
+  IdlTypes<AutocratProgram>["proposalInstruction"];
 
 export type Dao = IdlAccounts<AutocratProgram>["dao"];
 export type Proposal = IdlAccounts<AutocratProgram>["proposal"];
 export type Amm = IdlAccounts<AmmProgram>["amm"];
 
-export type SwapEvent = IdlEvents<AmmProgram>["SwapEvent"];
-export type AddLiquidityEvent = IdlEvents<AmmProgram>["AddLiquidityEvent"];
+export type SwapEvent = IdlEvents<AmmProgram>["swapEvent"];
+export type AddLiquidityEvent = IdlEvents<AmmProgram>["addLiquidityEvent"];
 export type RemoveLiquidityEvent =
-  IdlEvents<AmmProgram>["RemoveLiquidityEvent"];
-export type CreateAmmEvent = IdlEvents<AmmProgram>["CreateAmmEvent"];
-export type CrankThatTwapEvent = IdlEvents<AmmProgram>["CrankThatTwapEvent"];
+  IdlEvents<AmmProgram>["removeLiquidityEvent"];
+export type CreateAmmEvent = IdlEvents<AmmProgram>["createAmmEvent"];
+export type CrankThatTwapEvent = IdlEvents<AmmProgram>["crankThatTwapEvent"];
 export type AmmEvent =
   | SwapEvent
   | AddLiquidityEvent
@@ -43,19 +46,19 @@ export type AmmEvent =
   | CrankThatTwapEvent;
 
 export type AddMetadataToConditionalTokensEvent =
-  IdlEvents<ConditionalVaultProgram>["AddMetadataToConditionalTokensEvent"];
+  IdlEvents<ConditionalVaultProgram>["addMetadataToConditionalTokensEvent"];
 export type InitializeConditionalVaultEvent =
-  IdlEvents<ConditionalVaultProgram>["InitializeConditionalVaultEvent"];
+  IdlEvents<ConditionalVaultProgram>["initializeConditionalVaultEvent"];
 export type InitializeQuestionEvent =
-  IdlEvents<ConditionalVaultProgram>["InitializeQuestionEvent"];
+  IdlEvents<ConditionalVaultProgram>["initializeQuestionEvent"];
 export type MergeTokensEvent =
-  IdlEvents<ConditionalVaultProgram>["MergeTokensEvent"];
+  IdlEvents<ConditionalVaultProgram>["mergeTokensEvent"];
 export type RedeemTokensEvent =
-  IdlEvents<ConditionalVaultProgram>["RedeemTokensEvent"];
+  IdlEvents<ConditionalVaultProgram>["redeemTokensEvent"];
 export type ResolveQuestionEvent =
-  IdlEvents<ConditionalVaultProgram>["ResolveQuestionEvent"];
+  IdlEvents<ConditionalVaultProgram>["resolveQuestionEvent"];
 export type SplitTokensEvent =
-  IdlEvents<ConditionalVaultProgram>["SplitTokensEvent"];
+  IdlEvents<ConditionalVaultProgram>["splitTokensEvent"];
 export type ConditionalVaultEvent =
   | AddMetadataToConditionalTokensEvent
   | InitializeConditionalVaultEvent

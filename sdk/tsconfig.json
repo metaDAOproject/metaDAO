@@ -22,7 +22,8 @@
     "sourceMap": true,
     "outDir": "dist",
     "strict": true,
-    "declaration": true
+    "declaration": true,
+    "resolveJsonModule": true
   },
   "include": [
     "src/*",

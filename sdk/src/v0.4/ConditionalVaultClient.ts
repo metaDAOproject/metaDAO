@@ -1,14 +1,8 @@
-import { AnchorProvider, Program, utils } from "@coral-xyz/anchor";
-import {
-  AccountInfo,
-  AddressLookupTableAccount,
-  Keypair,
-  PublicKey,
-  SystemProgram,
-} from "@solana/web3.js";
+import { AnchorProvider, Program } from "@coral-xyz/anchor-0.30.1";
+import { AccountInfo, Keypair, PublicKey } from "@solana/web3.js";
 
-import { ConditionalVaultProgram, ConditionalVaultIDL } from "./types/index.js";
-
+import { ConditionalVaultProgram } from "./types/index.js";
+import ConditionalVaultIDL from "./idl/conditional_vault.json";
 import BN from "bn.js";
 import {
   CONDITIONAL_VAULT_PROGRAM_ID,
@@ -18,15 +12,11 @@ import {
   getQuestionAddr,
   getMetadataAddr,
   getVaultAddr,
-  getVaultFinalizeMintAddr,
-  getVaultRevertMintAddr,
   getConditionalTokenMintAddr,
 } from "./utils/index.js";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
-  createAssociatedTokenAccountInstruction,
   getAssociatedTokenAddressSync,
-  TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { ConditionalVault, Question } from "./types/index.js";
 
@@ -42,8 +32,7 @@ export class ConditionalVaultClient {
   constructor(provider: AnchorProvider, conditionalVaultProgramId: PublicKey) {
     this.provider = provider;
     this.vaultProgram = new Program<ConditionalVaultProgram>(
-      ConditionalVaultIDL,
-      conditionalVaultProgramId,
+      ConditionalVaultIDL as ConditionalVaultProgram,
       provider
     );
   }
@@ -103,7 +92,7 @@ export class ConditionalVaultClient {
         oracle,
         numOutcomes,
       })
-      .accounts({
+      .accountsPartial({
         question,
       });
   }
@@ -155,7 +144,7 @@ export class ConditionalVaultClient {
 
     return this.vaultProgram.methods
       .initializeConditionalVault()
-      .accounts({
+      .accountsPartial({
         vault,
         question,
         underlyingTokenMint,
@@ -211,7 +200,7 @@ export class ConditionalVaultClient {
       .resolveQuestion({
         payoutNumerators,
       })
-      .accounts({
+      .accountsPartial({
         question,
         oracle: oracle.publicKey,
       })
@@ -289,7 +278,7 @@ export class ConditionalVaultClient {
 
     return this.vaultProgram.methods
       .splitTokens(amount)
-      .accounts({
+      .accountsPartial({
         question,
         authority: user,
         vault,
@@ -331,7 +320,7 @@ export class ConditionalVaultClient {
 
     let ix = this.vaultProgram.methods
       .mergeTokens(amount)
-      .accounts({
+      .accountsPartial({
         question,
         authority: user,
         vault,
@@ -398,7 +387,7 @@ export class ConditionalVaultClient {
 
     let ix = this.vaultProgram.methods
       .redeemTokens()
-      .accounts({
+      .accountsPartial({
         question,
         authority: user,
         vault,
@@ -460,7 +449,7 @@ export class ConditionalVaultClient {
         symbol,
         uri,
       })
-      .accounts({
+      .accountsPartial({
         payer,
         vault,
         conditionalTokenMint,

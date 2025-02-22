@@ -1,9 +1,8 @@
-import { AnchorProvider, IdlTypes, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, Program } from "@coral-xyz/anchor-0.29.0";
 import {
   AccountMeta,
   AddressLookupTableAccount,
   ComputeBudgetProgram,
-  Connection,
   Keypair,
   PublicKey,
   Transaction,
