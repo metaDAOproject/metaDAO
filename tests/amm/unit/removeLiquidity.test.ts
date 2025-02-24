@@ -1,19 +1,7 @@
-import {
-  AmmClient,
-  getAmmAddr,
-  getAmmLpMintAddr,
-} from "@metadaoproject/futarchy";
+import { AmmClient } from "@metadaoproject/futarchy/v0.4";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
-import {
-  createMint,
-  createAssociatedTokenAccount,
-  mintTo,
-  getAccount,
-  getMint,
-} from "spl-token-bankrun";
-import * as anchor from "@coral-xyz/anchor";
-import * as token from "@solana/spl-token";
+import { createMint, getAccount, getMint } from "spl-token-bankrun";
 import { expectError } from "../../utils.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { BN } from "bn.js";
@@ -61,7 +49,7 @@ export default function suite() {
 
     await ammClient
       .removeLiquidityIx(amm, META, USDC, new BN(0), new BN(0), new BN(0))
-      .rpc()
+      .rpc({ skipPreflight: true })
       .then(callbacks[0], callbacks[1]);
   });
 

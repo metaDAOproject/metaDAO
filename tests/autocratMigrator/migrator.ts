@@ -1,6 +1,4 @@
 import * as anchor from "@coral-xyz/anchor";
-import { BN, Program } from "@coral-xyz/anchor";
-import * as token from "@solana/spl-token";
 import { BankrunProvider } from "anchor-bankrun";
 
 const { PublicKey, Keypair, SystemProgram } = anchor.web3;
@@ -9,14 +7,8 @@ import { assert } from "chai";
 
 import { startAnchor } from "solana-bankrun";
 
-const AUTOCRAT_MIGRATOR_PROGRAM_ID = new PublicKey(
-  "MigRDW6uxyNMDBD8fX2njCRyJC4YZk2Rx9pDUZiAESt"
-);
-
-import {
-  AutocratMigrator,
-  IDL as AutocratMigratorIDL,
-} from "../../target/types/autocrat_migrator";
+import { AutocratMigrator } from "../../target/types/autocrat_migrator.js";
+import AutocratMigratorIDL from "../../target/idl/autocrat_migrator.json" with { type: "json" };
 
 export type PublicKey = anchor.web3.PublicKey;
 export type Signer = anchor.web3.Signer;
@@ -31,7 +23,6 @@ import {
 
 describe("autocrat_migrator", async function () {
   let provider,
-    connection,
     migrator,
     payer,
     context,
@@ -48,8 +39,7 @@ describe("autocrat_migrator", async function () {
     anchor.setProvider(provider);
 
     migrator = new anchor.Program<AutocratMigrator>(
-      AutocratMigratorIDL,
-      AUTOCRAT_MIGRATOR_PROGRAM_ID,
+      AutocratMigratorIDL as any,
       provider
     );
 

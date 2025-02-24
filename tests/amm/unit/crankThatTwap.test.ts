@@ -1,8 +1,7 @@
 import { AmmClient, AmmMath } from "@metadaoproject/futarchy/v0.4";
 import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
-import { createMint, mintTo } from "spl-token-bankrun";
-import * as anchor from "@coral-xyz/anchor";
+import { createMint } from "spl-token-bankrun";
 import { advanceBySlots } from "../../utils.js";
 import { BN } from "bn.js";
 

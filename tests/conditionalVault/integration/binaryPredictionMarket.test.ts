@@ -1,16 +1,7 @@
-import { ConditionalVaultClient, sha256 } from "@metadaoproject/futarchy";
+import { sha256 } from "@metadaoproject/futarchy";
+import { ConditionalVaultClient } from "@metadaoproject/futarchy/v0.4";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
-import { assert } from "chai";
-import {
-  createMint,
-  getMint,
-  mintTo,
-  createAssociatedTokenAccount,
-  transfer,
-  getAccount,
-} from "spl-token-bankrun";
-import * as token from "@solana/spl-token";
 
 export default async function test() {
   // A binary prediction market test. Alice, Bob, and Charlie are betting on

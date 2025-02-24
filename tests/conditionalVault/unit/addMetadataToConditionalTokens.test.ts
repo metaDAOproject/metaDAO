@@ -7,13 +7,8 @@ import {
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import { createMint } from "spl-token-bankrun";
-import * as anchor from "@coral-xyz/anchor";
 import { expectError } from "../../utils.js";
-import {
-  Metadata,
-  deserializeMetadata,
-  getMetadataAccountDataSerializer,
-} from "@metaplex-foundation/mpl-token-metadata";
+import { getMetadataAccountDataSerializer } from "@metaplex-foundation/mpl-token-metadata";
 
 export default function suite() {
   let vaultClient: ConditionalVaultClient;

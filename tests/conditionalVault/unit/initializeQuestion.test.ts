@@ -1,13 +1,11 @@
 import { sha256 } from "@metadaoproject/futarchy";
-// const { ConditionalVaultClient, getQuestionAddr } = futarchy;
 import { Keypair } from "@solana/web3.js";
 import { assert } from "chai";
-import { expectError } from "../../utils";
+import { expectError } from "../../utils.js";
 import {
   ConditionalVaultClient,
   getQuestionAddr,
 } from "@metadaoproject/futarchy/v0.4";
-// import { getQuestionAddr } from "@metadaoproject/futarchy/dist/v0.4";
 
 export default function suite() {
   let vaultClient: ConditionalVaultClient;

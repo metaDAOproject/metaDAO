@@ -1,9 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { BN } from "bn.js";
-import * as token from "@solana/spl-token";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
-import { MEMO_PROGRAM_ID } from "@solana/spl-memo";
 import { BankrunProvider } from "anchor-bankrun";
 import { assert } from "chai";
 import {
@@ -17,30 +15,21 @@ import {
   createAccount,
   createAssociatedTokenAccount,
   mintToOverride,
-  getMint,
   getAccount,
 } from "spl-token-bankrun";
 
 import { advanceBySlots, expectError } from "../utils.js";
-import { Autocrat, IDL as AutocratIDL } from "../../target/types/autocrat.js";
-import {
-  ConditionalVault,
-  IDL as ConditionalVaultIDL,
-} from "../../target/types/conditional_vault.js";
-import {
-  AutocratMigrator,
-  IDL as AutocratMigratorIDL,
-} from "../../target/types/autocrat_migrator.js";
+import { Autocrat } from "../../target/types/autocrat.js";
+import AutocratIDL from "../../target/idl/autocrat.json" with { type: "json" };
+import { ConditionalVault } from "../../target/types/conditional_vault.js";
+import ConditionalVaultIDL from "../../target/idl/conditional_vault.json" with { type: "json" };
+import { AutocratMigrator } from "../../target/types/autocrat_migrator.js";
+import AutocratMigratorIDL from "../../target/idl/autocrat_migrator.json" with { type: "json" };
 
 const { PublicKey, Keypair } = anchor.web3;
 
 import {
-  AUTOCRAT_PROGRAM_ID,
-  CONDITIONAL_VAULT_PROGRAM_ID,
   AmmClient,
-  getAmmAddr,
-  getAmmLpMintAddr,
-  getVaultAddr,
   AmmMath,
 } from "@metadaoproject/futarchy/v0.4";
 import { PriceMath } from "@metadaoproject/futarchy/v0.4";
@@ -49,28 +38,12 @@ import {
   ConditionalVaultClient,
 } from "@metadaoproject/futarchy/v0.4";
 import {
-  ComputeBudgetInstruction,
   ComputeBudgetProgram,
-  SystemProgram,
-  Transaction,
-  TransactionInstruction,
 } from "@solana/web3.js";
-
-// const AutocratIDL: Autocrat = require("../target/idl/autocrat.json");
-// const ConditionalVaultIDL: ConditionalVault = require("../target/idl/conditional_vault.json");
-// const AutocratMigratorIDL: AutocratMigrator = require("../target/idl/autocrat_migrator.json");
 
 export type PublicKey = anchor.web3.PublicKey;
 export type Signer = anchor.web3.Signer;
 export type Keypair = anchor.web3.Keypair;
-
-type ProposalInstruction = anchor.IdlTypes<Autocrat>["ProposalInstruction"];
-
-// this test file isn't 'clean' or DRY or whatever; sorry!
-
-const AUTOCRAT_MIGRATOR_PROGRAM_ID = new PublicKey(
-  "MigRDW6uxyNMDBD8fX2njCRyJC4YZk2Rx9pDUZiAESt"
-);
 
 const ONE_META = new BN(1_000_000_000);
 const ONE_USDC = new BN(1_000_000);
@@ -110,21 +83,18 @@ export default function suite() {
     autocratClient = AutocratClient.createClient({ provider });
 
     autocrat = new anchor.Program<Autocrat>(
-      AutocratIDL,
-      AUTOCRAT_PROGRAM_ID,
+      AutocratIDL as any,
       provider
     );
 
     vaultProgram = new Program<ConditionalVault>(
-      ConditionalVaultIDL,
-      CONDITIONAL_VAULT_PROGRAM_ID,
+      ConditionalVaultIDL as any,
       provider
     );
 
     migrator = new anchor.Program<AutocratMigrator>(
-      AutocratMigratorIDL,
-      AUTOCRAT_MIGRATOR_PROGRAM_ID,
-      provider
+      AutocratMigratorIDL as any,
+      provider,
     );
 
     payer = provider.wallet.payer;
@@ -244,15 +214,15 @@ export default function suite() {
           isWritable: true,
         },
       ];
-      const data = autocrat.coder.instruction.encode("update_dao", {
+      const data = autocrat.coder.instruction.encode("updateDao", {
         daoParams: {
           passThresholdBps: 500,
           baseBurnLamports: null,
           burnDecayPerSlotLamports: null,
           slotsPerProposal: null,
           marketTakerFee: null,
-          // minQuoteFutarchicLiquidity: new BN(10),
-          // minBaseFutarchicLiquidity: new BN(100),
+          minQuoteFutarchicLiquidity: null,
+          minBaseFutarchicLiquidity: null,
         },
       });
       const instruction = {
@@ -563,7 +533,7 @@ export default function suite() {
         },
       ];
 
-      const data = autocrat.coder.instruction.encode("update_dao", {
+      const data = autocrat.coder.instruction.encode("updateDao", {
         daoParams: {
           passThresholdBps: 500,
           slotsPerProposal: new BN(10),

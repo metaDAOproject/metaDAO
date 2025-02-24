@@ -3,7 +3,7 @@ import { BN, Program } from "@coral-xyz/anchor";
 import * as token from "@solana/spl-token";
 import { BankrunProvider } from "anchor-bankrun";
 
-const { PublicKey, Keypair, SystemProgram } = anchor.web3;
+const { PublicKey, Keypair } = anchor.web3;
 
 import { assert } from "chai";
 
@@ -13,13 +13,9 @@ const TIMELOCK_PROGRAM_ID = new PublicKey(
   "tiME1hz9F5C5ZecbvE5z6Msjy8PKfTqo1UuRYXfndKF"
 );
 
-import {
-  OptimisticTimelock,
-  IDL as OptimisticTimelockIDL,
-} from "../../target/types/optimistic_timelock";
-import { ComputeBudgetProgram, Connection } from "@solana/web3.js";
-import { printArgs } from "@metaplex-foundation/mpl-token-metadata";
-// const OptimisticTimelockIDL: OptimisticTimelock = require("../target/idl/optimistic_timelock.json");
+import { OptimisticTimelock } from "../../target/types/optimistic_timelock.js";
+import OptimisticTimelockIDL from "../../target/idl/optimistic_timelock.json" with { type: "json" };
+import { ComputeBudgetProgram } from "@solana/web3.js";
 
 export type PublicKey = anchor.web3.PublicKey;
 export type Signer = anchor.web3.Signer;
@@ -82,8 +78,7 @@ describe("timelock", async function () {
     connection = provider.connection;
     payer = provider.wallet.payer;
     timelockProgram = new Program<OptimisticTimelock>(
-      OptimisticTimelockIDL,
-      TIMELOCK_PROGRAM_ID,
+      OptimisticTimelockIDL as any,
       provider
     );
   });
@@ -109,7 +104,7 @@ describe("timelock", async function () {
         [enqueuer1.publicKey, enqueuer2.publicKey],
         enqueuerCooldownSlots
       )
-      .accounts({
+      .accountsPartial({
         timelock: timelockKp.publicKey,
         timelockSigner: timelockSignerPubkey,
       })
@@ -193,7 +188,7 @@ describe("timelock", async function () {
         })),
         transferInstruction.data
       )
-      .accounts({
+      .accountsPartial({
         transactionBatch: transactionBatch.publicKey,
         transactionBatchAuthority: transactionBatchAuthority.publicKey,
       })
@@ -220,7 +215,7 @@ describe("timelock", async function () {
         })),
         setDelayInSlotsInstruction.data
       )
-      .accounts({
+      .accountsPartial({
         transactionBatch: transactionBatch.publicKey,
         transactionBatchAuthority: transactionBatchAuthority.publicKey,
       })
@@ -248,7 +243,7 @@ describe("timelock", async function () {
         })),
         setAuthorityInstruction.data
       )
-      .accounts({
+      .accountsPartial({
         transactionBatch: transactionBatch.publicKey,
         transactionBatchAuthority: transactionBatchAuthority.publicKey,
       })
@@ -274,7 +269,7 @@ describe("timelock", async function () {
         })),
         addEnqueuerInstruction.data
       )
-      .accounts({
+      .accountsPartial({
         transactionBatch: transactionBatch.publicKey,
         transactionBatchAuthority: transactionBatchAuthority.publicKey,
       })
@@ -303,7 +298,7 @@ describe("timelock", async function () {
         })),
         removeOptimisticProposerInstruction.data
       )
-      .accounts({
+      .accountsPartial({
         transactionBatch: transactionBatch.publicKey,
         transactionBatchAuthority: transactionBatchAuthority.publicKey,
       })
@@ -327,7 +322,7 @@ describe("timelock", async function () {
     try {
       await timelockProgram.methods
         .enqueueTransactionBatch()
-        .accounts({
+        .accountsPartial({
           transactionBatch: transactionBatch.publicKey,
           authority: timelockAuthority.publicKey,
           timelock: timelockKp.publicKey,
@@ -345,7 +340,7 @@ describe("timelock", async function () {
   it("Seals the transaction batch", async () => {
     await timelockProgram.methods
       .sealTransactionBatch()
-      .accounts({
+      .accountsPartial({
         transactionBatch: transactionBatch.publicKey,
         transactionBatchAuthority: transactionBatchAuthority.publicKey,
       })
@@ -369,7 +364,7 @@ describe("timelock", async function () {
     try {
       await timelockProgram.methods
         .cancelTransactionBatch()
-        .accounts({
+        .accountsPartial({
           transactionBatch: transactionBatch.publicKey,
           authority: timelockAuthority.publicKey,
           timelock: timelockKp.publicKey,
@@ -389,7 +384,7 @@ describe("timelock", async function () {
     try {
       await timelockProgram.methods
         .executeTransactionBatch()
-        .accounts({
+        .accountsPartial({
           timelock: timelockKp.publicKey,
           timelockSigner: timelockSignerPubkey,
           transactionBatch: transactionBatch.publicKey,
@@ -422,7 +417,7 @@ describe("timelock", async function () {
           })),
           transferInstruction.data
         )
-        .accounts({
+        .accountsPartial({
           transactionBatch: transactionBatch.publicKey,
           transactionBatchAuthority: transactionBatchAuthority.publicKey,
         })
@@ -440,7 +435,7 @@ describe("timelock", async function () {
     try {
       await timelockProgram.methods
         .sealTransactionBatch()
-        .accounts({
+        .accountsPartial({
           transactionBatch: transactionBatch.publicKey,
           transactionBatchAuthority: transactionBatchAuthority.publicKey,
         })
@@ -461,7 +456,7 @@ describe("timelock", async function () {
 
       await timelockProgram.methods
         .enqueueTransactionBatch()
-        .accounts({
+        .accountsPartial({
           transactionBatch: transactionBatch.publicKey,
           authority: fakeAuthority.publicKey,
           timelock: timelockKp.publicKey,
@@ -479,7 +474,7 @@ describe("timelock", async function () {
   it("Enqueues the transaction batch", async () => {
     await timelockProgram.methods
       .enqueueTransactionBatch()
-      .accounts({
+      .accountsPartial({
         transactionBatch: transactionBatch.publicKey,
         authority: timelockAuthority.publicKey,
         timelock: timelockKp.publicKey,
@@ -514,7 +509,7 @@ describe("timelock", async function () {
     try {
       await timelockProgram.methods
         .cancelTransactionBatch()
-        .accounts({
+        .accountsPartial({
           transactionBatch: transactionBatch.publicKey,
           authority: enqueuer1.publicKey,
           timelock: timelockKp.publicKey,
@@ -534,7 +529,7 @@ describe("timelock", async function () {
     try {
       await timelockProgram.methods
         .executeTransactionBatch()
-        .accounts({
+        .accountsPartial({
           timelock: timelockKp.publicKey,
           timelockSigner: timelockSignerPubkey,
           transactionBatch: transactionBatch.publicKey,
@@ -561,7 +556,7 @@ describe("timelock", async function () {
 
     await timelockProgram.methods
       .executeTransactionBatch()
-      .accounts({
+      .accountsPartial({
         timelock: timelockKp.publicKey,
         timelockSigner: timelockSignerPubkey,
         transactionBatch: transactionBatch.publicKey,
@@ -601,7 +596,7 @@ describe("timelock", async function () {
   it("Executes the set delay in slots transaction in the batch", async () => {
     await timelockProgram.methods
       .executeTransactionBatch()
-      .accounts({
+      .accountsPartial({
         timelock: timelockKp.publicKey,
         timelockSigner: timelockSignerPubkey,
         transactionBatch: transactionBatch.publicKey,
@@ -648,7 +643,7 @@ describe("timelock", async function () {
   it("Executes the change authority transaction and verifies the update", async () => {
     await timelockProgram.methods
       .executeTransactionBatch()
-      .accounts({
+      .accountsPartial({
         timelock: timelockKp.publicKey,
         timelockSigner: timelockSignerPubkey,
         transactionBatch: transactionBatch.publicKey,
@@ -696,7 +691,7 @@ describe("timelock", async function () {
   it("Executes the add enqueuer transaction and verifies the update", async () => {
     await timelockProgram.methods
       .executeTransactionBatch()
-      .accounts({
+      .accountsPartial({
         timelock: timelockKp.publicKey,
         timelockSigner: timelockSignerPubkey,
         transactionBatch: transactionBatch.publicKey,
@@ -740,7 +735,7 @@ describe("timelock", async function () {
   it("Executes the remove enqueuer transaction and verifies the update", async () => {
     await timelockProgram.methods
       .executeTransactionBatch()
-      .accounts({
+      .accountsPartial({
         timelock: timelockKp.publicKey,
         timelockSigner: timelockSignerPubkey,
         transactionBatch: transactionBatch.publicKey,
@@ -829,7 +824,7 @@ describe("timelock", async function () {
     // Step 2: Seal the Transaction Batch
     await timelockProgram.methods
       .sealTransactionBatch()
-      .accounts({
+      .accountsPartial({
         transactionBatch: transactionBatch.publicKey,
         transactionBatchAuthority: enqueuer1.publicKey,
       })
@@ -850,7 +845,7 @@ describe("timelock", async function () {
     // Step 3: Enqueue the Transaction Batch
     await timelockProgram.methods
       .enqueueTransactionBatch()
-      .accounts({
+      .accountsPartial({
         transactionBatch: transactionBatch.publicKey,
         authority: enqueuer1.publicKey, // Assuming recipient as the new authority
         timelock: timelockKp.publicKey,
@@ -877,7 +872,7 @@ describe("timelock", async function () {
     // Step 4: Cancel the Transaction Batch
     await timelockProgram.methods
       .cancelTransactionBatch()
-      .accounts({
+      .accountsPartial({
         transactionBatch: transactionBatch.publicKey,
         authority: enqueuer1.publicKey,
         timelock: timelockKp.publicKey,
@@ -933,7 +928,7 @@ describe("timelock", async function () {
     // Step 2: Seal the Transaction Batch
     await timelockProgram.methods
       .sealTransactionBatch()
-      .accounts({
+      .accountsPartial({
         transactionBatch: transactionBatch.publicKey,
         transactionBatchAuthority: enqueuer1.publicKey,
       })
@@ -957,7 +952,7 @@ describe("timelock", async function () {
     try {
       await timelockProgram.methods
         .enqueueTransactionBatch()
-        .accounts({
+        .accountsPartial({
           transactionBatch: transactionBatch.publicKey,
           authority: enqueuer1.publicKey, // Assuming recipient as the new authority
           timelock: timelockKp.publicKey,
@@ -984,7 +979,7 @@ describe("timelock", async function () {
     // now it'll succeed
     await timelockProgram.methods
       .enqueueTransactionBatch()
-      .accounts({
+      .accountsPartial({
         transactionBatch: transactionBatch.publicKey,
         authority: enqueuer1.publicKey, // Assuming recipient as the new authority
         timelock: timelockKp.publicKey,
@@ -1012,7 +1007,7 @@ describe("timelock", async function () {
     // Step 4: Cancel the Transaction Batch
     await timelockProgram.methods
       .cancelTransactionBatch()
-      .accounts({
+      .accountsPartial({
         transactionBatch: transactionBatch.publicKey,
         authority: enqueuer2.publicKey,
         timelock: timelockKp.publicKey,
@@ -1040,7 +1035,7 @@ describe("timelock", async function () {
 
     await timelockProgram.methods
       .createTransactionBatch()
-      .accounts({
+      .accountsPartial({
         transactionBatchAuthority: enqueuer2.publicKey,
         timelock: timelockKp.publicKey,
         transactionBatch: transactionBatch.publicKey,
@@ -1068,7 +1063,7 @@ describe("timelock", async function () {
     // Step 2: Seal the Transaction Batch
     await timelockProgram.methods
       .sealTransactionBatch()
-      .accounts({
+      .accountsPartial({
         transactionBatch: transactionBatch.publicKey,
         transactionBatchAuthority: enqueuer2.publicKey,
       })
@@ -1089,7 +1084,7 @@ describe("timelock", async function () {
     // Step 3: Enqueue the Transaction Batch
     await timelockProgram.methods
       .enqueueTransactionBatch()
-      .accounts({
+      .accountsPartial({
         transactionBatch: transactionBatch.publicKey,
         authority: enqueuer2.publicKey, // Assuming recipient as the new authority
         timelock: timelockKp.publicKey,
@@ -1111,7 +1106,7 @@ describe("timelock", async function () {
     // Step 4: Cancel the Transaction Batch
     await timelockProgram.methods
       .cancelTransactionBatch()
-      .accounts({
+      .accountsPartial({
         transactionBatch: transactionBatch.publicKey,
         authority: recipient.publicKey,
         timelock: timelockKp.publicKey,
@@ -1138,7 +1133,7 @@ describe("timelock", async function () {
     try {
       await timelockProgram.methods
         .setDelayInSlots(newDelay)
-        .accounts({
+        .accountsPartial({
           timelock: timelockKp.publicKey,
           timelockSigner: unauthorizedUser.publicKey, // incorrect signer
         })
