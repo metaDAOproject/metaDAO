@@ -1,29 +1,17 @@
 import * as anchor from "@coral-xyz/anchor";
 import { BN, Program, web3 } from "@coral-xyz/anchor";
-import {
-  MPL_TOKEN_METADATA_PROGRAM_ID as UMI_MPL_TOKEN_METADATA_PROGRAM_ID,
-  createMetadataAccountV3,
-} from "@metaplex-foundation/mpl-token-metadata";
-import {
-  Umi,
-  createSignerFromKeypair,
-  keypairIdentity,
-  none,
-} from "@metaplex-foundation/umi";
+import { MPL_TOKEN_METADATA_PROGRAM_ID as UMI_MPL_TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
+import { Umi, keypairIdentity } from "@metaplex-foundation/umi";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import {
   fromWeb3JsKeypair,
-  fromWeb3JsPublicKey,
-  toWeb3JsLegacyTransaction,
   toWeb3JsPublicKey,
 } from "@metaplex-foundation/umi-web3js-adapters";
 import * as token from "@solana/spl-token";
-import { SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import { BankrunProvider } from "anchor-bankrun";
 import { assert } from "chai";
 import { BanksClient, ProgramTestContext, startAnchor } from "solana-bankrun";
 import {
-  createAccount,
   createAssociatedTokenAccount,
   createMint,
   getAccount,
@@ -34,30 +22,22 @@ import {
 
 const { PublicKey, Keypair } = web3;
 
-import {
-  ConditionalVault,
-  IDL as ConditionalVaultIDL,
-} from "../../target/types/conditional_vault";
-import { expectError } from "../utils";
+import { ConditionalVault } from "../../target/types/conditional_vault.js";
+import ConditionalVaultIDL from "../../target/idl/conditional_vault.json" with { type: "json" };
+import { sha256 } from "@metadaoproject/futarchy";
 import {
   CONDITIONAL_VAULT_PROGRAM_ID,
   ConditionalVaultClient,
   getConditionalTokenMintAddr,
   getQuestionAddr,
   getVaultAddr,
-  getVaultFinalizeMintAddr,
-  getVaultRevertMintAddr,
-  sha256,
-} from "@metadaoproject/futarchy";
-import { set } from "@metaplex-foundation/umi/serializers";
+} from "@metadaoproject/futarchy/v0.4";
 
 export type VaultProgram = anchor.Program<ConditionalVault>;
 export type PublicKey = anchor.web3.PublicKey;
 export type Signer = anchor.web3.Signer;
 export type Keypair = anchor.web3.Keypair;
 
-const METADATA_URI =
-  "https://ftgnmxferax7tpgqyzdo76sisk5fhpsjv34omvgz33m7udvnsfba.arweave.net/LMzWXKSIL_m80MZG7_pIkrpTvkmu-OZU2d7Z-g6tkUI";
 const MPL_TOKEN_METADATA_PROGRAM_ID = toWeb3JsPublicKey(
   UMI_MPL_TOKEN_METADATA_PROGRAM_ID
 );
@@ -112,8 +92,7 @@ describe("conditional_vault", async function () {
     umi = createUmi(anchor.AnchorProvider.env().connection);
 
     vaultProgram = new Program<ConditionalVault>(
-      ConditionalVaultIDL,
-      CONDITIONAL_VAULT_PROGRAM_ID,
+      ConditionalVaultIDL as any,
       provider
     );
 
@@ -479,7 +458,7 @@ describe("conditional_vault", async function () {
       ).then((acc) => acc.amount);
 
       await vaultClient
-        .redeemTokensIx(question, vault, underlyingTokenMint, new BN(600), 2)
+        .redeemTokensIx(question, vault, underlyingTokenMint, 600)
         .rpc();
 
       const balanceAfter = await getAccount(

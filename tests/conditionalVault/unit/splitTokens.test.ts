@@ -2,14 +2,7 @@ import { sha256 } from "@metadaoproject/futarchy";
 import { ConditionalVaultClient } from "@metadaoproject/futarchy/v0.4";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
-import {
-  createAssociatedTokenAccount,
-  createMint,
-  getAccount,
-  getMint,
-  mintTo,
-} from "spl-token-bankrun";
-import * as anchor from "@coral-xyz/anchor";
+import { getMint } from "spl-token-bankrun";
 import * as token from "@solana/spl-token";
 import { expectError } from "../../utils.js";
 import { BN } from "bn.js";
@@ -82,7 +75,7 @@ export default function suite() {
 
     await vaultClient.vaultProgram.methods
       .splitTokens(new BN(1000))
-      .accounts({
+      .accountsPartial({
         question,
         authority: this.payer.publicKey,
         vault,
@@ -125,7 +118,7 @@ export default function suite() {
     // Attempt to split tokens using the original vault but with the malicious vault's conditional token accounts
     await vaultClient.vaultProgram.methods
       .splitTokens(new BN(1000))
-      .accounts({
+      .accountsPartial({
         question,
         authority: this.payer.publicKey,
         vault,
@@ -186,7 +179,7 @@ export default function suite() {
 
     await vaultClient.vaultProgram.methods
       .splitTokens(new BN(1000))
-      .accounts({
+      .accountsPartial({
         question,
         authority: this.payer.publicKey,
         vault,
@@ -240,6 +233,5 @@ export default function suite() {
       assert.equal(storedMint.supply.toString(), "2000");
       await this.assertBalance(mint, this.payer.publicKey, 2000);
     }
-    
   });
 }

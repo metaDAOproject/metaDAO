@@ -8,7 +8,6 @@ import {
   getAccount,
   mintTo,
 } from "spl-token-bankrun";
-import * as anchor from "@coral-xyz/anchor";
 import * as token from "@solana/spl-token";
 import { expectError } from "../../utils.js";
 import { BN } from "bn.js";

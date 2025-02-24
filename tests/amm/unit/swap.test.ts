@@ -1,19 +1,7 @@
-import {
-  AmmClient,
-  AmmMath,
-  getAmmAddr,
-  getAmmLpMintAddr,
-} from "@metadaoproject/futarchy/v0.4";
+import { AmmClient, AmmMath } from "@metadaoproject/futarchy/v0.4";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
-import {
-  createMint,
-  createAssociatedTokenAccount,
-  mintTo,
-  getAccount,
-  getMint,
-} from "spl-token-bankrun";
-import * as anchor from "@coral-xyz/anchor";
+import { createMint, getAccount, getMint } from "spl-token-bankrun";
 import { expectError } from "../../utils.js";
 import { advanceBySlots } from "../../utils.js";
 import { BN } from "bn.js";

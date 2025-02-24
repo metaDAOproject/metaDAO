@@ -1,5 +1,5 @@
-import { AnchorProvider, Program } from "@coral-xyz/anchor";
-import { AddressLookupTableAccount, Keypair, PublicKey } from "@solana/web3.js";
+import { AnchorProvider, Program } from "@coral-xyz/anchor-0.29.0";
+import { AddressLookupTableAccount, PublicKey } from "@solana/web3.js";
 
 import {
   ConditionalVault,
@@ -19,7 +19,6 @@ import {
 } from "./utils/index.js";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
-  createAssociatedTokenAccountInstruction,
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
 

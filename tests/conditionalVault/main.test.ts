@@ -17,11 +17,11 @@ export default function suite() {
   describe("#initialize_question", initializeQuestion);
   describe("#initialize_conditional_vault", initializeConditionalVault);
   describe("#resolve_question", resolveQuestion);
-  describe("#split_tokens", splitTokens);
   describe("#merge_tokens", mergeTokens);
   describe("#redeem_tokens", redeemTokens);
   describe(
     "#add_metadata_to_conditional_tokens",
     addMetadataToConditionalTokens
   );
+  describe("#split_tokens", splitTokens);
 }

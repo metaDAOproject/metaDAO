@@ -8,7 +8,6 @@ import {
   getAccount,
   mintTo,
 } from "spl-token-bankrun";
-import * as anchor from "@coral-xyz/anchor";
 import * as token from "@solana/spl-token";
 import { BN } from "bn.js";
 
@@ -183,14 +182,12 @@ export default function suite() {
     ).then((acc) => acc.amount);
 
     assert.isTrue(balanceAfter > balanceBefore);
-    assert.isTrue(balanceAfter - balanceBefore  < 1000); //dont need both these checks lol but just in case
+    assert.isTrue(balanceAfter - balanceBefore < 1000); //dont need both these checks lol but just in case
     assert.isTrue(balanceAfter - balanceBefore == 999);
 
     // console.log('balanceAfter', balanceAfter);
 
     const updatedVault = await vaultClient.fetchVault(vault);
     assert.equal(updatedVault.seqNum.toString(), "2");
-
-    
   });
 }

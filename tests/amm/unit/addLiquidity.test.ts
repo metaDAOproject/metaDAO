@@ -1,18 +1,7 @@
-import {
-  AmmClient,
-  getAmmAddr,
-  getAmmLpMintAddr,
-} from "@metadaoproject/futarchy/v0.4";
+import { AmmClient, getAmmLpMintAddr } from "@metadaoproject/futarchy/v0.4";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
-import {
-  createMint,
-  createAssociatedTokenAccount,
-  mintTo,
-  getAccount,
-} from "spl-token-bankrun";
-import * as anchor from "@coral-xyz/anchor";
-import { expectError } from "../../utils.js";
+import { createMint, getAccount } from "spl-token-bankrun";
 import * as token from "@solana/spl-token";
 import { BN } from "bn.js";
 

@@ -12,7 +12,7 @@ export {
 
 export { LowercaseKeys } from "./utils.js";
 
-import type { IdlAccounts, IdlTypes } from "@coral-xyz/anchor";
+import type { IdlAccounts, IdlTypes } from "@coral-xyz/anchor-0.29.0";
 import { PublicKey } from "@solana/web3.js";
 
 export type InitializeDaoParams = IdlTypes<Autocrat>["InitializeDaoParams"];

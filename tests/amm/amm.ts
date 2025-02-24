@@ -3,12 +3,7 @@ import { BN } from "@coral-xyz/anchor";
 import { BankrunProvider } from "anchor-bankrun";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 
-import {
-  startAnchor,
-  Clock,
-  ProgramTestContext,
-  BanksClient,
-} from "solana-bankrun";
+import { startAnchor, ProgramTestContext, BanksClient } from "solana-bankrun";
 
 import {
   createMint,
@@ -23,10 +18,10 @@ import {
   AmmClient,
   PriceMath,
   getAmmLpMintAddr,
-} from "@metadaoproject/futarchy";
+} from "@metadaoproject/futarchy/v0.4";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
-import { expectError, advanceBySlots } from "../utils";
+import { expectError, advanceBySlots } from "../utils.js";
 
 const META_DECIMALS = 9;
 const USDC_DECIMALS = 6;
@@ -151,13 +146,13 @@ describe("amm", async function () {
       let proposal = Keypair.generate().publicKey;
 
       await ammClient
-        .createAmmIx(
+        .createAmm(
+          proposal,
           META,
           META,
-          twapFirstObservationScaled,
-          twapMaxObservationChangePerUpdateScaled
+          twapFirstObservationScaled.toNumber(),
+          twapMaxObservationChangePerUpdateScaled.toNumber()
         )
-        .rpc()
         .then(callbacks[0], callbacks[1]);
     });
   });
@@ -296,12 +291,17 @@ describe("amm", async function () {
       const expectedOut = 0.098029507;
 
       const storedAmm = await ammClient.getAmm(amm);
-      let sim = ammClient.simulateSwap(
-        new BN(100 * 10 ** 6),
-        { buy: {} },
-        storedAmm.baseAmount,
-        storedAmm.quoteAmount
-      );
+      let sim: any = await ammClient
+        .swapIx(
+          amm,
+          META,
+          USDC,
+          { buy: {} },
+          new BN(100 * 10 ** 6),
+          storedAmm.quoteAmount
+        )
+        .simulate();
+      console.log(sim);
       assert.equal(
         sim.expectedOut.toString(),
         new BN(expectedOut * 10 ** 9).toString()

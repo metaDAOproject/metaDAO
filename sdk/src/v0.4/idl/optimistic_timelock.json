@@ -1,0 +1,716 @@
+{
+  "address": "tiME1hz9F5C5ZecbvE5z6Msjy8PKfTqo1UuRYXfndKF",
+  "metadata": {
+    "name": "optimistic_timelock",
+    "version": "0.3.0",
+    "spec": "0.1.0",
+    "description": "Optimistic timelock",
+    "repository": "https://github.com/metaDAOproject/futarchy"
+  },
+  "instructions": [
+    {
+      "name": "add_optimistic_proposer",
+      "discriminator": [
+        93,
+        205,
+        243,
+        6,
+        64,
+        133,
+        100,
+        83
+      ],
+      "accounts": [
+        {
+          "name": "timelock_signer",
+          "signer": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "timelock"
+              }
+            ]
+          }
+        },
+        {
+          "name": "timelock",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "enqueuer",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "add_transaction",
+      "discriminator": [
+        48,
+        96,
+        174,
+        112,
+        81,
+        30,
+        239,
+        89
+      ],
+      "accounts": [
+        {
+          "name": "transaction_batch_authority",
+          "signer": true,
+          "relations": [
+            "transaction_batch"
+          ]
+        },
+        {
+          "name": "transaction_batch",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "program_id",
+          "type": "pubkey"
+        },
+        {
+          "name": "accounts",
+          "type": {
+            "vec": {
+              "defined": {
+                "name": "TransactionAccount"
+              }
+            }
+          }
+        },
+        {
+          "name": "data",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "cancel_transaction_batch",
+      "discriminator": [
+        190,
+        143,
+        202,
+        59,
+        12,
+        129,
+        248,
+        187
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "timelock",
+          "writable": true,
+          "relations": [
+            "transaction_batch"
+          ]
+        },
+        {
+          "name": "transaction_batch",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_timelock",
+      "discriminator": [
+        243,
+        10,
+        110,
+        170,
+        71,
+        251,
+        210,
+        87
+      ],
+      "accounts": [
+        {
+          "name": "timelock_signer",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "timelock"
+              }
+            ]
+          }
+        },
+        {
+          "name": "timelock",
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "authority",
+          "type": "pubkey"
+        },
+        {
+          "name": "delay_in_slots",
+          "type": "u64"
+        },
+        {
+          "name": "enqueuers",
+          "type": {
+            "vec": "pubkey"
+          }
+        },
+        {
+          "name": "enqueuer_cooldown_slots",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "create_transaction_batch",
+      "discriminator": [
+        68,
+        250,
+        48,
+        173,
+        135,
+        15,
+        30,
+        147
+      ],
+      "accounts": [
+        {
+          "name": "transaction_batch_authority",
+          "signer": true
+        },
+        {
+          "name": "timelock"
+        },
+        {
+          "name": "transaction_batch",
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "enqueue_transaction_batch",
+      "discriminator": [
+        3,
+        107,
+        2,
+        52,
+        126,
+        155,
+        230,
+        210
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "timelock",
+          "writable": true,
+          "relations": [
+            "transaction_batch"
+          ]
+        },
+        {
+          "name": "transaction_batch",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "execute_transaction_batch",
+      "discriminator": [
+        142,
+        236,
+        149,
+        53,
+        195,
+        112,
+        253,
+        222
+      ],
+      "accounts": [
+        {
+          "name": "timelock_signer",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "timelock"
+              }
+            ]
+          }
+        },
+        {
+          "name": "timelock",
+          "relations": [
+            "transaction_batch"
+          ]
+        },
+        {
+          "name": "transaction_batch",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "remove_optimistic_proposer",
+      "discriminator": [
+        227,
+        181,
+        91,
+        29,
+        1,
+        230,
+        136,
+        104
+      ],
+      "accounts": [
+        {
+          "name": "timelock_signer",
+          "signer": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "timelock"
+              }
+            ]
+          }
+        },
+        {
+          "name": "timelock",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "optimistic_proposer",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "seal_transaction_batch",
+      "discriminator": [
+        54,
+        214,
+        150,
+        11,
+        55,
+        140,
+        173,
+        49
+      ],
+      "accounts": [
+        {
+          "name": "transaction_batch_authority",
+          "signer": true,
+          "relations": [
+            "transaction_batch"
+          ]
+        },
+        {
+          "name": "transaction_batch",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "set_authority",
+      "discriminator": [
+        133,
+        250,
+        37,
+        21,
+        110,
+        163,
+        26,
+        121
+      ],
+      "accounts": [
+        {
+          "name": "timelock_signer",
+          "signer": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "timelock"
+              }
+            ]
+          }
+        },
+        {
+          "name": "timelock",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "authority",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "set_delay_in_slots",
+      "discriminator": [
+        85,
+        96,
+        182,
+        146,
+        20,
+        10,
+        5,
+        59
+      ],
+      "accounts": [
+        {
+          "name": "timelock_signer",
+          "signer": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "timelock"
+              }
+            ]
+          }
+        },
+        {
+          "name": "timelock",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "delay_in_slots",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "set_optimistic_proposer_cooldown_slots",
+      "discriminator": [
+        32,
+        223,
+        131,
+        84,
+        138,
+        12,
+        56,
+        120
+      ],
+      "accounts": [
+        {
+          "name": "timelock_signer",
+          "signer": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "timelock"
+              }
+            ]
+          }
+        },
+        {
+          "name": "timelock",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "cooldown_slots",
+          "type": "u64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Timelock",
+      "discriminator": [
+        189,
+        33,
+        78,
+        75,
+        205,
+        31,
+        4,
+        177
+      ]
+    },
+    {
+      "name": "TransactionBatch",
+      "discriminator": [
+        39,
+        221,
+        32,
+        82,
+        209,
+        112,
+        56,
+        68
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "NotReady",
+      "msg": "This transaction is not yet ready to be executed"
+    },
+    {
+      "code": 6001,
+      "name": "CannotAddTransactions",
+      "msg": "Can only add instructions when transaction batch status is `Created`"
+    },
+    {
+      "code": 6002,
+      "name": "CannotSealTransactionBatch",
+      "msg": "Can only seal the transaction batch when status is `Created`"
+    },
+    {
+      "code": 6003,
+      "name": "CannotEnqueueTransactionBatch",
+      "msg": "Can only enqueue the timelock running once the status is `Sealed`"
+    },
+    {
+      "code": 6004,
+      "name": "CannotCancelTimelock",
+      "msg": "Can only cancel the transactions if the status `Enqueued`"
+    },
+    {
+      "code": 6005,
+      "name": "CanOnlyCancelDuringTimelockPeriod",
+      "msg": "Can only cancel the transactions during the timelock period"
+    },
+    {
+      "code": 6006,
+      "name": "CannotExecuteTransactions",
+      "msg": "Can only execute the transactions if the status is `Enqueued`"
+    },
+    {
+      "code": 6007,
+      "name": "NoAuthority",
+      "msg": "The signer is neither the timelock authority nor an optimistic proposer"
+    },
+    {
+      "code": 6008,
+      "name": "InsufficientPermissions",
+      "msg": "Optimistic proposers can't cancel transaction batches enqueued by the timelock authority"
+    },
+    {
+      "code": 6009,
+      "name": "OptimisticProposerCooldown",
+      "msg": "This optimistic proposer is still in its cooldown period"
+    }
+  ],
+  "types": [
+    {
+      "name": "AuthorityType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "OptimisticProposer"
+          },
+          {
+            "name": "TimelockAuthority"
+          }
+        ]
+      }
+    },
+    {
+      "name": "OptimisticProposer",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pubkey",
+            "type": "pubkey"
+          },
+          {
+            "name": "last_slot_enqueued",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Timelock",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "signer_bump",
+            "type": "u8"
+          },
+          {
+            "name": "delay_in_slots",
+            "type": "u64"
+          },
+          {
+            "name": "optimistic_proposers",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "OptimisticProposer"
+                }
+              }
+            }
+          },
+          {
+            "name": "optimistic_proposer_cooldown_slots",
+            "docs": [
+              "The cooldown period for enqueuers to prevent spamming the timelock."
+            ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Transaction",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "program_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "accounts",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "TransactionAccount"
+                }
+              }
+            }
+          },
+          {
+            "name": "data",
+            "type": "bytes"
+          },
+          {
+            "name": "did_execute",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TransactionAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pubkey",
+            "type": "pubkey"
+          },
+          {
+            "name": "is_signer",
+            "type": "bool"
+          },
+          {
+            "name": "is_writable",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TransactionBatch",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "TransactionBatchStatus"
+              }
+            }
+          },
+          {
+            "name": "transactions",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "Transaction"
+                }
+              }
+            }
+          },
+          {
+            "name": "timelock",
+            "type": "pubkey"
+          },
+          {
+            "name": "enqueued_slot",
+            "type": "u64"
+          },
+          {
+            "name": "transaction_batch_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "enqueuer_type",
+            "type": {
+              "defined": {
+                "name": "AuthorityType"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "TransactionBatchStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Created"
+          },
+          {
+            "name": "Sealed"
+          },
+          {
+            "name": "Enqueued"
+          },
+          {
+            "name": "Cancelled"
+          },
+          {
+            "name": "Executed"
+          }
+        ]
+      }
+    }
+  ]
+}
