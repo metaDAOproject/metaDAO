@@ -81,6 +81,8 @@ impl InitializeLaunch<'_> {
     pub fn validate(&self, _args: InitializeLaunchArgs) -> Result<()> {
         require_eq!(self.token_mint.supply, 0, LaunchpadError::SupplyNonZero);
 
+        require!(self.token_mint.freeze_authority.is_none(), LaunchpadError::FreezeAuthoritySet);
+
         Ok(())
     }
 

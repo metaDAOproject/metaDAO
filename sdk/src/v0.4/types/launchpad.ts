@@ -712,6 +712,11 @@ export type Launchpad = {
       code: 6005;
       name: "LaunchNotInitialized";
       msg: "Launch must be initialized to be started";
+    },
+    {
+      code: 6006;
+      name: "FreezeAuthoritySet";
+      msg: "Freeze authority can't be set on launchpad tokens";
     }
   ];
 };
@@ -1430,6 +1435,11 @@ export const IDL: Launchpad = {
       code: 6005,
       name: "LaunchNotInitialized",
       msg: "Launch must be initialized to be started",
+    },
+    {
+      code: 6006,
+      name: "FreezeAuthoritySet",
+      msg: "Freeze authority can't be set on launchpad tokens",
     },
   ],
 };

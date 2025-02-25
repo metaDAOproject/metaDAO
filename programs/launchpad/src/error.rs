@@ -14,4 +14,6 @@ pub enum LaunchpadError {
     LaunchNotRefunding,
     #[msg("Launch must be initialized to be started")]
     LaunchNotInitialized,
+    #[msg("Freeze authority can't be set on launchpad tokens")]
+    FreezeAuthoritySet,
 } 

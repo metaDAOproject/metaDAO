@@ -85,6 +85,36 @@ export default function suite() {
     }
   });
 
+  it("fails when freeze authority is set", async function () {
+    const minRaise = new BN(1000_000000); // 1000 USDC
+    const maxRaise = new BN(5000_000000); // 5000 USDC
+
+    const [launchAddr] = getLaunchAddr(launchpadClient.getProgramId(), dao);
+
+    const META2 = await createMint(this.banksClient, this.payer, this.payer.publicKey, this.payer.publicKey, 6);
+    try {
+      await launchpadClient.initializeLaunchIx(
+        dao,
+        minRaise,
+        maxRaise,
+        USDC,
+        META2
+      )
+        .preInstructions([
+          token.createSetAuthorityInstruction(
+            META2,
+            this.payer.publicKey,
+            token.AuthorityType.MintTokens,
+            launchAddr
+          ),
+        ])
+        .rpc();
+      assert.fail("Should have thrown error");
+    } catch (e) {
+      assert.include(e.message, "FreezeAuthoritySet");
+    }
+  });
+
   it("fails when supply has already been minted", async function () {
     const minRaise = new BN(1000_000000); // 1000 USDC
     const maxRaise = new BN(5000_000000); // 5000 USDC
