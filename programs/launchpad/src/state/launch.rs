@@ -15,7 +15,7 @@ pub struct Launch {
     pub minimum_raise_amount: u64,
     /// The creator of the launch.
     pub creator: Pubkey,
-    /// The launch treasury address. Needed because Raydium pools need a SOL payer.
+    /// The launch treasury address. Needed because Raydium pools need a SOL payer and this PDA can't hold SOL.
     pub launch_treasury: Pubkey,
     /// The PDA bump for the launch treasury.
     pub launch_treasury_pda_bump: u8,

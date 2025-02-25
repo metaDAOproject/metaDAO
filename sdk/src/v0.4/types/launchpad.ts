@@ -385,7 +385,7 @@ export type Launchpad = {
           {
             name: "launchTreasury";
             docs: [
-              "The launch treasury address. Needed because Raydium pools need a SOL payer."
+              "The launch treasury address. Needed because Raydium pools need a SOL payer and this PDA can't hold SOL."
             ];
             type: "publicKey";
           },
@@ -1108,7 +1108,7 @@ export const IDL: Launchpad = {
           {
             name: "launchTreasury",
             docs: [
-              "The launch treasury address. Needed because Raydium pools need a SOL payer.",
+              "The launch treasury address. Needed because Raydium pools need a SOL payer and this PDA can't hold SOL.",
             ],
             type: "publicKey",
           },

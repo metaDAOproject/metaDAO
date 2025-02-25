@@ -27,6 +27,7 @@ import {
   mintTo,
   getAccount,
   transfer,
+  getMint,
 } from "spl-token-bankrun";
 import * as token from "@solana/spl-token";
 import { assert } from "chai";
@@ -140,6 +141,10 @@ before(async function () {
     const tokenAccount = token.getAssociatedTokenAddressSync(mint, owner, true);
     const storedTokenAccount = await getAccount(this.banksClient, tokenAccount);
     return storedTokenAccount.amount;
+  };
+
+  this.getMint = async (mint: PublicKey) => {
+    return await getMint(this.banksClient, mint);
   };
 
   this.assertBalance = async (

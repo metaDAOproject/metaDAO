@@ -90,6 +90,9 @@ export default function suite() {
 
     assert.exists(launchAccount.state.complete);
     assert.equal(treasuryBalance.toString(), minRaise.muln(9).divn(10).toString());
+
+    const mint = await this.getMint(META);
+    assert.isTrue(mint.mintAuthority.equals(daoTreasury));
   });
 
   it("fails when launch period has not passed", async function () {

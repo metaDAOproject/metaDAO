@@ -1,17 +1,18 @@
 use anchor_lang::Discriminator;
 use anchor_lang::{prelude::*, system_program};
 use anchor_spl::associated_token::AssociatedToken;
-use anchor_spl::token::{self, Mint, MintTo, Token, TokenAccount, Transfer};
+use anchor_spl::token::{self, Mint, MintTo, SetAuthority, Token, TokenAccount, Transfer};
+use anchor_spl::token::spl_token::instruction::AuthorityType;
 
-use crate::TOKENS_PER_USDC;
 use crate::error::LaunchpadError;
+use crate::events::{CommonFields, LaunchCompletedEvent};
 use crate::state::{Launch, LaunchState};
+use crate::TOKENS_PER_USDC;
 use raydium_cpmm_cpi::{
     cpi, instruction,
     program::RaydiumCpmm,
     states::{AmmConfig, OBSERVATION_SEED, POOL_LP_MINT_SEED, POOL_VAULT_SEED},
 };
-use crate::events::{LaunchCompletedEvent, CommonFields};
 
 #[event_cpi]
 #[derive(Accounts)]
@@ -190,6 +191,19 @@ impl CompleteLaunch<'_> {
                 token_to_lp,
             )?;
 
+            token::set_authority(
+                CpiContext::new_with_signer(
+                    ctx.accounts.token_program.to_account_info(),
+                    SetAuthority {
+                        account_or_mint: ctx.accounts.token_mint.to_account_info(),
+                        current_authority: launch.to_account_info(),
+                    },
+                    signer,
+                ),
+                AuthorityType::MintTokens,
+                Some(launch.dao_treasury),
+            )?;
+
             system_program::transfer(
                 CpiContext::new(
                     ctx.accounts.system_program.to_account_info(),
@@ -200,7 +214,6 @@ impl CompleteLaunch<'_> {
                 ),
                 3_000_000_000,
             )?;
-
 
             let launch_key = launch.key();
 
