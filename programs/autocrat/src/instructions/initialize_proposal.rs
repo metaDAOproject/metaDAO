@@ -107,6 +107,9 @@ impl InitializeProposal<'_> {
             );
         }
 
+        // Should never be the case because the oracle is the proposal account, and you can't re-initialize a proposal
+        assert!(!self.question.is_resolved());
+
         Ok(())
     }
 

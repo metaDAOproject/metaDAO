@@ -92,9 +92,11 @@ impl Fund<'_> {
         // Update committed amount
         ctx.accounts.launch.committed_amount += amount;
 
+        ctx.accounts.launch.seq_num += 1;
+
         let clock = Clock::get()?;
         emit_cpi!(LaunchFundedEvent {
-            common: CommonFields::new(&clock),
+            common: CommonFields::new(&clock, ctx.accounts.launch.seq_num),
             launch: ctx.accounts.launch.key(),
             funder: ctx.accounts.funder.key(),
             amount,

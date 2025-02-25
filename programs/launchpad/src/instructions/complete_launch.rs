@@ -321,9 +321,11 @@ impl CompleteLaunch<'_> {
             launch.state = LaunchState::Refunding;
         }
 
+        launch.seq_num += 1;
+
         let clock = Clock::get()?;
         emit_cpi!(LaunchCompletedEvent {
-            common: CommonFields::new(&clock),
+            common: CommonFields::new(&clock, launch.seq_num),
             launch: launch.key(),
             final_state: launch.state,
             total_committed: launch.committed_amount,

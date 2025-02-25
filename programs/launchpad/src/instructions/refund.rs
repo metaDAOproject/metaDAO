@@ -47,7 +47,7 @@ impl Refund<'_> {
     }
 
     pub fn handle(ctx: Context<Self>) -> Result<()> {
-        let launch = &ctx.accounts.launch;
+        let launch = &mut ctx.accounts.launch;
         let launch_key = launch.key();
 
         // Get the amount of tokens the user has
@@ -87,10 +87,12 @@ impl Refund<'_> {
             ),
             user_token_balance,
         )?;
+        
+        launch.seq_num += 1;
 
         let clock = Clock::get()?;
         emit_cpi!(LaunchRefundedEvent {
-            common: CommonFields::new(&clock),
+            common: CommonFields::new(&clock, launch.seq_num),
             launch: ctx.accounts.launch.key(),
             funder: ctx.accounts.funder.key(),
             usdc_refunded: user_token_balance.saturating_div(TOKENS_PER_USDC),

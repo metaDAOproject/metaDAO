@@ -1,10 +1,6 @@
 export type Launchpad = {
   version: "0.4.0";
   name: "launchpad";
-  docs: [
-    "TODO:",
-    "- Add a `start_launch` instruction that allows the creator to start the launch"
-  ];
   instructions: [
     {
       name: "initializeLaunch";
@@ -481,6 +477,10 @@ export type Launchpad = {
           {
             name: "unixTimestamp";
             type: "i64";
+          },
+          {
+            name: "seqNum";
+            type: "u64";
           }
         ];
       };
@@ -729,10 +729,6 @@ export type Launchpad = {
 export const IDL: Launchpad = {
   version: "0.4.0",
   name: "launchpad",
-  docs: [
-    "TODO:",
-    "- Add a `start_launch` instruction that allows the creator to start the launch",
-  ],
   instructions: [
     {
       name: "initializeLaunch",
@@ -1209,6 +1205,10 @@ export const IDL: Launchpad = {
           {
             name: "unixTimestamp",
             type: "i64",
+          },
+          {
+            name: "seqNum",
+            type: "u64",
           },
         ],
       },

@@ -32,8 +32,10 @@ impl StartLaunch<'_> {
         launch.state = LaunchState::Live;
         launch.slot_started = clock.slot;
 
+        launch.seq_num += 1;
+
         emit_cpi!(LaunchStartedEvent {
-            common: CommonFields::new(&clock),
+            common: CommonFields::new(&clock, launch.seq_num),
             launch: ctx.accounts.launch.key(),
             creator: ctx.accounts.creator.key(),
             slot_started: clock.slot,

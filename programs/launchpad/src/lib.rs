@@ -20,10 +20,8 @@ use instructions::*;
 
 declare_id!("AfJJJ5UqxhBKoE3grkKAZZsoXDE9kncbMKvqSHGsCNrE");
 
+/// 1,000 tokens per USDC, so a price of $0.001 per token
 pub const TOKENS_PER_USDC: u64 = 1_000;
-
-/// TODO:
-/// - Add a `start_launch` instruction that allows the creator to start the launch
 
 #[program]
 pub mod launchpad {

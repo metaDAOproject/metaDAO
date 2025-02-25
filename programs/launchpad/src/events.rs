@@ -5,13 +5,15 @@ use crate::state::LaunchState;
 pub struct CommonFields {
     pub slot: u64,
     pub unix_timestamp: i64,
+    pub seq_num: u64,
 }
 
 impl CommonFields {
-    pub fn new(clock: &Clock) -> Self {
+    pub fn new(clock: &Clock, seq_num: u64) -> Self {
         Self {
             slot: clock.slot,
             unix_timestamp: clock.unix_timestamp,
+            seq_num
         }
     }
 }

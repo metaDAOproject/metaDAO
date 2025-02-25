@@ -120,10 +120,7 @@ impl InitializeLaunch<'_> {
 
         let clock = Clock::get()?;
         emit!(LaunchInitializedEvent {
-            common: CommonFields {
-                slot: clock.slot,
-                unix_timestamp: clock.unix_timestamp,
-            },
+            common: CommonFields::new(&clock, 0),
             launch: ctx.accounts.launch.key(),
             dao: ctx.accounts.dao.key(),
             dao_treasury: ctx.accounts.dao_treasury.key(),
