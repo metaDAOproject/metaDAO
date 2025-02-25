@@ -21,17 +21,7 @@ wallet = "~/.config/solana/id.json"
 
 [scripts]
 add-v03-metadata = "yarn run tsx scripts/addV03Metadata.ts"
-attach-metadata = "yarn run ts-node scripts/attachMetadata.ts"
-crank = "yarn run ts-node scripts/crankTwap.ts"
-finalize = "yarn run ts-node scripts/finalizeProposal.ts"
-initialize-dao = "yarn run ts-node scripts/initializeDao.ts"
-merge-tokens = "yarn run ts-node scripts/mergeTokens.ts"
-metadata = "yarn run ts-node scripts/uploadMetadata.ts"
-propose = "yarn run ts-node scripts/initializeProposal.ts"
-reclaim-tokens = "yarn run ts-node scripts/reclaimTokens.ts"
-send-tokens = "yarn run ts-node scripts/sendTokens.ts"
 setup-devnet = "yarn run tsx scripts/setupDevnet.ts"
-test = "npx mocha --import=tsx tests/main.test.ts"
 
 [test]
 startup_wait = 5000
