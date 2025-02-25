@@ -173,9 +173,13 @@ impl CompleteLaunch<'_> {
             let usdc_to_dao = launch_usdc_balance.saturating_sub(usdc_to_lp);
             let token_to_lp = usdc_to_lp.saturating_mul(TOKENS_PER_USDC);
 
-            let dao_key = launch.dao;
+            let launch_key = launch.key();
 
-            let seeds = &[b"launch", dao_key.as_ref(), &[launch.pda_bump]];
+            let seeds = &[
+                b"launch_signer",
+                launch_key.as_ref(),
+                &[launch.launch_signer_pda_bump],
+            ];
             let signer = &[&seeds[..]];
 
             token::mint_to(
@@ -184,7 +188,7 @@ impl CompleteLaunch<'_> {
                     MintTo {
                         mint: ctx.accounts.token_mint.to_account_info(),
                         to: ctx.accounts.launch_token_vault.to_account_info(),
-                        authority: launch.to_account_info(),
+                        authority: ctx.accounts.launch_signer.to_account_info(),
                     },
                     signer,
                 ),
@@ -196,7 +200,7 @@ impl CompleteLaunch<'_> {
                     ctx.accounts.token_program.to_account_info(),
                     SetAuthority {
                         account_or_mint: ctx.accounts.token_mint.to_account_info(),
-                        current_authority: launch.to_account_info(),
+                        current_authority: ctx.accounts.launch_signer.to_account_info(),
                     },
                     signer,
                 ),
@@ -215,14 +219,6 @@ impl CompleteLaunch<'_> {
                 3_000_000_000,
             )?;
 
-            let launch_key = launch.key();
-
-            let seeds = &[
-                b"launch_signer",
-                launch_key.as_ref(),
-                &[launch.launch_signer_pda_bump],
-            ];
-            let signer = &[&seeds[..]];
 
             token::transfer(
                 CpiContext::new_with_signer(

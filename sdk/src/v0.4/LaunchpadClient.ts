@@ -158,13 +158,13 @@ export class LaunchpadClient {
     tokenMint: PublicKey,
     funder: PublicKey = this.provider.publicKey
   ) {
-    const [launchTreasury] = getLaunchSignerAddr(
+    const [launchSigner] = getLaunchSignerAddr(
       this.launchpad.programId,
       launch
     );
     const usdcVault = getAssociatedTokenAddressSync(
       usdcMint,
-      launchTreasury,
+      launchSigner,
       true
     );
     const funderUsdcAccount = getAssociatedTokenAddressSync(usdcMint, funder);
@@ -177,6 +177,7 @@ export class LaunchpadClient {
       funder,
       funderUsdcAccount,
       funderTokenAccount,
+      launchSigner,
     });
   }
 

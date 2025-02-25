@@ -12,9 +12,13 @@ pub struct Fund<'info> {
     #[account(
         mut, 
         has_one = token_mint,
+        has_one = launch_signer,
         constraint = launch.state == LaunchState::Live @ LaunchpadError::InvalidLaunchState
     )]
     pub launch: Account<'info, Launch>,
+
+    /// CHECK: just a signer
+    pub launch_signer: UncheckedAccount<'info>,
 
     #[account(
         mut,
@@ -63,12 +67,12 @@ impl Fund<'_> {
         // have 6 decimals
         let token_amount = amount * TOKENS_PER_USDC;
 
-        let dao_key = ctx.accounts.launch.dao;
+        let launch_key = ctx.accounts.launch.key();
 
         let seeds = &[
-            b"launch",
-            dao_key.as_ref(),
-            &[ctx.accounts.launch.pda_bump],
+            b"launch_signer",
+            launch_key.as_ref(),
+            &[ctx.accounts.launch.launch_signer_pda_bump],
         ];
         let signer = &[&seeds[..]];
 
@@ -78,7 +82,7 @@ impl Fund<'_> {
                 MintTo {
                     mint: ctx.accounts.token_mint.to_account_info(),
                     to: ctx.accounts.funder_token_account.to_account_info(),
-                    authority: ctx.accounts.launch.to_account_info(),
+                    authority: ctx.accounts.launch_signer.to_account_info(),
                 },
                 signer,
             ),

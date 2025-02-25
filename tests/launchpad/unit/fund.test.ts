@@ -64,7 +64,7 @@ export default function suite() {
         META,
         this.payer.publicKey,
         AuthorityType.MintTokens,
-        launch
+        launchSigner
       )
     ]).rpc();
 

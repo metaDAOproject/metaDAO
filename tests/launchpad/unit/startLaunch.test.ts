@@ -3,6 +3,7 @@ import { assert } from "chai";
 import {
   AutocratClient,
   getLaunchAddr,
+  getLaunchSignerAddr,
   LaunchpadClient,
 } from "@metadaoproject/futarchy/v0.4";
 import { createMint } from "spl-token-bankrun";
@@ -16,7 +17,7 @@ export default function suite() {
   let META: PublicKey;
   let USDC: PublicKey;
   let launch: PublicKey;
-
+  let launchSigner: PublicKey;
   const minRaise = new BN(1000_000000); // 1000 USDC
 
   before(async function () {
@@ -34,7 +35,7 @@ export default function suite() {
 
     // Get launch address
     [launch] = getLaunchAddr(launchpadClient.getProgramId(), dao);
-
+    [launchSigner] = getLaunchSignerAddr(launchpadClient.getProgramId(), launch);
     // Initialize launch
     await launchpadClient.initializeLaunchIx(
       dao,
@@ -47,7 +48,7 @@ export default function suite() {
         META,
         this.payer.publicKey,
         AuthorityType.MintTokens,
-        launch
+        launchSigner
       )
     ]).rpc();
   });

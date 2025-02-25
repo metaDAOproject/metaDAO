@@ -68,7 +68,7 @@ pub struct InitializeLaunch<'info> {
     /// CHECK: This is USDC mint
     #[account(
         mint::decimals = 6,
-        mint::authority = launch,
+        mint::authority = launch_signer,
     )]
     pub token_mint: Account<'info, Mint>,
     
@@ -106,8 +106,8 @@ impl InitializeLaunch<'_> {
             creator: ctx.accounts.creator.key(),
             dao_treasury,
             treasury_usdc_account: ctx.accounts.treasury_usdc_account.key(),
-            launch_signer: launch_signer,
-            launch_signer_pda_bump: launch_signer_pda_bump,
+            launch_signer,
+            launch_signer_pda_bump,
             launch_usdc_vault: ctx.accounts.usdc_vault.key(),
             launch_token_vault: ctx.accounts.token_vault.key(),
             committed_amount: 0,

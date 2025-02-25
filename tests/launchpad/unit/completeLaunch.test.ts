@@ -3,6 +3,7 @@ import { assert } from "chai";
 import {
   AutocratClient,
   getLaunchAddr,
+  getLaunchSignerAddr,
   LaunchpadClient,
   RAYDIUM_CP_SWAP_PROGRAM_ID,
 } from "@metadaoproject/futarchy/v0.4";
@@ -19,6 +20,7 @@ export default function suite() {
   let META: PublicKey;
   let USDC: PublicKey;
   let launch: PublicKey;
+  let launchSigner: PublicKey;
   let usdcVault: PublicKey;
   let treasuryUsdcAccount: PublicKey;
 
@@ -44,6 +46,8 @@ export default function suite() {
 
     // Get accounts
     [launch] = getLaunchAddr(launchpadClient.getProgramId(), dao);
+    [launchSigner] = getLaunchSignerAddr(launchpadClient.getProgramId(), launch);
+
     usdcVault = getAssociatedTokenAddressSync(USDC, launch, true);
     treasuryUsdcAccount = getAssociatedTokenAddressSync(USDC, daoTreasury, true);
 
@@ -59,7 +63,7 @@ export default function suite() {
         META,
         this.payer.publicKey,
         AuthorityType.MintTokens,
-        launch
+        launchSigner
       )
     ]).rpc();
 

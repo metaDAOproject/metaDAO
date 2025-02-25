@@ -129,6 +129,11 @@ export type Launchpad = {
           isSigner: false;
         },
         {
+          name: "launchSigner";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "usdcVault";
           isMut: true;
           isSigner: false;
@@ -849,6 +854,11 @@ export const IDL: Launchpad = {
         {
           name: "launch",
           isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "launchSigner",
+          isMut: false,
           isSigner: false,
         },
         {
