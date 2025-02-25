@@ -173,12 +173,12 @@ export function getLaunchAddr(
   );
 }
 
-export const getLaunchTreasuryAddr = (
+export const getLaunchSignerAddr = (
   programId: PublicKey = LAUNCHPAD_PROGRAM_ID,
   launch: PublicKey
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
-    [Buffer.from("launch_treasury"), launch.toBuffer()],
+    [Buffer.from("launch_signer"), launch.toBuffer()],
     programId
   );
 };

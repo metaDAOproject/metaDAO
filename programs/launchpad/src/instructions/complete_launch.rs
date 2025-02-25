@@ -22,7 +22,7 @@ pub struct CompleteLaunch<'info> {
         has_one = treasury_usdc_account,
         has_one = launch_usdc_vault,
         has_one = launch_token_vault,
-        has_one = launch_treasury,
+        has_one = launch_signer,
     )]
     pub launch: Account<'info, Launch>,
 
@@ -31,7 +31,7 @@ pub struct CompleteLaunch<'info> {
 
     /// CHECK: just a signer
     #[account(mut)]
-    pub launch_treasury: UncheckedAccount<'info>,
+    pub launch_signer: UncheckedAccount<'info>,
 
     /// CHECK: pool vault and lp mint authority
     #[account(
@@ -46,14 +46,14 @@ pub struct CompleteLaunch<'info> {
     #[account(
         mut,
         token::mint = usdc_mint,
-        token::authority = launch_treasury,
+        token::authority = launch_signer,
     )]
     pub launch_usdc_vault: Account<'info, TokenAccount>,
 
     #[account(
         mut,
         token::mint = token_mint,
-        token::authority = launch_treasury,
+        token::authority = launch_signer,
     )]
     pub launch_token_vault: Account<'info, TokenAccount>,
 
@@ -209,7 +209,7 @@ impl CompleteLaunch<'_> {
                     ctx.accounts.system_program.to_account_info(),
                     system_program::Transfer {
                         from: ctx.accounts.payer.to_account_info(),
-                        to: ctx.accounts.launch_treasury.to_account_info(),
+                        to: ctx.accounts.launch_signer.to_account_info(),
                     },
                 ),
                 3_000_000_000,
@@ -218,9 +218,9 @@ impl CompleteLaunch<'_> {
             let launch_key = launch.key();
 
             let seeds = &[
-                b"launch_treasury",
+                b"launch_signer",
                 launch_key.as_ref(),
-                &[launch.launch_treasury_pda_bump],
+                &[launch.launch_signer_pda_bump],
             ];
             let signer = &[&seeds[..]];
 
@@ -230,7 +230,7 @@ impl CompleteLaunch<'_> {
                     Transfer {
                         from: ctx.accounts.launch_usdc_vault.to_account_info(),
                         to: ctx.accounts.treasury_usdc_account.to_account_info(),
-                        authority: ctx.accounts.launch_treasury.to_account_info(),
+                        authority: ctx.accounts.launch_signer.to_account_info(),
                     },
                     signer,
                 ),
@@ -271,7 +271,7 @@ impl CompleteLaunch<'_> {
             };
 
             let cpi_accounts = cpi::accounts::Initialize {
-                creator: ctx.accounts.launch_treasury.to_account_info(),
+                creator: ctx.accounts.launch_signer.to_account_info(),
                 amm_config: ctx.accounts.amm_config.to_account_info(),
                 authority: ctx.accounts.authority.to_account_info(),
                 pool_state: ctx.accounts.pool_state.to_account_info(),
@@ -310,7 +310,7 @@ impl CompleteLaunch<'_> {
                     .zip(cpi_accounts.to_account_infos())
                     .map(|mut pair| {
                         pair.0.is_signer = pair.1.is_signer;
-                        if pair.0.pubkey == ctx.accounts.launch_treasury.key() {
+                        if pair.0.pubkey == ctx.accounts.launch_signer.key() {
                             pair.0.is_signer = true;
                         }
                         pair.0

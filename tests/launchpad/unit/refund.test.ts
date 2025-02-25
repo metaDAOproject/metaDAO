@@ -3,7 +3,7 @@ import { assert } from "chai";
 import {
   AutocratClient,
   getLaunchAddr,
-  getLaunchTreasuryAddr,
+  getLaunchSignerAddr,
   LaunchpadClient,
 } from "@metadaoproject/futarchy/v0.4";
 import { createMint } from "spl-token-bankrun";
@@ -18,7 +18,7 @@ export default function suite() {
   let META: PublicKey;
   let USDC: PublicKey;
   let launch: PublicKey;
-  let launchTreasury: PublicKey;
+  let launchSigner: PublicKey;
   let usdcVault: PublicKey;
   let funderUsdcAccount: PublicKey;
 
@@ -45,8 +45,8 @@ export default function suite() {
 
     // Get accounts
     [launch] = getLaunchAddr(launchpadClient.getProgramId(), dao);
-    [launchTreasury] = getLaunchTreasuryAddr(launchpadClient.getProgramId(), launch);
-    usdcVault = getAssociatedTokenAddressSync(USDC, launchTreasury, true);
+    [launchSigner] = getLaunchSignerAddr(launchpadClient.getProgramId(), launch);
+    usdcVault = getAssociatedTokenAddressSync(USDC, launchSigner, true);
     funderUsdcAccount = getAssociatedTokenAddressSync(USDC, this.payer.publicKey);
 
     // Initialize launch

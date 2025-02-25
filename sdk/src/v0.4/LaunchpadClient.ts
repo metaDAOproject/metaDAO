@@ -17,7 +17,7 @@ import { Launch } from "./types/index.js";
 import {
   getDaoTreasuryAddr,
   getLaunchAddr,
-  getLaunchTreasuryAddr,
+  getLaunchSignerAddr,
 } from "./utils/pda.js";
 import { AutocratClient } from "./AutocratClient.js";
 import * as anchor from "@coral-xyz/anchor";
@@ -79,18 +79,18 @@ export class LaunchpadClient {
     creator: PublicKey = this.provider.publicKey
   ) {
     const [launch] = getLaunchAddr(this.launchpad.programId, dao);
-    const [launchTreasury] = getLaunchTreasuryAddr(
+    const [launchSigner] = getLaunchSignerAddr(
       this.launchpad.programId,
       launch
     );
     const usdcVault = getAssociatedTokenAddressSync(
       usdcMint,
-      launchTreasury,
+      launchSigner,
       true
     );
     const tokenVault = getAssociatedTokenAddressSync(
       tokenMint,
-      launchTreasury,
+      launchSigner,
       true
     );
     const [daoTreasury] = getDaoTreasuryAddr(
@@ -109,7 +109,7 @@ export class LaunchpadClient {
       })
       .accounts({
         launch,
-        launchTreasury,
+        launchSigner,
         usdcVault,
         tokenVault,
         daoTreasury,
@@ -122,14 +122,14 @@ export class LaunchpadClient {
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(
           creator,
-          getAssociatedTokenAddressSync(tokenMint, launchTreasury, true),
-          launchTreasury,
+          getAssociatedTokenAddressSync(tokenMint, launchSigner, true),
+          launchSigner,
           tokenMint
         ),
         createAssociatedTokenAccountIdempotentInstruction(
           creator,
-          getAssociatedTokenAddressSync(usdcMint, launchTreasury, true),
-          launchTreasury,
+          getAssociatedTokenAddressSync(usdcMint, launchSigner, true),
+          launchSigner,
           usdcMint
         ),
         createAssociatedTokenAccountIdempotentInstruction(
@@ -158,7 +158,7 @@ export class LaunchpadClient {
     tokenMint: PublicKey,
     funder: PublicKey = this.provider.publicKey
   ) {
-    const [launchTreasury] = getLaunchTreasuryAddr(
+    const [launchTreasury] = getLaunchSignerAddr(
       this.launchpad.programId,
       launch
     );
@@ -186,18 +186,18 @@ export class LaunchpadClient {
     tokenMint: PublicKey,
     daoTreasury: PublicKey
   ) {
-    const [launchTreasury] = getLaunchTreasuryAddr(
+    const [launchSigner] = getLaunchSignerAddr(
       this.launchpad.programId,
       launch
     );
     const launchUsdcVault = getAssociatedTokenAddressSync(
       usdcMint,
-      launchTreasury,
+      launchSigner,
       true
     );
     const launchTokenVault = getAssociatedTokenAddressSync(
       tokenMint,
-      launchTreasury,
+      launchSigner,
       true
     );
     const treasuryUsdcAccount = getAssociatedTokenAddressSync(
@@ -216,7 +216,7 @@ export class LaunchpadClient {
       RAYDIUM_CP_SWAP_PROGRAM_ID
     );
 
-    const lpVault = getAssociatedTokenAddressSync(lpMint, launchTreasury, true);
+    const lpVault = getAssociatedTokenAddressSync(lpMint, launchSigner, true);
 
     const [poolTokenVault] = PublicKey.findProgramAddressSync(
       [
@@ -248,7 +248,7 @@ export class LaunchpadClient {
       .completeLaunch()
       .accounts({
         launch,
-        launchTreasury,
+        launchSigner,
         launchUsdcVault,
         launchTokenVault,
         usdcMint,
@@ -274,14 +274,14 @@ export class LaunchpadClient {
     tokenMint: PublicKey,
     funder: PublicKey = this.provider.publicKey
   ) {
-    const [launchTreasury] = getLaunchTreasuryAddr(
+    const [launchSigner] = getLaunchSignerAddr(
       this.launchpad.programId,
       launch
     );
 
     const launchUsdcVault = getAssociatedTokenAddressSync(
       usdcMint,
-      launchTreasury,
+      launchSigner,
       true
     );
     const funderUsdcAccount = getAssociatedTokenAddressSync(usdcMint, funder);
@@ -289,7 +289,7 @@ export class LaunchpadClient {
 
     return this.launchpad.methods.refund().accounts({
       launch,
-      launchTreasury,
+      launchSigner,
       launchUsdcVault,
       funder,
       funderUsdcAccount,

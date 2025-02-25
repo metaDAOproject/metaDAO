@@ -15,7 +15,7 @@ export type Launchpad = {
           isSigner: false;
         },
         {
-          name: "launchTreasury";
+          name: "launchSigner";
           isMut: false;
           isSigner: false;
         },
@@ -190,7 +190,7 @@ export type Launchpad = {
           isSigner: true;
         },
         {
-          name: "launchTreasury";
+          name: "launchSigner";
           isMut: true;
           isSigner: false;
         },
@@ -320,7 +320,7 @@ export type Launchpad = {
           isSigner: false;
         },
         {
-          name: "launchTreasury";
+          name: "launchSigner";
           isMut: true;
           isSigner: false;
         },
@@ -383,15 +383,15 @@ export type Launchpad = {
             type: "publicKey";
           },
           {
-            name: "launchTreasury";
+            name: "launchSigner";
             docs: [
-              "The launch treasury address. Needed because Raydium pools need a SOL payer and this PDA can't hold SOL."
+              "The launch signer address. Needed because Raydium pools need a SOL payer and this PDA can't hold SOL."
             ];
             type: "publicKey";
           },
           {
-            name: "launchTreasuryPdaBump";
-            docs: ["The PDA bump for the launch treasury."];
+            name: "launchSignerPdaBump";
+            docs: ["The PDA bump for the launch signer."];
             type: "u8";
           },
           {
@@ -738,7 +738,7 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
-          name: "launchTreasury",
+          name: "launchSigner",
           isMut: false,
           isSigner: false,
         },
@@ -913,7 +913,7 @@ export const IDL: Launchpad = {
           isSigner: true,
         },
         {
-          name: "launchTreasury",
+          name: "launchSigner",
           isMut: true,
           isSigner: false,
         },
@@ -1043,7 +1043,7 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
-          name: "launchTreasury",
+          name: "launchSigner",
           isMut: true,
           isSigner: false,
         },
@@ -1106,15 +1106,15 @@ export const IDL: Launchpad = {
             type: "publicKey",
           },
           {
-            name: "launchTreasury",
+            name: "launchSigner",
             docs: [
-              "The launch treasury address. Needed because Raydium pools need a SOL payer and this PDA can't hold SOL.",
+              "The launch signer address. Needed because Raydium pools need a SOL payer and this PDA can't hold SOL.",
             ],
             type: "publicKey",
           },
           {
-            name: "launchTreasuryPdaBump",
-            docs: ["The PDA bump for the launch treasury."],
+            name: "launchSignerPdaBump",
+            docs: ["The PDA bump for the launch signer."],
             type: "u8",
           },
           {

@@ -15,10 +15,10 @@ pub struct Launch {
     pub minimum_raise_amount: u64,
     /// The creator of the launch.
     pub creator: Pubkey,
-    /// The launch treasury address. Needed because Raydium pools need a SOL payer and this PDA can't hold SOL.
-    pub launch_treasury: Pubkey,
-    /// The PDA bump for the launch treasury.
-    pub launch_treasury_pda_bump: u8,
+    /// The launch signer address. Needed because Raydium pools need a SOL payer and this PDA can't hold SOL.
+    pub launch_signer: Pubkey,
+    /// The PDA bump for the launch signer.
+    pub launch_signer_pda_bump: u8,
     /// The USDC vault that will hold the USDC raised until the launch is over.
     pub launch_usdc_vault: Pubkey,
     /// The token vault, used to send tokens to Raydium.

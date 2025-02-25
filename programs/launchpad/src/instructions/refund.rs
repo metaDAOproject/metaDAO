@@ -13,6 +13,7 @@ pub struct Refund<'info> {
         mut,
         has_one = launch_usdc_vault,
         has_one = token_mint,
+        has_one = launch_signer,
     )]
     pub launch: Account<'info, Launch>,
 
@@ -21,7 +22,7 @@ pub struct Refund<'info> {
 
     /// CHECK: just a signer
     #[account(mut)]
-    pub launch_treasury: UncheckedAccount<'info>,
+    pub launch_signer: UncheckedAccount<'info>,
 
     #[account(mut)]
     pub funder: Signer<'info>,
@@ -54,9 +55,9 @@ impl Refund<'_> {
         require!(user_token_balance > 0, LaunchpadError::InvalidAmount);
 
         let seeds = &[
-            b"launch_treasury",
+            b"launch_signer",
             launch_key.as_ref(),
-            &[launch.launch_treasury_pda_bump],
+            &[launch.launch_signer_pda_bump],
         ];
         let signer = &[&seeds[..]];
 
@@ -67,7 +68,7 @@ impl Refund<'_> {
                 Transfer {
                     from: ctx.accounts.launch_usdc_vault.to_account_info(),
                     to: ctx.accounts.funder_usdc_account.to_account_info(),
-                    authority: ctx.accounts.launch_treasury.to_account_info(),
+                    authority: ctx.accounts.launch_signer.to_account_info(),
                 },
                 signer,
             ),
