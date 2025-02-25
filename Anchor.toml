@@ -22,6 +22,7 @@ wallet = "~/.config/solana/id.json"
 [scripts]
 add-v03-metadata = "yarn run tsx scripts/addV03Metadata.ts"
 setup-devnet = "yarn run tsx scripts/setupDevnet.ts"
+initialize-launch = "yarn run tsx scripts/initializeLaunch.ts"
 
 [test]
 startup_wait = 5000
