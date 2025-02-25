@@ -20,6 +20,7 @@ cluster = "Localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
+test = "npx mocha --import=tsx tests/main.test.ts"
 add-v03-metadata = "yarn run tsx scripts/addV03Metadata.ts"
 setup-devnet = "yarn run tsx scripts/setupDevnet.ts"
 initialize-launch = "yarn run tsx scripts/initializeLaunch.ts"
