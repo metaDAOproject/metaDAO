@@ -62,6 +62,27 @@ upgrade_idl() {
     anchor idl upgrade --filepath ./target/idl/"$PROGRAM_NAME".json "$PROGRAM_ID" --provider.cluster "$CLUSTER"
 }
 
+# this is for if our program isn't big enough, must be in solana 1.18.x
+show_size_diff() {
+    PROGRAM_NAME=$1
+    PROGRAM_ID=$2
+    CLUSTER=$3
+
+    EXISTING_SIZE=$(solana program show "$PROGRAM_ID" -u "$CLUSTER" | awk '/Data Length:/ {print $3}')
+
+    NEW_SIZE=$(wc -c < ./target/deploy/"$PROGRAM_NAME".so)
+
+    echo "Existing size: $EXISTING_SIZE bytes"
+    echo "New size: $NEW_SIZE bytes"
+
+    DIFF=$((NEW_SIZE - EXISTING_SIZE))
+    echo "Size difference: $DIFF bytes"
+
+    if [ "$NEW_SIZE" -gt "$EXISTING_SIZE" ]; then
+        echo "New program is larger than existing one. You may need to run: solana program extend"
+    fi
+}
+
 bankrun() {
     (find programs && find tests) | entr -csr 'anchor build -p autocrat && RUST_LOG= yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/autocrat.ts'
 }
@@ -111,5 +132,6 @@ case "$1" in
     bankrun_timelock) bankrun_timelock ;;
     bankrun_vault_logs) bankrun_vault_logs ;;
     bankrun_logs) bankrun_logs ;;
+    show_size_diff) show_size_diff "$2" "$3" "$4" ;;
     *) echo "Unknown command: $1" ;;
 esac
