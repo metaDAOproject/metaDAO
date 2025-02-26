@@ -119,7 +119,7 @@ impl InitializeLaunch<'_> {
         });
 
         let clock = Clock::get()?;
-        emit!(LaunchInitializedEvent {
+        emit_cpi!(LaunchInitializedEvent {
             common: CommonFields::new(&clock, 0),
             launch: ctx.accounts.launch.key(),
             dao: ctx.accounts.dao.key(),
