@@ -79,7 +79,7 @@ show_size_diff() {
     echo "Size difference: $DIFF bytes"
 
     if [ "$NEW_SIZE" -gt "$EXISTING_SIZE" ]; then
-        echo "New program is larger than existing one. You may need to run: solana program extend"
+        echo "New program is larger than existing one. You may need to run: solana program extend $PROGRAM_ID $DIFF -u \"$CLUSTER\""
     fi
 }
 
