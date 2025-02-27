@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Token, TokenAccount, Transfer, Burn, Mint};
+use anchor_spl::token::{self, Token, TokenAccount, Transfer};
 
 use crate::state::{Launch, LaunchState, FundingRecord};
 use crate::error::LaunchpadError;

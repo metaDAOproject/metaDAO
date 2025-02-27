@@ -449,6 +449,11 @@ export type Launchpad = {
             type: "publicKey";
           },
           {
+            name: "launch";
+            docs: ["The launch."];
+            type: "publicKey";
+          },
+          {
             name: "committedAmount";
             docs: ["The amount of USDC that has been committed by the funder."];
             type: "u64";
@@ -1328,6 +1333,11 @@ export const IDL: Launchpad = {
           {
             name: "funder",
             docs: ["The funder."],
+            type: "publicKey",
+          },
+          {
+            name: "launch",
+            docs: ["The launch."],
             type: "publicKey",
           },
           {

@@ -74,6 +74,7 @@ impl Fund<'_> {
             funding_record.set_inner(FundingRecord {
                 pda_bump: ctx.bumps.funding_record,
                 funder: ctx.accounts.funder.key(),
+                launch: ctx.accounts.launch.key(),
                 committed_amount: amount,
                 seq_num: 0,
             });
