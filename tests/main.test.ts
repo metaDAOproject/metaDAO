@@ -34,7 +34,7 @@ import { assert } from "chai";
 import { MPL_TOKEN_METADATA_PROGRAM_ID as UMI_MPL_TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
 import { toWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
 import * as fs from "fs";
-import { RAYDIUM_CONFIG } from "@metadaoproject/futarchy/v0.4";
+import { LOW_FEE_RAYDIUM_CONFIG } from "@metadaoproject/futarchy/v0.4";
 
 const MPL_TOKEN_METADATA_PROGRAM_ID = toWeb3JsPublicKey(
   UMI_MPL_TOKEN_METADATA_PROGRAM_ID
@@ -66,7 +66,7 @@ before(async function () {
     ],
     [
       {
-        address: RAYDIUM_CONFIG,
+        address: LOW_FEE_RAYDIUM_CONFIG,
         info: {
           data: fs.readFileSync("./tests/fixtures/raydium-amm-config"),
           executable: false,

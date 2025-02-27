@@ -77,7 +77,7 @@ async function main() {
 
     await launchpad.startLaunchIx(launchAddr, payer.publicKey).rpc();
 
-    await launchpad.fundIx(launchAddr, new BN(10), DEVNET_MUSDC, payer.publicKey).rpc();
+    await launchpad.fundIx(launchAddr, new BN(12), DEVNET_MUSDC, payer.publicKey).rpc();
 
     await launchpad.completeLaunchIx(launchAddr, DEVNET_MUSDC, pORE, daoTreasury, true)
         .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 })]).rpc();

@@ -284,8 +284,6 @@ export class LaunchpadClient {
       cpSwapProgramId
     );
 
-    console.log(cpSwapProgramId);
-
     return this.launchpad.methods
       .completeLaunch()
       .accounts({
