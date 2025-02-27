@@ -218,9 +218,9 @@ export type Launchpad = {
         },
         {
           name: "ammConfig";
-          isMut: false;
+          isMut: true;
           isSigner: false;
-          docs: ["Which config the pool belongs to."];
+          docs: ["Use the lowest fee pool"];
         },
         {
           name: "poolState";
@@ -1090,9 +1090,9 @@ export const IDL: Launchpad = {
         },
         {
           name: "ammConfig",
-          isMut: false,
+          isMut: true,
           isSigner: false,
-          docs: ["Which config the pool belongs to."],
+          docs: ["Use the lowest fee pool"],
         },
         {
           name: "poolState",

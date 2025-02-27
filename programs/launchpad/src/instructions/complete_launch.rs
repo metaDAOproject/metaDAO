@@ -3,6 +3,7 @@ use anchor_lang::{prelude::*, system_program};
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{self, Mint, MintTo, SetAuthority, Token, TokenAccount, Transfer};
 use anchor_spl::token::spl_token::instruction::AuthorityType;
+use raydium_cpmm_cpi::states::AMM_CONFIG_SEED;
 
 use crate::error::LaunchpadError;
 use crate::events::{CommonFields, LaunchCompletedEvent};
@@ -60,7 +61,16 @@ pub struct CompleteLaunch<'info> {
     #[account(mut)]
     pub treasury_usdc_account: Account<'info, TokenAccount>,
 
-    /// Which config the pool belongs to.
+    /// Use the lowest fee pool, can see fees at https://api-v3.raydium.io/main/cpmm-config
+    #[account(
+        mut,
+        seeds = [
+            AMM_CONFIG_SEED.as_bytes(),
+            &0_u16.to_be_bytes()
+        ],
+        seeds::program = cp_swap_program,
+        bump,
+    )]
     pub amm_config: Box<Account<'info, AmmConfig>>,
 
     /// CHECK: Initialize an account to store the pool state, init by cp-swap

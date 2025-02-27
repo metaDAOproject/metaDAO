@@ -55,6 +55,7 @@ pub struct Claim<'info> {
 impl Claim<'_> {
     pub fn validate(&self) -> Result<()> {
         require!(self.launch.state == LaunchState::Complete, LaunchpadError::InvalidLaunchState);
+
         Ok(())
     }
 
@@ -68,7 +69,7 @@ impl Claim<'_> {
             .checked_mul(AVAILABLE_TOKENS as u128)
             .unwrap()
             .checked_div(launch.total_committed_amount as u128)
-            .unwrap();
+            .unwrap() as u64;
 
         let seeds = &[
             b"launch_signer",
@@ -88,7 +89,7 @@ impl Claim<'_> {
                 },
                 signer,
             ),
-            token_amount as u64,
+            token_amount,
         )?;
 
         let clock = Clock::get()?;
@@ -96,7 +97,7 @@ impl Claim<'_> {
             common: CommonFields::new(&clock, launch.seq_num),
             launch: launch.key(),
             funder: ctx.accounts.funder.key(),
-            tokens_claimed: token_amount as u64,
+            tokens_claimed: token_amount,
             funding_record: funding_record.key(),
         });
 
