@@ -4,6 +4,7 @@ use anchor_spl::token::{self, Token, TokenAccount, Mint, Transfer};
 use crate::state::{Launch, LaunchState, FundingRecord};
 use crate::error::LaunchpadError;
 use crate::events::{LaunchClaimEvent, CommonFields};
+use crate::AVAILABLE_TOKENS;
 
 #[event_cpi]
 #[derive(Accounts)]
@@ -34,13 +35,16 @@ pub struct Claim<'info> {
     #[account(mut)]
     pub launch_token_vault: Account<'info, TokenAccount>,
 
+    /// CHECK: not used, just for constraints
+    pub funder: UncheckedAccount<'info>,
+
     #[account(mut)]
-    pub funder: Signer<'info>,
+    pub payer: Signer<'info>,
 
     #[account(
         mut,
-        token::mint = token_mint,
-        token::authority = funder
+        associated_token::mint = token_mint,
+        associated_token::authority = funder
     )]
     pub funder_token_account: Account<'info, TokenAccount>,
 
@@ -61,7 +65,7 @@ impl Claim<'_> {
 
         // Calculate tokens to transfer based on contribution percentage
         let token_amount = (funding_record.committed_amount as u128)
-            .checked_mul(launch.total_tokens_available as u128)
+            .checked_mul(AVAILABLE_TOKENS as u128)
             .unwrap()
             .checked_div(launch.total_committed_amount as u128)
             .unwrap();

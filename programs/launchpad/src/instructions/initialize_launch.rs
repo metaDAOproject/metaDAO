@@ -7,6 +7,7 @@ use autocrat::Dao;
 use crate::state::{Launch, LaunchState};
 use crate::events::{LaunchInitializedEvent, CommonFields};
 use crate::error::LaunchpadError;
+use crate::AVAILABLE_TOKENS;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub struct InitializeLaunchArgs {
@@ -114,7 +115,6 @@ impl InitializeLaunch<'_> {
             token_mint: ctx.accounts.token_mint.key(),
             pda_bump: ctx.bumps.launch,
             seq_num: 0,
-            total_tokens_available: 10_000_000 * 1_000_000,
             state: LaunchState::Initialized,
             slot_started: 0,
         });
@@ -151,7 +151,7 @@ impl InitializeLaunch<'_> {
                 },
                 signer,
             ),
-            10_000_000_000000, // 10M tokens with 6 decimals
+            AVAILABLE_TOKENS,
         )?;
 
         Ok(())

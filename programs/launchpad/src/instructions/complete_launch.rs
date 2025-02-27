@@ -7,6 +7,7 @@ use anchor_spl::token::spl_token::instruction::AuthorityType;
 use crate::error::LaunchpadError;
 use crate::events::{CommonFields, LaunchCompletedEvent};
 use crate::state::{Launch, LaunchState};
+use crate::AVAILABLE_TOKENS;
 use raydium_cpmm_cpi::{
     cpi, instruction,
     program::RaydiumCpmm,
@@ -170,7 +171,7 @@ impl CompleteLaunch<'_> {
         if total_committed_amount >= launch.minimum_raise_amount {
             let usdc_to_lp = total_committed_amount.saturating_div(10);
             let usdc_to_dao = total_committed_amount.saturating_sub(usdc_to_lp);
-            let token_to_lp = launch.total_tokens_available.saturating_div(10);
+            let token_to_lp = AVAILABLE_TOKENS / 10;
 
             let launch_key = launch.key();
 

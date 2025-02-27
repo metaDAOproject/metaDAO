@@ -1,7 +1,7 @@
 export type Launchpad = {
   version: "0.4.0";
   name: "launchpad";
-  docs: ["TODO hardcode the Raydium config for the pool", "", ""];
+  docs: ["TODO hardcode the Raydium config for the pool"];
   instructions: [
     {
       name: "initializeLaunch";
@@ -394,6 +394,11 @@ export type Launchpad = {
         },
         {
           name: "funder";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "payer";
           isMut: true;
           isSigner: true;
         },
@@ -536,11 +541,6 @@ export type Launchpad = {
           {
             name: "totalCommittedAmount";
             docs: ["The amount of USDC that has been committed by the users."];
-            type: "u64";
-          },
-          {
-            name: "totalTokensAvailable";
-            docs: ["The amount of tokens available in the launch pool."];
             type: "u64";
           },
           {
@@ -873,7 +873,7 @@ export type Launchpad = {
 export const IDL: Launchpad = {
   version: "0.4.0",
   name: "launchpad",
-  docs: ["TODO hardcode the Raydium config for the pool", "", ""],
+  docs: ["TODO hardcode the Raydium config for the pool"],
   instructions: [
     {
       name: "initializeLaunch",
@@ -1266,6 +1266,11 @@ export const IDL: Launchpad = {
         },
         {
           name: "funder",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "payer",
           isMut: true,
           isSigner: true,
         },
@@ -1408,11 +1413,6 @@ export const IDL: Launchpad = {
           {
             name: "totalCommittedAmount",
             docs: ["The amount of USDC that has been committed by the users."],
-            type: "u64",
-          },
-          {
-            name: "totalTokensAvailable",
-            docs: ["The amount of tokens available in the launch pool."],
             type: "u64",
           },
           {
