@@ -1,17 +1,18 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Token, TokenAccount, Transfer, Burn, Mint};
+use anchor_spl::token::{self, Token, TokenAccount, Mint, Transfer};
 
 use crate::state::{Launch, LaunchState, FundingRecord};
 use crate::error::LaunchpadError;
-use crate::events::{LaunchRefundedEvent, CommonFields};
+use crate::events::{LaunchClaimEvent, CommonFields};
 
 #[event_cpi]
 #[derive(Accounts)]
-pub struct Refund<'info> {
+pub struct Claim<'info> {
     #[account(
         mut,
-        has_one = launch_usdc_vault,
         has_one = launch_signer,
+        has_one = token_mint,
+        has_one = launch_token_vault,
     )]
     pub launch: Account<'info, Launch>,
 
@@ -24,32 +25,46 @@ pub struct Refund<'info> {
     )]
     pub funding_record: Account<'info, FundingRecord>,
 
-    #[account(mut)]
-    pub launch_usdc_vault: Account<'info, TokenAccount>,
-
     /// CHECK: just a signer
     pub launch_signer: UncheckedAccount<'info>,
 
     #[account(mut)]
-    pub funder: Signer<'info>,
+    pub token_mint: Account<'info, Mint>,
 
     #[account(mut)]
-    pub funder_usdc_account: Account<'info, TokenAccount>,
+    pub launch_token_vault: Account<'info, TokenAccount>,
+
+    #[account(mut)]
+    pub funder: Signer<'info>,
+
+    #[account(
+        mut,
+        token::mint = token_mint,
+        token::authority = funder
+    )]
+    pub funder_token_account: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
 }
 
-impl Refund<'_> {
+impl Claim<'_> {
     pub fn validate(&self) -> Result<()> {
-        require!(self.launch.state == LaunchState::Refunding, LaunchpadError::LaunchNotRefunding);
+        require!(self.launch.state == LaunchState::Complete, LaunchpadError::InvalidLaunchState);
         Ok(())
     }
 
     pub fn handle(ctx: Context<Self>) -> Result<()> {
-        let launch = &mut ctx.accounts.launch;
-        let launch_key = launch.key();
+        let launch = &ctx.accounts.launch;
         let funding_record = &ctx.accounts.funding_record;
+        let launch_key = launch.key();
+
+        // Calculate tokens to transfer based on contribution percentage
+        let token_amount = (funding_record.committed_amount as u128)
+            .checked_mul(launch.total_tokens_available as u128)
+            .unwrap()
+            .checked_div(launch.total_committed_amount as u128)
+            .unwrap();
 
         let seeds = &[
             b"launch_signer",
@@ -58,28 +73,27 @@ impl Refund<'_> {
         ];
         let signer = &[&seeds[..]];
 
-        // Transfer USDC back to the user
+        // Transfer tokens from vault to funder
         token::transfer(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
                 Transfer {
-                    from: ctx.accounts.launch_usdc_vault.to_account_info(),
-                    to: ctx.accounts.funder_usdc_account.to_account_info(),
+                    from: ctx.accounts.launch_token_vault.to_account_info(),
+                    to: ctx.accounts.funder_token_account.to_account_info(),
                     authority: ctx.accounts.launch_signer.to_account_info(),
                 },
                 signer,
             ),
-            funding_record.committed_amount,
+            token_amount as u64,
         )?;
-        
-        launch.seq_num += 1;
 
         let clock = Clock::get()?;
-        emit_cpi!(LaunchRefundedEvent {
+        emit_cpi!(LaunchClaimEvent {
             common: CommonFields::new(&clock, launch.seq_num),
-            launch: ctx.accounts.launch.key(),
+            launch: launch.key(),
             funder: ctx.accounts.funder.key(),
-            usdc_refunded: funding_record.committed_amount,
+            tokens_claimed: token_amount as u64,
+            funding_record: funding_record.key(),
         });
 
         Ok(())

@@ -1,5 +1,10 @@
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
-import { PublicKey, Keypair, AccountInfo } from "@solana/web3.js";
+import {
+  PublicKey,
+  Keypair,
+  AccountInfo,
+  ComputeBudgetProgram,
+} from "@solana/web3.js";
 import { Launchpad, IDL as LaunchpadIDL } from "./types/launchpad.js";
 import {
   LAUNCHPAD_PROGRAM_ID,
@@ -304,13 +309,18 @@ export class LaunchpadClient {
       launch
     );
 
+    const [fundingRecord] = getFundingRecordAddr(
+      this.launchpad.programId,
+      launch,
+      funder
+    );
+
     const launchUsdcVault = getAssociatedTokenAddressSync(
       usdcMint,
       launchSigner,
       true
     );
     const funderUsdcAccount = getAssociatedTokenAddressSync(usdcMint, funder);
-    const funderTokenAccount = getAssociatedTokenAddressSync(tokenMint, funder);
 
     return this.launchpad.methods.refund().accounts({
       launch,
@@ -318,8 +328,37 @@ export class LaunchpadClient {
       launchUsdcVault,
       funder,
       funderUsdcAccount,
-      funderTokenAccount,
+      fundingRecord,
+    });
+  }
+
+  claimIx(
+    launch: PublicKey,
+    tokenMint: PublicKey,
+    funder: PublicKey = this.provider.publicKey
+  ) {
+    const [launchSigner] = getLaunchSignerAddr(
+      this.launchpad.programId,
+      launch
+    );
+    const [fundingRecord] = getFundingRecordAddr(
+      this.launchpad.programId,
+      launch,
+      funder
+    );
+
+    return this.launchpad.methods.claim().accounts({
+      launch,
+      fundingRecord,
+      launchSigner,
+      funder,
+      funderTokenAccount: getAssociatedTokenAddressSync(tokenMint, funder),
       tokenMint,
+      launchTokenVault: getAssociatedTokenAddressSync(
+        tokenMint,
+        launchSigner,
+        true
+      ),
     });
   }
 }

@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, Token, TokenAccount};
+use anchor_spl::token::{self, Mint, Token, TokenAccount, MintTo};
 use anchor_spl::associated_token::AssociatedToken;
 use autocrat::ID as AUTOCRAT_PROGRAM_ID;
 use autocrat::Dao;
@@ -114,6 +114,7 @@ impl InitializeLaunch<'_> {
             token_mint: ctx.accounts.token_mint.key(),
             pda_bump: ctx.bumps.launch,
             seq_num: 0,
+            total_tokens_available: 10_000_000 * 1_000_000,
             state: LaunchState::Initialized,
             slot_started: 0,
         });
@@ -129,6 +130,29 @@ impl InitializeLaunch<'_> {
             token_mint: ctx.accounts.token_mint.key(),
             pda_bump: ctx.bumps.launch,
         });
+
+        let launch_key = ctx.accounts.launch.key();
+
+        let seeds = &[
+            b"launch_signer",
+            launch_key.as_ref(),
+            &[launch_signer_pda_bump],
+        ];
+        let signer = &[&seeds[..]];
+
+        // Mint total tokens to launch token vault
+        token::mint_to(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                MintTo {
+                    mint: ctx.accounts.token_mint.to_account_info(),
+                    to: ctx.accounts.token_vault.to_account_info(),
+                    authority: ctx.accounts.launch_signer.to_account_info(),
+                },
+                signer,
+            ),
+            10_000_000_000000, // 10M tokens with 6 decimals
+        )?;
 
         Ok(())
     }

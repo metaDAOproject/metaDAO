@@ -1,6 +1,7 @@
 export type Launchpad = {
   version: "0.4.0";
   name: "launchpad";
+  docs: ["TODO hardcode the Raydium config for the pool", "", ""];
   instructions: [
     {
       name: "initializeLaunch";
@@ -316,13 +317,18 @@ export type Launchpad = {
           isSigner: false;
         },
         {
+          name: "fundingRecord";
+          isMut: true;
+          isSigner: false;
+        },
+        {
           name: "launchUsdcVault";
           isMut: true;
           isSigner: false;
         },
         {
           name: "launchSigner";
-          isMut: true;
+          isMut: false;
           isSigner: false;
         },
         {
@@ -336,8 +342,44 @@ export type Launchpad = {
           isSigner: false;
         },
         {
-          name: "funderTokenAccount";
+          name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [];
+    },
+    {
+      name: "claim";
+      accounts: [
+        {
+          name: "launch";
           isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "fundingRecord";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "launchSigner";
+          isMut: false;
           isSigner: false;
         },
         {
@@ -346,7 +388,27 @@ export type Launchpad = {
           isSigner: false;
         },
         {
+          name: "launchTokenVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "funder";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "funderTokenAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
           name: "tokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
           isMut: false;
           isSigner: false;
         },
@@ -474,6 +536,11 @@ export type Launchpad = {
           {
             name: "totalCommittedAmount";
             docs: ["The amount of USDC that has been committed by the users."];
+            type: "u64";
+          },
+          {
+            name: "totalTokensAvailable";
+            docs: ["The amount of tokens available in the launch pool."];
             type: "u64";
           },
           {
@@ -723,10 +790,37 @@ export type Launchpad = {
           name: "usdcRefunded";
           type: "u64";
           index: false;
+        }
+      ];
+    },
+    {
+      name: "LaunchClaimEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
         },
         {
-          name: "tokensBurned";
+          name: "launch";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "funder";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "tokensClaimed";
           type: "u64";
+          index: false;
+        },
+        {
+          name: "fundingRecord";
+          type: "publicKey";
           index: false;
         }
       ];
@@ -779,6 +873,7 @@ export type Launchpad = {
 export const IDL: Launchpad = {
   version: "0.4.0",
   name: "launchpad",
+  docs: ["TODO hardcode the Raydium config for the pool", "", ""],
   instructions: [
     {
       name: "initializeLaunch",
@@ -1094,13 +1189,18 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
+          name: "fundingRecord",
+          isMut: true,
+          isSigner: false,
+        },
+        {
           name: "launchUsdcVault",
           isMut: true,
           isSigner: false,
         },
         {
           name: "launchSigner",
-          isMut: true,
+          isMut: false,
           isSigner: false,
         },
         {
@@ -1114,8 +1214,44 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
-          name: "funderTokenAccount",
+          name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: "claim",
+      accounts: [
+        {
+          name: "launch",
           isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "fundingRecord",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "launchSigner",
+          isMut: false,
           isSigner: false,
         },
         {
@@ -1124,7 +1260,27 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
+          name: "launchTokenVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "funder",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "funderTokenAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
           name: "tokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
           isMut: false,
           isSigner: false,
         },
@@ -1252,6 +1408,11 @@ export const IDL: Launchpad = {
           {
             name: "totalCommittedAmount",
             docs: ["The amount of USDC that has been committed by the users."],
+            type: "u64",
+          },
+          {
+            name: "totalTokensAvailable",
+            docs: ["The amount of tokens available in the launch pool."],
             type: "u64",
           },
           {
@@ -1502,9 +1663,36 @@ export const IDL: Launchpad = {
           type: "u64",
           index: false,
         },
+      ],
+    },
+    {
+      name: "LaunchClaimEvent",
+      fields: [
         {
-          name: "tokensBurned",
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "launch",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "funder",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "tokensClaimed",
           type: "u64",
+          index: false,
+        },
+        {
+          name: "fundingRecord",
+          type: "publicKey",
           index: false,
         },
       ],

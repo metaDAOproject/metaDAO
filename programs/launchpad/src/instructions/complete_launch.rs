@@ -7,7 +7,6 @@ use anchor_spl::token::spl_token::instruction::AuthorityType;
 use crate::error::LaunchpadError;
 use crate::events::{CommonFields, LaunchCompletedEvent};
 use crate::state::{Launch, LaunchState};
-use crate::TOKENS_PER_USDC;
 use raydium_cpmm_cpi::{
     cpi, instruction,
     program::RaydiumCpmm,
@@ -166,12 +165,12 @@ impl CompleteLaunch<'_> {
     pub fn handle(ctx: Context<Self>) -> Result<()> {
         let launch = &mut ctx.accounts.launch;
 
-        let launch_usdc_balance = ctx.accounts.launch_usdc_vault.amount;
+        let total_committed_amount = launch.total_committed_amount;
 
-        if launch_usdc_balance >= launch.minimum_raise_amount {
-            let usdc_to_lp = launch_usdc_balance.saturating_div(10);
-            let usdc_to_dao = launch_usdc_balance.saturating_sub(usdc_to_lp);
-            let token_to_lp = usdc_to_lp.saturating_mul(TOKENS_PER_USDC);
+        if total_committed_amount >= launch.minimum_raise_amount {
+            let usdc_to_lp = total_committed_amount.saturating_div(10);
+            let usdc_to_dao = total_committed_amount.saturating_sub(usdc_to_lp);
+            let token_to_lp = launch.total_tokens_available.saturating_div(10);
 
             let launch_key = launch.key();
 

@@ -1,7 +1,8 @@
-import { PublicKey } from "@solana/web3.js";
+import { ComputeBudgetProgram, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import {
   AutocratClient,
+  getFundingRecordAddr,
   getLaunchAddr,
   getLaunchSignerAddr,
   LaunchpadClient,
@@ -22,7 +23,7 @@ export default function suite() {
   let usdcVault: PublicKey;
   let funderUsdcAccount: PublicKey;
 
-  const minRaise = new BN(1000_000000); // 1000 USDC
+  const minRaise = new BN(100_000000); // 1000 USDC
   const maxRaise = new BN(5000_000000); // 5000 USDC
   const SLOTS_PER_DAY = 216_000n;
 
@@ -70,66 +71,56 @@ export default function suite() {
     // Setup funder accounts
     await this.createTokenAccount(META, this.payer.publicKey);
     await this.createTokenAccount(USDC, this.payer.publicKey);
-  });
 
-  it("allows refunds when launch is in refunding state", async function () {
-    // Fund the launch with less than minimum raise
-    const partialAmount = minRaise.divn(2);
-    await this.mintTo(USDC, this.payer.publicKey, this.payer, partialAmount.toNumber());
+    await this.mintTo(USDC, this.payer.publicKey, this.payer, 1_000_000000);
 
+    const fundAmount = new BN(1000_000000); // 1000 USDC
+
+    // Fund the launch
     await launchpadClient.fundIx(
       launch,
-      partialAmount,
+      fundAmount,
       USDC,
     ).rpc();
+  });
 
-    // Advance clock past 7 days
+  it("successfully claims tokens after launch completion", async function () {
+    // // Advance clock and complete launch
     await this.advanceBySlots(SLOTS_PER_DAY * 7n);
+    await launchpadClient.completeLaunchIx(launch, USDC, META, daoTreasury).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 })]).rpc();
 
-    // Complete the launch (moves to refunding state)
-    await launchpadClient.completeLaunchIx(launch, USDC, META, daoTreasury).rpc();
+    const initialTokenBalance = await this.getTokenBalance(META, this.payer.publicKey);
+    console.log("initialTokenBalance", initialTokenBalance.toString());
 
-    const initialUsdcBalance = await this.getTokenBalance(USDC, this.payer.publicKey);
-    const initialMetaBalance = await this.getTokenBalance(META, this.payer.publicKey);
+    // Claim tokens
+    await launchpadClient.claimIx(launch, META).rpc();
 
-    // Get refund
-    await launchpadClient.refundIx(launch, USDC, META).rpc();
+    const finalTokenBalance = await this.getTokenBalance(META, this.payer.publicKey);
+    const expectedTokens = new BN(10_000_000 * 1_000_000); // full supply
 
-    const finalUsdcBalance = await this.getTokenBalance(USDC, this.payer.publicKey);
-    const finalMetaBalance = await this.getTokenBalance(META, this.payer.publicKey);
-    
-    assert.equal((finalUsdcBalance - initialUsdcBalance).toString(), partialAmount.toString());
-    assert.equal(finalMetaBalance, 0, "META tokens should be burned during refund");
-  });
+    assert.equal(finalTokenBalance.toString(), expectedTokens.toString());
 
-  it("fails when launch is not in refunding state", async function () {
-    const partialAmount = minRaise.divn(2);
-    await this.mintTo(USDC, this.payer.publicKey, this.payer, partialAmount.toNumber());
-
-    await launchpadClient.fundIx(
+    // Verify funding record is closed
+    const [fundingRecord] = getFundingRecordAddr(
+      launchpadClient.getProgramId(),
       launch,
-      partialAmount,
-      USDC,
-    ).rpc();
+      this.payer.publicKey
+    );
 
     try {
-      await launchpadClient.refundIx(launch, USDC, META).rpc();
-      assert.fail("Should have thrown error");
+      await launchpadClient.fetchFundingRecord(fundingRecord);
+      assert.fail("Funding record should be closed");
     } catch (e) {
-      assert.include(e.message, "LaunchNotRefunding");
+      assert.include(e.message, "Could not find");
     }
   });
 
-  it("fails when user has no tokens to refund", async function () {
-    // Move to refunding state without any funding
-    await this.advanceBySlots(SLOTS_PER_DAY * 7n);
-    await launchpadClient.completeLaunchIx(launch, USDC, META, daoTreasury).rpc();
-
+  it("fails when launch is not complete", async function () {
     try {
-      await launchpadClient.refundIx(launch, USDC, META).rpc();
+      await launchpadClient.claimIx(launch, META).rpc();
       assert.fail("Should have thrown error");
     } catch (e) {
-      // assert.include(e.message, "InvalidAmount");
+      assert.include(e.message, "InvalidLaunchState");
     }
   });
 } 

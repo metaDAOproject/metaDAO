@@ -22,6 +22,11 @@ declare_id!("AfJJJ5UqxhBKoE3grkKAZZsoXDE9kncbMKvqSHGsCNrE");
 
 /// 1,000 tokens per USDC, so a price of $0.001 per token
 pub const TOKENS_PER_USDC: u64 = 1_000;
+pub const AVAILABLE_TOKENS: u64 = 10_000_000;
+
+/// TODO hardcode the Raydium config for the pool
+/// 
+/// 
 
 #[program]
 pub mod launchpad {
@@ -53,5 +58,10 @@ pub mod launchpad {
     #[access_control(ctx.accounts.validate())]
     pub fn refund(ctx: Context<Refund>) -> Result<()> {
         Refund::handle(ctx)
+    }
+
+    #[access_control(ctx.accounts.validate())]
+    pub fn claim(ctx: Context<Claim>) -> Result<()> {
+        Claim::handle(ctx)
     }
 }
