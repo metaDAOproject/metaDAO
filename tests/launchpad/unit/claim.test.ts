@@ -24,8 +24,7 @@ export default function suite() {
   let funderUsdcAccount: PublicKey;
 
   const minRaise = new BN(100_000000); // 1000 USDC
-  const maxRaise = new BN(5000_000000); // 5000 USDC
-  const SLOTS_PER_DAY = 216_000n;
+  const SLOTS_PER_DAY = 216_000;
 
   before(async function () {
     autocratClient = this.autocratClient;
@@ -54,7 +53,7 @@ export default function suite() {
     await launchpadClient.initializeLaunchIx(
       dao,
       minRaise,
-      maxRaise,
+      new BN(SLOTS_PER_DAY * 2),
       USDC,
       META
     ).preInstructions([
@@ -86,7 +85,7 @@ export default function suite() {
 
   it("successfully claims tokens after launch completion", async function () {
     // // Advance clock and complete launch
-    await this.advanceBySlots(SLOTS_PER_DAY * 7n);
+    await this.advanceBySlots(BigInt(SLOTS_PER_DAY * 7));
     await launchpadClient.completeLaunchIx(launch, USDC, META, daoTreasury).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 })]).rpc();
 
     const initialTokenBalance = await this.getTokenBalance(META, this.payer.publicKey);

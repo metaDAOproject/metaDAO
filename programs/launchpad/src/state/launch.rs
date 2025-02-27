@@ -41,4 +41,6 @@ pub struct Launch {
     pub state: LaunchState,
     /// The sequence number of this launch. Useful for sorting events.
     pub seq_num: u64,
+    /// The number of slots for the launch.
+    pub slots_for_launch: u64,
 }

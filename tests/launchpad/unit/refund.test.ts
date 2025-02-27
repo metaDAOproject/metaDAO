@@ -23,8 +23,7 @@ export default function suite() {
   let funderUsdcAccount: PublicKey;
 
   const minRaise = new BN(1000_000000); // 1000 USDC
-  const maxRaise = new BN(5000_000000); // 5000 USDC
-  const SLOTS_PER_DAY = 216_000n;
+  const SLOTS_PER_DAY = 216_000;
 
   before(async function () {
     autocratClient = this.autocratClient;
@@ -53,7 +52,7 @@ export default function suite() {
     await launchpadClient.initializeLaunchIx(
       dao,
       minRaise,
-      maxRaise,
+      new BN(SLOTS_PER_DAY * 6),
       USDC,
       META
     ).preInstructions([
@@ -84,7 +83,7 @@ export default function suite() {
     ).rpc();
 
     // Advance clock past 7 days
-    await this.advanceBySlots(SLOTS_PER_DAY * 7n);
+    await this.advanceBySlots(BigInt(SLOTS_PER_DAY * 7));
 
     // Complete the launch (moves to refunding state)
     await launchpadClient.completeLaunchIx(launch, USDC, META, daoTreasury).rpc();
@@ -122,7 +121,7 @@ export default function suite() {
 
   it("fails when user has no tokens to refund", async function () {
     // Move to refunding state without any funding
-    await this.advanceBySlots(SLOTS_PER_DAY * 7n);
+    await this.advanceBySlots(BigInt(SLOTS_PER_DAY * 7));
     await launchpadClient.completeLaunchIx(launch, USDC, META, daoTreasury).rpc();
 
     try {

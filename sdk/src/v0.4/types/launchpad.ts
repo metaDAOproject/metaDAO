@@ -1,7 +1,6 @@
 export type Launchpad = {
   version: "0.4.0";
   name: "launchpad";
-  docs: ["TODO hardcode the Raydium config for the pool"];
   instructions: [
     {
       name: "initializeLaunch";
@@ -220,7 +219,9 @@ export type Launchpad = {
           name: "ammConfig";
           isMut: true;
           isSigner: false;
-          docs: ["Use the lowest fee pool"];
+          docs: [
+            "Use the lowest fee pool, can see fees at https://api-v3.raydium.io/main/cpmm-config"
+          ];
         },
         {
           name: "poolState";
@@ -556,6 +557,11 @@ export type Launchpad = {
               "The sequence number of this launch. Useful for sorting events."
             ];
             type: "u64";
+          },
+          {
+            name: "slotsForLaunch";
+            docs: ["The number of slots for the launch."];
+            type: "u64";
           }
         ];
       };
@@ -589,6 +595,10 @@ export type Launchpad = {
         fields: [
           {
             name: "minimumRaiseAmount";
+            type: "u64";
+          },
+          {
+            name: "slotsForLaunch";
             type: "u64";
           }
         ];
@@ -873,7 +883,6 @@ export type Launchpad = {
 export const IDL: Launchpad = {
   version: "0.4.0",
   name: "launchpad",
-  docs: ["TODO hardcode the Raydium config for the pool"],
   instructions: [
     {
       name: "initializeLaunch",
@@ -1092,7 +1101,9 @@ export const IDL: Launchpad = {
           name: "ammConfig",
           isMut: true,
           isSigner: false,
-          docs: ["Use the lowest fee pool"],
+          docs: [
+            "Use the lowest fee pool, can see fees at https://api-v3.raydium.io/main/cpmm-config",
+          ],
         },
         {
           name: "poolState",
@@ -1429,6 +1440,11 @@ export const IDL: Launchpad = {
             ],
             type: "u64",
           },
+          {
+            name: "slotsForLaunch",
+            docs: ["The number of slots for the launch."],
+            type: "u64",
+          },
         ],
       },
     },
@@ -1461,6 +1477,10 @@ export const IDL: Launchpad = {
         fields: [
           {
             name: "minimumRaiseAmount",
+            type: "u64",
+          },
+          {
+            name: "slotsForLaunch",
             type: "u64",
           },
         ],

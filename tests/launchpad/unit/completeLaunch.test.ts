@@ -25,7 +25,7 @@ export default function suite() {
   let treasuryUsdcAccount: PublicKey;
 
   const minRaise = new BN(1000_000000); // 1000 USDC
-  const SLOTS_PER_DAY = 216_000n; // (24 * 60 * 60 * 1000) / 400
+  const SLOTS_PER_DAY = 216_000; // (24 * 60 * 60 * 1000) / 400
 
   before(async function () {
     autocratClient = this.autocratClient;
@@ -55,7 +55,7 @@ export default function suite() {
     await launchpadClient.initializeLaunchIx(
       dao,
       minRaise,
-      new BN(5000_000000),
+      new BN(SLOTS_PER_DAY * 5),
       USDC,
       META
     ).preInstructions([
@@ -83,7 +83,7 @@ export default function suite() {
     ).rpc();
 
     // Advance clock past 7 days
-    await this.advanceBySlots(SLOTS_PER_DAY * 7n);
+    await this.advanceBySlots(BigInt(SLOTS_PER_DAY * 7));
 
     // Complete the launch
     await launchpadClient.completeLaunchIx(launch, USDC, META, daoTreasury).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 })]).rpc();
@@ -119,7 +119,7 @@ export default function suite() {
     }
 
     // Advance by 6 days (still not enough)
-    await this.advanceBySlots(SLOTS_PER_DAY * 3n);
+    await this.advanceBySlots(BigInt(SLOTS_PER_DAY * 3));
 
     try {
       await launchpadClient.completeLaunchIx(launch, USDC, META, daoTreasury).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 })]).rpc();
@@ -143,7 +143,7 @@ export default function suite() {
     ).rpc();
 
     // Advance clock past 7 days
-    await this.advanceBySlots(SLOTS_PER_DAY * 7n);
+    await this.advanceBySlots(BigInt(SLOTS_PER_DAY * 7));
 
     // Complete the launch
     await launchpadClient.completeLaunchIx(launch, USDC, META, daoTreasury).rpc();
@@ -157,7 +157,7 @@ export default function suite() {
 
   it("fails when launch is not in live state", async function () {
     // Advance clock past 7 days
-    await this.advanceBySlots(SLOTS_PER_DAY * 7n);
+    await this.advanceBySlots(BigInt(SLOTS_PER_DAY * 7));
 
     // Complete launch first time
     await launchpadClient.completeLaunchIx(launch, USDC, META, daoTreasury).rpc();

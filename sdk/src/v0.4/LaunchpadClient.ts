@@ -100,7 +100,7 @@ export class LaunchpadClient {
   initializeLaunchIx(
     dao: PublicKey,
     minimumRaiseAmount: BN,
-    maximumRaiseAmount: BN,
+    slotsForLaunch: BN,
     usdcMint: PublicKey,
     tokenMint: PublicKey,
     creator: PublicKey = this.provider.publicKey
@@ -133,6 +133,7 @@ export class LaunchpadClient {
     return this.launchpad.methods
       .initializeLaunch({
         minimumRaiseAmount,
+        slotsForLaunch,
       })
       .accounts({
         launch,

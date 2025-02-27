@@ -12,6 +12,7 @@ use crate::AVAILABLE_TOKENS;
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub struct InitializeLaunchArgs {
     pub minimum_raise_amount: u64,
+    pub slots_for_launch: u64,
 }
 
 #[event_cpi]
@@ -117,6 +118,7 @@ impl InitializeLaunch<'_> {
             seq_num: 0,
             state: LaunchState::Initialized,
             slot_started: 0,
+            slots_for_launch: args.slots_for_launch,
         });
 
         let clock = Clock::get()?;
