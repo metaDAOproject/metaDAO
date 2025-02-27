@@ -110,7 +110,7 @@ impl InitializeLaunch<'_> {
             launch_signer_pda_bump,
             launch_usdc_vault: ctx.accounts.usdc_vault.key(),
             launch_token_vault: ctx.accounts.token_vault.key(),
-            committed_amount: 0,
+            total_committed_amount: 0,
             token_mint: ctx.accounts.token_mint.key(),
             pda_bump: ctx.bumps.launch,
             seq_num: 0,

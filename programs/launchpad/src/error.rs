@@ -6,6 +6,8 @@ pub enum LaunchpadError {
     InvalidAmount,
     #[msg("Supply must be zero")]
     SupplyNonZero,
+    #[msg("Insufficient funds")]
+    InsufficientFunds,
     #[msg("Invalid launch state")]
     InvalidLaunchState,
     #[msg("Launch period not over")]

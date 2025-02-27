@@ -35,6 +35,7 @@ export type Dao = IdlAccounts<AutocratProgram>["dao"];
 export type Proposal = IdlAccounts<AutocratProgram>["proposal"];
 export type Amm = IdlAccounts<AmmProgram>["amm"];
 export type Launch = IdlAccounts<LaunchpadProgram>["launch"];
+export type FundingRecord = IdlAccounts<LaunchpadProgram>["fundingRecord"];
 
 export type SwapEvent = IdlEvents<AmmProgram>["SwapEvent"];
 export type AddLiquidityEvent = IdlEvents<AmmProgram>["AddLiquidityEvent"];

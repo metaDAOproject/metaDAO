@@ -125,17 +125,17 @@ export type Launchpad = {
           isSigner: false;
         },
         {
+          name: "fundingRecord";
+          isMut: true;
+          isSigner: false;
+        },
+        {
           name: "launchSigner";
           isMut: false;
           isSigner: false;
         },
         {
-          name: "usdcVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "tokenMint";
+          name: "launchUsdcVault";
           isMut: true;
           isSigner: false;
         },
@@ -150,12 +150,12 @@ export type Launchpad = {
           isSigner: false;
         },
         {
-          name: "funderTokenAccount";
-          isMut: true;
+          name: "tokenProgram";
+          isMut: false;
           isSigner: false;
         },
         {
-          name: "tokenProgram";
+          name: "systemProgram";
           isMut: false;
           isSigner: false;
         },
@@ -366,10 +366,45 @@ export type Launchpad = {
   ];
   accounts: [
     {
+      name: "fundingRecord";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "pdaBump";
+            docs: ["The PDA bump."];
+            type: "u8";
+          },
+          {
+            name: "funder";
+            docs: ["The funder."];
+            type: "publicKey";
+          },
+          {
+            name: "committedAmount";
+            docs: ["The amount of USDC that has been committed by the funder."];
+            type: "u64";
+          },
+          {
+            name: "seqNum";
+            docs: [
+              "The sequence number of this funding record. Useful for sorting events."
+            ];
+            type: "u64";
+          }
+        ];
+      };
+    },
+    {
       name: "launch";
       type: {
         kind: "struct";
         fields: [
+          {
+            name: "pdaBump";
+            docs: ["The PDA bump."];
+            type: "u8";
+          },
           {
             name: "minimumRaiseAmount";
             docs: [
@@ -415,14 +450,9 @@ export type Launchpad = {
             type: "publicKey";
           },
           {
-            name: "pdaBump";
-            docs: ["The PDA bump."];
-            type: "u8";
-          },
-          {
             name: "dao";
             docs: [
-              "The DAO that will receive the USDC raised once the launch is over."
+              "The DAO that will control the USDC raised once the launch is over."
             ];
             type: "publicKey";
           },
@@ -437,15 +467,13 @@ export type Launchpad = {
             type: "publicKey";
           },
           {
-            name: "committedAmount";
-            docs: ["The amount of USDC that has been committed by the users."];
+            name: "slotStarted";
+            docs: ["The slot when the launch was started."];
             type: "u64";
           },
           {
-            name: "seqNum";
-            docs: [
-              "The sequence number of this launch. Useful for sorting events."
-            ];
+            name: "totalCommittedAmount";
+            docs: ["The amount of USDC that has been committed by the users."];
             type: "u64";
           },
           {
@@ -456,8 +484,10 @@ export type Launchpad = {
             };
           },
           {
-            name: "slotStarted";
-            docs: ["The slot when the launch was started."];
+            name: "seqNum";
+            docs: [
+              "The sequence number of this launch. Useful for sorting events."
+            ];
             type: "u64";
           }
         ];
@@ -479,7 +509,7 @@ export type Launchpad = {
             type: "i64";
           },
           {
-            name: "seqNum";
+            name: "launchSeqNum";
             type: "u64";
           }
         ];
@@ -604,6 +634,11 @@ export type Launchpad = {
           index: false;
         },
         {
+          name: "fundingRecord";
+          type: "publicKey";
+          index: false;
+        },
+        {
           name: "launch";
           type: "publicKey";
           index: false;
@@ -619,7 +654,17 @@ export type Launchpad = {
           index: false;
         },
         {
+          name: "totalCommittedByFunder";
+          type: "u64";
+          index: false;
+        },
+        {
           name: "totalCommitted";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "fundingRecordSeqNum";
           type: "u64";
           index: false;
         }
@@ -700,26 +745,31 @@ export type Launchpad = {
     },
     {
       code: 6002;
+      name: "InsufficientFunds";
+      msg: "Insufficient funds";
+    },
+    {
+      code: 6003;
       name: "InvalidLaunchState";
       msg: "Invalid launch state";
     },
     {
-      code: 6003;
+      code: 6004;
       name: "LaunchPeriodNotOver";
       msg: "Launch period not over";
     },
     {
-      code: 6004;
+      code: 6005;
       name: "LaunchNotRefunding";
       msg: "Launch needs to be in refunding state to get a refund";
     },
     {
-      code: 6005;
+      code: 6006;
       name: "LaunchNotInitialized";
       msg: "Launch must be initialized to be started";
     },
     {
-      code: 6006;
+      code: 6007;
       name: "FreezeAuthoritySet";
       msg: "Freeze authority can't be set on launchpad tokens";
     }
@@ -853,17 +903,17 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
+          name: "fundingRecord",
+          isMut: true,
+          isSigner: false,
+        },
+        {
           name: "launchSigner",
           isMut: false,
           isSigner: false,
         },
         {
-          name: "usdcVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "tokenMint",
+          name: "launchUsdcVault",
           isMut: true,
           isSigner: false,
         },
@@ -878,12 +928,12 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
-          name: "funderTokenAccount",
-          isMut: true,
+          name: "tokenProgram",
+          isMut: false,
           isSigner: false,
         },
         {
-          name: "tokenProgram",
+          name: "systemProgram",
           isMut: false,
           isSigner: false,
         },
@@ -1094,10 +1144,45 @@ export const IDL: Launchpad = {
   ],
   accounts: [
     {
+      name: "fundingRecord",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "pdaBump",
+            docs: ["The PDA bump."],
+            type: "u8",
+          },
+          {
+            name: "funder",
+            docs: ["The funder."],
+            type: "publicKey",
+          },
+          {
+            name: "committedAmount",
+            docs: ["The amount of USDC that has been committed by the funder."],
+            type: "u64",
+          },
+          {
+            name: "seqNum",
+            docs: [
+              "The sequence number of this funding record. Useful for sorting events.",
+            ],
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
       name: "launch",
       type: {
         kind: "struct",
         fields: [
+          {
+            name: "pdaBump",
+            docs: ["The PDA bump."],
+            type: "u8",
+          },
           {
             name: "minimumRaiseAmount",
             docs: [
@@ -1143,14 +1228,9 @@ export const IDL: Launchpad = {
             type: "publicKey",
           },
           {
-            name: "pdaBump",
-            docs: ["The PDA bump."],
-            type: "u8",
-          },
-          {
             name: "dao",
             docs: [
-              "The DAO that will receive the USDC raised once the launch is over.",
+              "The DAO that will control the USDC raised once the launch is over.",
             ],
             type: "publicKey",
           },
@@ -1165,15 +1245,13 @@ export const IDL: Launchpad = {
             type: "publicKey",
           },
           {
-            name: "committedAmount",
-            docs: ["The amount of USDC that has been committed by the users."],
+            name: "slotStarted",
+            docs: ["The slot when the launch was started."],
             type: "u64",
           },
           {
-            name: "seqNum",
-            docs: [
-              "The sequence number of this launch. Useful for sorting events.",
-            ],
+            name: "totalCommittedAmount",
+            docs: ["The amount of USDC that has been committed by the users."],
             type: "u64",
           },
           {
@@ -1184,8 +1262,10 @@ export const IDL: Launchpad = {
             },
           },
           {
-            name: "slotStarted",
-            docs: ["The slot when the launch was started."],
+            name: "seqNum",
+            docs: [
+              "The sequence number of this launch. Useful for sorting events.",
+            ],
             type: "u64",
           },
         ],
@@ -1207,7 +1287,7 @@ export const IDL: Launchpad = {
             type: "i64",
           },
           {
-            name: "seqNum",
+            name: "launchSeqNum",
             type: "u64",
           },
         ],
@@ -1332,6 +1412,11 @@ export const IDL: Launchpad = {
           index: false,
         },
         {
+          name: "fundingRecord",
+          type: "publicKey",
+          index: false,
+        },
+        {
           name: "launch",
           type: "publicKey",
           index: false,
@@ -1347,7 +1432,17 @@ export const IDL: Launchpad = {
           index: false,
         },
         {
+          name: "totalCommittedByFunder",
+          type: "u64",
+          index: false,
+        },
+        {
           name: "totalCommitted",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "fundingRecordSeqNum",
           type: "u64",
           index: false,
         },
@@ -1428,26 +1523,31 @@ export const IDL: Launchpad = {
     },
     {
       code: 6002,
+      name: "InsufficientFunds",
+      msg: "Insufficient funds",
+    },
+    {
+      code: 6003,
       name: "InvalidLaunchState",
       msg: "Invalid launch state",
     },
     {
-      code: 6003,
+      code: 6004,
       name: "LaunchPeriodNotOver",
       msg: "Launch period not over",
     },
     {
-      code: 6004,
+      code: 6005,
       name: "LaunchNotRefunding",
       msg: "Launch needs to be in refunding state to get a refund",
     },
     {
-      code: 6005,
+      code: 6006,
       name: "LaunchNotInitialized",
       msg: "Launch must be initialized to be started",
     },
     {
-      code: 6006,
+      code: 6007,
       name: "FreezeAuthoritySet",
       msg: "Freeze authority can't be set on launchpad tokens",
     },

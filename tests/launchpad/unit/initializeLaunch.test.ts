@@ -72,7 +72,7 @@ export default function suite() {
     assert.equal(launch.pdaBump, pdaBump);
     assert.ok(launch.dao.equals(dao));
     assert.ok(launch.daoTreasury.equals(daoTreasury));
-    assert.equal(launch.committedAmount.toString(), "0");
+    assert.equal(launch.totalCommittedAmount.toString(), "0");
     assert.equal(launch.seqNum.toString(), "0");
     assert.exists(launch.state.initialized);
     assert.equal(launch.slotStarted.toString(), "0");

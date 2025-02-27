@@ -81,7 +81,6 @@ export default function suite() {
       launch,
       partialAmount,
       USDC,
-      META
     ).rpc();
 
     // Advance clock past 7 days

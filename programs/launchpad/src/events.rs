@@ -5,15 +5,15 @@ use crate::state::LaunchState;
 pub struct CommonFields {
     pub slot: u64,
     pub unix_timestamp: i64,
-    pub seq_num: u64,
+    pub launch_seq_num: u64,
 }
 
 impl CommonFields {
-    pub fn new(clock: &Clock, seq_num: u64) -> Self {
+    pub fn new(clock: &Clock, launch_seq_num: u64) -> Self {
         Self {
             slot: clock.slot,
             unix_timestamp: clock.unix_timestamp,
-            seq_num
+            launch_seq_num,
         }
     }
 }
@@ -41,10 +41,13 @@ pub struct LaunchStartedEvent {
 #[event]
 pub struct LaunchFundedEvent {
     pub common: CommonFields,
+    pub funding_record: Pubkey,
     pub launch: Pubkey,
     pub funder: Pubkey,
     pub amount: u64,
+    pub total_committed_by_funder: u64,
     pub total_committed: u64,
+    pub funding_record_seq_num: u64,
 }
 
 #[event]

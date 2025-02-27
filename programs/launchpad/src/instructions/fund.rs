@@ -1,9 +1,8 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer, MintTo};
+use anchor_spl::token::{self, Token, TokenAccount, Transfer};
 
-use crate::state::{Launch, LaunchState};
+use crate::state::{Launch, LaunchState, FundingRecord};
 use crate::error::LaunchpadError;
-use crate::TOKENS_PER_USDC;
 use crate::events::{LaunchFundedEvent, CommonFields};
 
 #[event_cpi]
@@ -11,23 +10,25 @@ use crate::events::{LaunchFundedEvent, CommonFields};
 pub struct Fund<'info> {
     #[account(
         mut, 
-        has_one = token_mint,
         has_one = launch_signer,
-        constraint = launch.state == LaunchState::Live @ LaunchpadError::InvalidLaunchState
+        has_one = launch_usdc_vault,
     )]
     pub launch: Account<'info, Launch>,
+
+    #[account(
+        init_if_needed,
+        payer = funder,
+        space = 8 + std::mem::size_of::<FundingRecord>(),
+        seeds = [b"funding_record", launch.key().as_ref(), funder.key().as_ref()],
+        bump
+    )]
+    pub funding_record: Account<'info, FundingRecord>,
 
     /// CHECK: just a signer
     pub launch_signer: UncheckedAccount<'info>,
 
-    #[account(
-        mut,
-        constraint = usdc_vault.key() == launch.launch_usdc_vault
-    )]
-    pub usdc_vault: Account<'info, TokenAccount>,
-
     #[account(mut)]
-    pub token_mint: Account<'info, Mint>,
+    pub launch_usdc_vault: Account<'info, TokenAccount>,
 
     #[account(mut)]
     pub funder: Signer<'info>,
@@ -35,15 +36,17 @@ pub struct Fund<'info> {
     #[account(mut)]
     pub funder_usdc_account: Account<'info, TokenAccount>,
 
-    #[account(mut)]
-    pub funder_token_account: Account<'info, TokenAccount>,
-
     pub token_program: Program<'info, Token>,
+    pub system_program: Program<'info, System>,
 }
 
 impl Fund<'_> {
     pub fn validate(&self, amount: u64) -> Result<()> {
         require!(amount > 0, LaunchpadError::InvalidAmount);
+
+        require_gte!(self.funder_usdc_account.amount, amount, LaunchpadError::InsufficientFunds);
+
+        require!(self.launch.state == LaunchState::Live, LaunchpadError::InvalidLaunchState);
 
         Ok(())
     }
@@ -55,42 +58,29 @@ impl Fund<'_> {
                 ctx.accounts.token_program.to_account_info(),
                 Transfer {
                     from: ctx.accounts.funder_usdc_account.to_account_info(),
-                    to: ctx.accounts.usdc_vault.to_account_info(),
+                    to: ctx.accounts.launch_usdc_vault.to_account_info(),
                     authority: ctx.accounts.funder.to_account_info(),
                 },
             ),
             amount,
         )?;
 
-        // Transfer tokens from vault to funder (10,000 * USDC amount)
-        // We don't need to worry about decimals because both USDC and token
-        // have 6 decimals
-        let token_amount = amount * TOKENS_PER_USDC;
+        let funding_record = &mut ctx.accounts.funding_record;
 
-        let launch_key = ctx.accounts.launch.key();
-
-        let seeds = &[
-            b"launch_signer",
-            launch_key.as_ref(),
-            &[ctx.accounts.launch.launch_signer_pda_bump],
-        ];
-        let signer = &[&seeds[..]];
-
-        token::mint_to(
-            CpiContext::new_with_signer(
-                ctx.accounts.token_program.to_account_info(),
-                MintTo {
-                    mint: ctx.accounts.token_mint.to_account_info(),
-                    to: ctx.accounts.funder_token_account.to_account_info(),
-                    authority: ctx.accounts.launch_signer.to_account_info(),
-                },
-                signer,
-            ),
-            token_amount,
-        )?;
+        if funding_record.funder == ctx.accounts.funder.key() {
+            funding_record.committed_amount += amount;
+            funding_record.seq_num += 1;
+        } else {
+            funding_record.set_inner(FundingRecord {
+                pda_bump: ctx.bumps.funding_record,
+                funder: ctx.accounts.funder.key(),
+                committed_amount: amount,
+                seq_num: 0,
+            });
+        }
 
         // Update committed amount
-        ctx.accounts.launch.committed_amount += amount;
+        ctx.accounts.launch.total_committed_amount += amount;
 
         ctx.accounts.launch.seq_num += 1;
 
@@ -100,7 +90,10 @@ impl Fund<'_> {
             launch: ctx.accounts.launch.key(),
             funder: ctx.accounts.funder.key(),
             amount,
-            total_committed: ctx.accounts.launch.committed_amount,
+            total_committed: ctx.accounts.launch.total_committed_amount,
+            funding_record: funding_record.key(),
+            funding_record_seq_num: funding_record.seq_num,
+            total_committed_by_funder: funding_record.committed_amount,
         });
 
         Ok(())

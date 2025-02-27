@@ -80,7 +80,6 @@ export default function suite() {
       launch,
       minRaise,
       USDC,
-      META
     ).rpc();
 
     // Advance clock past 7 days
@@ -109,7 +108,6 @@ export default function suite() {
       launch,
       minRaise,
       USDC,
-      META
     ).rpc();
 
     // Try to complete immediately (should fail)
@@ -142,7 +140,6 @@ export default function suite() {
       launch,
       partialAmount,
       USDC,
-      META
     ).rpc();
 
     // Advance clock past 7 days

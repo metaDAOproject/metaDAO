@@ -2,6 +2,7 @@ import { PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import {
   AutocratClient,
+  getFundingRecordAddr,
   getLaunchAddr,
   getLaunchSignerAddr,
   LaunchpadClient,
@@ -72,7 +73,7 @@ export default function suite() {
 
     await this.createTokenAccount(META, this.payer.publicKey);
     await this.createTokenAccount(USDC, this.payer.publicKey);
-    await this.mintTo(USDC, this.payer.publicKey, this.payer, 100_000000);
+    await this.mintTo(USDC, this.payer.publicKey, this.payer, 1_000_000000);
     // await this.mintTo(META, this.payer.publicKey, this.payer, maxRaise.toNumber());
   });
 
@@ -83,16 +84,60 @@ export default function suite() {
       launch,
       fundAmount,
       USDC,
-      META
     ).rpc();
 
     const launchAccount = await launchpadClient.fetchLaunch(launch);
-    assert.equal(launchAccount.committedAmount.toString(), fundAmount.toString());
+    assert.equal(launchAccount.totalCommittedAmount.toString(), fundAmount.toString());
 
     const usdcVaultAccount = await getAccount(this.banksClient, usdcVault);
     assert.equal(usdcVaultAccount.amount.toString(), fundAmount.toString());
 
-    const storedFunderTokenAccount = await getAccount(this.banksClient, funderTokenAccount);
-    assert.equal(storedFunderTokenAccount.amount.toString(), fundAmount.muln(1_000).toString());
+    const [fundingRecord, pdaBump] = getFundingRecordAddr(
+      launchpadClient.getProgramId(),
+      launch,
+      this.payer.publicKey
+    );
+
+    const fundingRecordAccount = await launchpadClient.fetchFundingRecord(fundingRecord);
+    assert.equal(fundingRecordAccount.committedAmount.toString(), fundAmount.toString());
+    assert.equal(fundingRecordAccount.pdaBump, pdaBump);
+    assert.ok(fundingRecordAccount.funder.equals(this.payer.publicKey));
+    assert.ok(fundingRecordAccount.seqNum.eqn(0));
+  });
+
+  it("successfully funds the launch multiple times", async function () {
+    const fundAmount1 = new BN(100_000000); // 100 USDC
+    const fundAmount2 = new BN(200_000000); // 200 USDC
+    const totalAmount = fundAmount1.add(fundAmount2);
+
+    // First funding
+    await launchpadClient.fundIx(
+      launch,
+      fundAmount1,
+      USDC,
+    ).rpc();
+
+    // Second funding
+    await launchpadClient.fundIx(
+      launch,
+      fundAmount2,
+      USDC,
+    ).rpc();
+
+    const launchAccount = await launchpadClient.fetchLaunch(launch);
+    assert.equal(launchAccount.totalCommittedAmount.toString(), totalAmount.toString());
+
+    const usdcVaultAccount = await getAccount(this.banksClient, usdcVault);
+    assert.equal(usdcVaultAccount.amount.toString(), totalAmount.toString());
+
+    const [fundingRecord] = getFundingRecordAddr(
+      launchpadClient.getProgramId(),
+      launch,
+      this.payer.publicKey
+    );
+
+    const fundingRecordAccount = await launchpadClient.fetchFundingRecord(fundingRecord);
+    assert.equal(fundingRecordAccount.committedAmount.toString(), totalAmount.toString());
+    assert.ok(fundingRecordAccount.seqNum.eqn(1));
   });
 } 

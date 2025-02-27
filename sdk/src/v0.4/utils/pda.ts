@@ -182,3 +182,14 @@ export const getLaunchSignerAddr = (
     programId
   );
 };
+
+export const getFundingRecordAddr = (
+  programId: PublicKey = LAUNCHPAD_PROGRAM_ID,
+  launch: PublicKey,
+  funder: PublicKey
+): [PublicKey, number] => {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("funding_record"), launch.toBuffer(), funder.toBuffer()],
+    programId
+  );
+};

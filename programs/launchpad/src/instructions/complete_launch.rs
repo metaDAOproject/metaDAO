@@ -328,7 +328,7 @@ impl CompleteLaunch<'_> {
             common: CommonFields::new(&clock, launch.seq_num),
             launch: launch.key(),
             final_state: launch.state,
-            total_committed: launch.committed_amount,
+            total_committed: launch.total_committed_amount,
         });
 
         Ok(())

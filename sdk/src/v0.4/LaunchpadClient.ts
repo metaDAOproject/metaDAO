@@ -13,9 +13,10 @@ import {
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
 import { BN } from "@coral-xyz/anchor";
-import { Launch } from "./types/index.js";
+import { FundingRecord, Launch } from "./types/index.js";
 import {
   getDaoTreasuryAddr,
+  getFundingRecordAddr,
   getLaunchAddr,
   getLaunchSignerAddr,
 } from "./utils/pda.js";
@@ -68,6 +69,27 @@ export class LaunchpadClient {
 
   async deserializeLaunch(accountInfo: AccountInfo<Buffer>): Promise<Launch> {
     return this.launchpad.coder.accounts.decode("launch", accountInfo.data);
+  }
+
+  async getFundingRecord(fundingRecord: PublicKey): Promise<FundingRecord> {
+    return await this.launchpad.account.fundingRecord.fetch(fundingRecord);
+  }
+
+  async fetchFundingRecord(
+    fundingRecord: PublicKey
+  ): Promise<FundingRecord | null> {
+    return await this.launchpad.account.fundingRecord.fetchNullable(
+      fundingRecord
+    );
+  }
+
+  async deserializeFundingRecord(
+    accountInfo: AccountInfo<Buffer>
+  ): Promise<FundingRecord> {
+    return this.launchpad.coder.accounts.decode(
+      "fundingRecord",
+      accountInfo.data
+    );
   }
 
   initializeLaunchIx(
@@ -155,28 +177,30 @@ export class LaunchpadClient {
     launch: PublicKey,
     amount: BN,
     usdcMint: PublicKey,
-    tokenMint: PublicKey,
     funder: PublicKey = this.provider.publicKey
   ) {
     const [launchSigner] = getLaunchSignerAddr(
       this.launchpad.programId,
       launch
     );
-    const usdcVault = getAssociatedTokenAddressSync(
+    const launchUsdcVault = getAssociatedTokenAddressSync(
       usdcMint,
       launchSigner,
       true
     );
     const funderUsdcAccount = getAssociatedTokenAddressSync(usdcMint, funder);
-    const funderTokenAccount = getAssociatedTokenAddressSync(tokenMint, funder);
+    const [fundingRecord] = getFundingRecordAddr(
+      this.launchpad.programId,
+      launch,
+      funder
+    );
 
     return this.launchpad.methods.fund(amount).accounts({
       launch,
-      usdcVault,
-      tokenMint,
+      launchUsdcVault,
+      fundingRecord,
       funder,
       funderUsdcAccount,
-      funderTokenAccount,
       launchSigner,
     });
   }
