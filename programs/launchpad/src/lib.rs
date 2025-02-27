@@ -1,4 +1,4 @@
-//! A smart contract that facilitates the creation of new futarchic DAOs via ICO.
+//! A smart contract that facilitates the creation of new futarchic DAOs.
 //! 
 //! Creators can then create a `Launch` account, specifying the minimum and maximum to raise.
 //! `Launch` accounts are associated with a `Dao` account, which is where the USDC will be
