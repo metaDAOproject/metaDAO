@@ -33,7 +33,11 @@ pub struct Fund<'info> {
     #[account(mut)]
     pub funder: Signer<'info>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        token::mint = launch.usdc_mint,
+        token::authority = funder
+    )]
     pub funder_usdc_account: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,

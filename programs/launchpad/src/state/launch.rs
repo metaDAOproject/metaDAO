@@ -27,6 +27,8 @@ pub struct Launch {
     pub launch_token_vault: Pubkey,
     /// The token that will be minted to funders and that will control the DAO.
     pub token_mint: Pubkey,
+    /// The USDC mint.
+    pub usdc_mint: Pubkey,
     /// The slot when the launch was started.
     pub slot_started: u64,
     /// The amount of USDC that has been committed by the users.

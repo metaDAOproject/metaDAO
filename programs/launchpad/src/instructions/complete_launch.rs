@@ -29,6 +29,8 @@ pub struct CompleteLaunch<'info> {
         has_one = launch_usdc_vault,
         has_one = launch_token_vault,
         has_one = launch_signer,
+        has_one = token_mint,
+        has_one = usdc_mint,
     )]
     pub launch: Account<'info, Launch>,
 
@@ -58,8 +60,8 @@ pub struct CompleteLaunch<'info> {
 
     #[account(
         mut,
-        token::mint = token_mint,
-        token::authority = launch_signer,
+        associated_token::mint = token_mint,
+        associated_token::authority = launch_signer,
     )]
     pub launch_token_vault: Account<'info, TokenAccount>,
 

@@ -82,6 +82,7 @@ impl InitializeLaunch<'_> {
             launch_token_vault: ctx.accounts.token_vault.key(),
             total_committed_amount: 0,
             token_mint: ctx.accounts.token_mint.key(),
+            usdc_mint: ctx.accounts.usdc_mint.key(),
             pda_bump: ctx.bumps.launch,
             seq_num: 0,
             state: LaunchState::Initialized,

@@ -526,6 +526,11 @@ export type Launchpad = {
             type: "publicKey";
           },
           {
+            name: "usdcMint";
+            docs: ["The USDC mint."];
+            type: "publicKey";
+          },
+          {
             name: "slotStarted";
             docs: ["The slot when the launch was started."];
             type: "u64";
@@ -1407,6 +1412,11 @@ export const IDL: Launchpad = {
             docs: [
               "The token that will be minted to funders and that will control the DAO.",
             ],
+            type: "publicKey",
+          },
+          {
+            name: "usdcMint",
+            docs: ["The USDC mint."],
             type: "publicKey",
           },
           {
