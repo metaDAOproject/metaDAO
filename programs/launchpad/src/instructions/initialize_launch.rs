@@ -26,6 +26,10 @@ pub struct InitializeLaunch<'info> {
     pub launch: Account<'info, Launch>,
 
     /// CHECK: This is the launch signer
+    #[account(
+        seeds = [b"launch_signer", launch.key().as_ref()],
+        bump
+    )]
     pub launch_signer: UncheckedAccount<'info>,
 
     #[account(
@@ -70,14 +74,11 @@ impl InitializeLaunch<'_> {
         ctx: Context<Self>,
         args: InitializeLaunchArgs,
     ) -> Result<()> {
-        let (launch_signer, launch_signer_pda_bump) =
-            Pubkey::find_program_address(&[b"launch_signer", ctx.accounts.launch.key().as_ref()], ctx.program_id);
-
         ctx.accounts.launch.set_inner(Launch {
             minimum_raise_amount: args.minimum_raise_amount,
             creator: ctx.accounts.creator.key(),
-            launch_signer,
-            launch_signer_pda_bump,
+            launch_signer: ctx.accounts.launch_signer.key(),
+            launch_signer_pda_bump: ctx.bumps.launch_signer,
             launch_usdc_vault: ctx.accounts.usdc_vault.key(),
             launch_token_vault: ctx.accounts.token_vault.key(),
             total_committed_amount: 0,
@@ -107,7 +108,7 @@ impl InitializeLaunch<'_> {
         let seeds = &[
             b"launch_signer",
             launch_key.as_ref(),
-            &[launch_signer_pda_bump],
+            &[ctx.bumps.launch_signer],
         ];
         let signer = &[&seeds[..]];
 

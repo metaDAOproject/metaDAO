@@ -77,6 +77,59 @@ export default function suite() {
     assert.equal(launch.daoTreasury, null);
   });
 
+  it("fails when launch signer is faked", async function () {
+    const minimumRaiseAmount = new BN(1000_000000); // 1000 USDC
+    const slotsForLaunch = new BN(5000_000000); // 5000 USDC
+
+    const [launchAddr, pdaBump] = getLaunchAddr(launchpadClient.getProgramId(), META);
+
+    const fakeLaunchSigner = Keypair.generate();
+
+    try {
+      await launchpadClient.launchpad.methods.initializeLaunch({
+        minimumRaiseAmount,
+        slotsForLaunch,
+      }).accounts({
+        launch: launchAddr,
+        launchSigner: fakeLaunchSigner.publicKey,
+        usdcVault: token.getAssociatedTokenAddressSync(USDC, fakeLaunchSigner.publicKey, true),
+        tokenVault: token.getAssociatedTokenAddressSync(META, fakeLaunchSigner.publicKey, true),
+        usdcMint: USDC,
+        tokenMint: META,
+      })
+        .preInstructions([
+          token.createSetAuthorityInstruction(
+            META,
+            this.payer.publicKey,
+            token.AuthorityType.MintTokens,
+            fakeLaunchSigner.publicKey
+          ),
+          token.createAssociatedTokenAccountIdempotentInstruction(
+            this.payer.publicKey,
+            getAssociatedTokenAddressSync(META, fakeLaunchSigner.publicKey, true),
+            fakeLaunchSigner.publicKey,
+            META
+          ),
+          token.createAssociatedTokenAccountIdempotentInstruction(
+            this.payer.publicKey,
+            getAssociatedTokenAddressSync(USDC, fakeLaunchSigner.publicKey, true),
+            fakeLaunchSigner.publicKey,
+            USDC
+          ),
+        ])
+        .remainingAccounts([{
+          pubkey: fakeLaunchSigner.publicKey,
+          isWritable: false,
+          isSigner: true,
+        }])
+        .signers([fakeLaunchSigner])
+        .rpc();
+      assert.fail("Should have thrown error");
+    } catch (e) {
+      assert.include(e.message, "ConstraintSeeds");
+    }
+  });
+
   it("fails when vault doesn't have mint authority", async function () {
     const minRaise = new BN(1000_000000); // 1000 USDC
     const maxRaise = new BN(5000_000000); // 5000 USDC
