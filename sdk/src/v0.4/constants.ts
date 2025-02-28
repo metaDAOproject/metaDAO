@@ -1,5 +1,6 @@
 import { PublicKey } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
+import { BN } from "bn.js";
 
 export const AUTOCRAT_PROGRAM_ID = new PublicKey(
   "autowMzCbM29YXMgVG3T62Hkgo7RcyrvgQQkd54fDQL"
@@ -17,6 +18,10 @@ export const MPL_TOKEN_METADATA_PROGRAM_ID = new PublicKey(
 
 export const RAYDIUM_CP_SWAP_PROGRAM_ID = new PublicKey(
   "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C"
+);
+
+export const DEVNET_RAYDIUM_CP_SWAP_PROGRAM_ID = new PublicKey(
+  "CPMDWBwJDtYax9qW7AyRuVC19Cc4L4Vcy4n2BHAbHkCW"
 );
 
 export const META_MINT = new PublicKey(
@@ -39,9 +44,27 @@ export const RAYDIUM_AUTHORITY = PublicKey.findProgramAddressSync(
   RAYDIUM_CP_SWAP_PROGRAM_ID
 )[0];
 
-export const RAYDIUM_CONFIG = new PublicKey(
+export const DEVNET_RAYDIUM_AUTHORITY = PublicKey.findProgramAddressSync(
+  [anchor.utils.bytes.utf8.encode("vault_and_lp_mint_auth_seed")],
+  DEVNET_RAYDIUM_CP_SWAP_PROGRAM_ID
+)[0];
+
+export const LOW_FEE_RAYDIUM_CONFIG = new PublicKey(
   "D4FPEruKEHrG5TenZ2mpDGEfu1iUvTiqBxvpU8HLBvC2"
 );
+
+export const DEVNET_LOW_FEE_RAYDIUM_CONFIG = PublicKey.findProgramAddressSync(
+  [
+    anchor.utils.bytes.utf8.encode("amm_config"),
+    new BN(0).toArrayLike(Buffer, "be", 2),
+  ],
+  DEVNET_RAYDIUM_CP_SWAP_PROGRAM_ID
+)[0];
+
 export const RAYDIUM_CREATE_POOL_FEE_RECEIVE = new PublicKey(
   "DNXgeM9EiiaAbaWvwjHj9fQQLAX5ZsfHyvmYUNRAdNC8"
+);
+
+export const DEVNET_RAYDIUM_CREATE_POOL_FEE_RECEIVE = new PublicKey(
+  "G11FKBRaAkHAKuLCgLM6K6NUc9rTjPAznRCjZifrTQe2"
 );

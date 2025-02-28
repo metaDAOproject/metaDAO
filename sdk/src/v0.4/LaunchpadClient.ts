@@ -9,9 +9,13 @@ import { Launchpad, IDL as LaunchpadIDL } from "./types/launchpad.js";
 import {
   LAUNCHPAD_PROGRAM_ID,
   RAYDIUM_AUTHORITY,
-  RAYDIUM_CONFIG,
+  LOW_FEE_RAYDIUM_CONFIG,
   RAYDIUM_CP_SWAP_PROGRAM_ID,
   RAYDIUM_CREATE_POOL_FEE_RECEIVE,
+  DEVNET_RAYDIUM_CP_SWAP_PROGRAM_ID,
+  DEVNET_RAYDIUM_AUTHORITY,
+  DEVNET_LOW_FEE_RAYDIUM_CONFIG,
+  DEVNET_RAYDIUM_CREATE_POOL_FEE_RECEIVE,
 } from "./constants.js";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
@@ -215,7 +219,8 @@ export class LaunchpadClient {
     launch: PublicKey,
     usdcMint: PublicKey,
     tokenMint: PublicKey,
-    daoTreasury: PublicKey
+    daoTreasury: PublicKey,
+    isDevnet: boolean = false
   ) {
     const [launchSigner] = getLaunchSignerAddr(
       this.launchpad.programId,
@@ -239,12 +244,16 @@ export class LaunchpadClient {
 
     const poolStateKp = Keypair.generate();
 
+    const cpSwapProgramId = isDevnet
+      ? DEVNET_RAYDIUM_CP_SWAP_PROGRAM_ID
+      : RAYDIUM_CP_SWAP_PROGRAM_ID;
+
     const [lpMint] = PublicKey.findProgramAddressSync(
       [
         anchor.utils.bytes.utf8.encode("pool_lp_mint"),
         poolStateKp.publicKey.toBuffer(),
       ],
-      RAYDIUM_CP_SWAP_PROGRAM_ID
+      cpSwapProgramId
     );
 
     const lpVault = getAssociatedTokenAddressSync(lpMint, launchSigner, true);
@@ -255,7 +264,7 @@ export class LaunchpadClient {
         poolStateKp.publicKey.toBuffer(),
         tokenMint.toBuffer(),
       ],
-      RAYDIUM_CP_SWAP_PROGRAM_ID
+      cpSwapProgramId
     );
 
     const [poolUsdcVault] = PublicKey.findProgramAddressSync(
@@ -264,7 +273,7 @@ export class LaunchpadClient {
         poolStateKp.publicKey.toBuffer(),
         usdcMint.toBuffer(),
       ],
-      RAYDIUM_CP_SWAP_PROGRAM_ID
+      cpSwapProgramId
     );
 
     const [observationState] = PublicKey.findProgramAddressSync(
@@ -272,8 +281,10 @@ export class LaunchpadClient {
         anchor.utils.bytes.utf8.encode("observation"),
         poolStateKp.publicKey.toBuffer(),
       ],
-      RAYDIUM_CP_SWAP_PROGRAM_ID
+      cpSwapProgramId
     );
+
+    console.log(cpSwapProgramId);
 
     return this.launchpad.methods
       .completeLaunch()
@@ -291,10 +302,14 @@ export class LaunchpadClient {
         poolState: poolStateKp.publicKey,
         observationState,
         treasuryUsdcAccount,
-        cpSwapProgram: RAYDIUM_CP_SWAP_PROGRAM_ID,
-        authority: RAYDIUM_AUTHORITY,
-        ammConfig: RAYDIUM_CONFIG,
-        createPoolFee: RAYDIUM_CREATE_POOL_FEE_RECEIVE,
+        cpSwapProgram: cpSwapProgramId,
+        authority: isDevnet ? DEVNET_RAYDIUM_AUTHORITY : RAYDIUM_AUTHORITY,
+        ammConfig: isDevnet
+          ? DEVNET_LOW_FEE_RAYDIUM_CONFIG
+          : LOW_FEE_RAYDIUM_CONFIG,
+        createPoolFee: isDevnet
+          ? DEVNET_RAYDIUM_CREATE_POOL_FEE_RECEIVE
+          : RAYDIUM_CREATE_POOL_FEE_RECEIVE,
       })
       .signers([poolStateKp]);
   }
@@ -348,18 +363,28 @@ export class LaunchpadClient {
       funder
     );
 
-    return this.launchpad.methods.claim().accounts({
-      launch,
-      fundingRecord,
-      launchSigner,
-      funder,
-      funderTokenAccount: getAssociatedTokenAddressSync(tokenMint, funder),
-      tokenMint,
-      launchTokenVault: getAssociatedTokenAddressSync(
-        tokenMint,
+    return this.launchpad.methods
+      .claim()
+      .accounts({
+        launch,
+        fundingRecord,
         launchSigner,
-        true
-      ),
-    });
+        funder,
+        funderTokenAccount: getAssociatedTokenAddressSync(tokenMint, funder),
+        tokenMint,
+        launchTokenVault: getAssociatedTokenAddressSync(
+          tokenMint,
+          launchSigner,
+          true
+        ),
+      })
+      .preInstructions([
+        createAssociatedTokenAccountIdempotentInstruction(
+          funder,
+          getAssociatedTokenAddressSync(tokenMint, funder, true),
+          funder,
+          tokenMint
+        ),
+      ]);
   }
 }

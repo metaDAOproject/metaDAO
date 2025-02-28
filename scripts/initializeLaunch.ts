@@ -1,21 +1,21 @@
 import * as token from "@solana/spl-token";
-import { Keypair, PublicKey } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import {
     AutocratClient,
     ConditionalVaultClient,
+    getDaoTreasuryAddr,
     getLaunchAddr,
     getLaunchSignerAddr,
     LaunchpadClient,
 } from "@metadaoproject/futarchy/v0.4";
 import { BN } from "bn.js";
 import { DEVNET_MUSDC } from "./consts.js";
-import { percentAmount, generateSigner, some } from '@metaplex-foundation/umi'
-import { createFungible, createFungibleAsset, createMetadataAccountV3, createV1, updateV1 } from '@metaplex-foundation/mpl-token-metadata'
+import { createMetadataAccountV3 } from '@metaplex-foundation/mpl-token-metadata'
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults'
 import { mplTokenMetadata } from '@metaplex-foundation/mpl-token-metadata'
 import { walletAdapterIdentity } from '@metaplex-foundation/umi-signer-wallet-adapters'
 import { fromWeb3JsPublicKey } from '@metaplex-foundation/umi-web3js-adapters';
+import { ComputeBudgetProgram } from "@solana/web3.js";
 
 // Use the RPC endpoint of your choice.
 
@@ -54,6 +54,7 @@ async function main() {
     });
 
     const dao = await autocrat.initializeDao(pORE, 0.001, 100 * 1_000, 100, DEVNET_MUSDC);
+    const [daoTreasury] = getDaoTreasuryAddr(autocrat.getProgramId(), dao);
 
 
     const [launchAddr] = getLaunchAddr(launchpad.getProgramId(), dao);
@@ -61,7 +62,7 @@ async function main() {
 
     const tx = await launchpad.initializeLaunchIx(
         dao,
-        new BN(100),
+        new BN(5),
         new BN(0),
         DEVNET_MUSDC,
         pORE
@@ -74,7 +75,17 @@ async function main() {
         ),
     ]).rpc();
 
+    await launchpad.startLaunchIx(launchAddr, payer.publicKey).rpc();
 
+    await launchpad.fundIx(launchAddr, new BN(10), DEVNET_MUSDC, payer.publicKey).rpc();
+
+    await launchpad.completeLaunchIx(launchAddr, DEVNET_MUSDC, pORE, daoTreasury, true)
+        .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 300_000 })]).rpc();
+
+    // await launchpad.refundIx(launchAddr, DEVNET_MUSDC, pORE, payer.publicKey).rpc();
+    await launchpad.claimIx(launchAddr, pORE, payer.publicKey).rpc();
+
+    console.log(launchAddr.toBase58());
 
     console.log(dao.toBase58());
 
