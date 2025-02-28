@@ -25,6 +25,7 @@ import { BN } from "@coral-xyz/anchor";
 import { FundingRecord, Launch } from "./types/index.js";
 import {
   getDaoTreasuryAddr,
+  getEventAuthorityAddr,
   getFundingRecordAddr,
   getLaunchAddr,
   getLaunchSignerAddr,
@@ -102,14 +103,13 @@ export class LaunchpadClient {
   }
 
   initializeLaunchIx(
-    dao: PublicKey,
     minimumRaiseAmount: BN,
     slotsForLaunch: BN,
     usdcMint: PublicKey,
     tokenMint: PublicKey,
     creator: PublicKey = this.provider.publicKey
   ) {
-    const [launch] = getLaunchAddr(this.launchpad.programId, dao);
+    const [launch] = getLaunchAddr(this.launchpad.programId, tokenMint);
     const [launchSigner] = getLaunchSignerAddr(
       this.launchpad.programId,
       launch
@@ -124,15 +124,6 @@ export class LaunchpadClient {
       launchSigner,
       true
     );
-    const [daoTreasury] = getDaoTreasuryAddr(
-      this.autocratClient.getProgramId(),
-      dao
-    );
-    const treasuryUsdcAccount = getAssociatedTokenAddressSync(
-      usdcMint,
-      daoTreasury,
-      true
-    );
 
     return this.launchpad.methods
       .initializeLaunch({
@@ -144,10 +135,7 @@ export class LaunchpadClient {
         launchSigner,
         usdcVault,
         tokenVault,
-        daoTreasury,
-        treasuryUsdcAccount,
         creator,
-        dao,
         usdcMint,
         tokenMint,
       })
@@ -162,12 +150,6 @@ export class LaunchpadClient {
           creator,
           getAssociatedTokenAddressSync(usdcMint, launchSigner, true),
           launchSigner,
-          usdcMint
-        ),
-        createAssociatedTokenAccountIdempotentInstruction(
-          creator,
-          getAssociatedTokenAddressSync(usdcMint, daoTreasury, true),
-          daoTreasury,
           usdcMint
         ),
       ]);
@@ -219,7 +201,6 @@ export class LaunchpadClient {
     launch: PublicKey,
     usdcMint: PublicKey,
     tokenMint: PublicKey,
-    daoTreasury: PublicKey,
     isDevnet: boolean = false
   ) {
     const [launchSigner] = getLaunchSignerAddr(
@@ -235,6 +216,12 @@ export class LaunchpadClient {
       tokenMint,
       launchSigner,
       true
+    );
+
+    const daoKp = Keypair.generate();
+    const [daoTreasury] = getDaoTreasuryAddr(
+      this.autocratClient.getProgramId(),
+      daoKp.publicKey
     );
     const treasuryUsdcAccount = getAssociatedTokenAddressSync(
       usdcMint,
@@ -284,6 +271,10 @@ export class LaunchpadClient {
       cpSwapProgramId
     );
 
+    const [autocratEventAuthority] = getEventAuthorityAddr(
+      this.autocratClient.getProgramId()
+    );
+
     return this.launchpad.methods
       .completeLaunch()
       .accounts({
@@ -291,6 +282,9 @@ export class LaunchpadClient {
         launchSigner,
         launchUsdcVault,
         launchTokenVault,
+        dao: daoKp.publicKey,
+        daoTreasury,
+        treasuryUsdcAccount,
         usdcMint,
         tokenMint,
         lpMint,
@@ -299,7 +293,6 @@ export class LaunchpadClient {
         poolUsdcVault,
         poolState: poolStateKp.publicKey,
         observationState,
-        treasuryUsdcAccount,
         cpSwapProgram: cpSwapProgramId,
         authority: isDevnet ? DEVNET_RAYDIUM_AUTHORITY : RAYDIUM_AUTHORITY,
         ammConfig: isDevnet
@@ -308,8 +301,18 @@ export class LaunchpadClient {
         createPoolFee: isDevnet
           ? DEVNET_RAYDIUM_CREATE_POOL_FEE_RECEIVE
           : RAYDIUM_CREATE_POOL_FEE_RECEIVE,
+        autocratProgram: this.autocratClient.getProgramId(),
+        autocratEventAuthority,
       })
-      .signers([poolStateKp]);
+      .signers([poolStateKp, daoKp])
+      .preInstructions([
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.provider.publicKey,
+          treasuryUsdcAccount,
+          daoTreasury,
+          usdcMint
+        ),
+      ]);
   }
 
   refundIx(

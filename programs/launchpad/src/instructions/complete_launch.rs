@@ -1,8 +1,8 @@
 use anchor_lang::Discriminator;
 use anchor_lang::{prelude::*, system_program};
 use anchor_spl::associated_token::AssociatedToken;
-use anchor_spl::token::{self, Mint, MintTo, SetAuthority, Token, TokenAccount, Transfer};
 use anchor_spl::token::spl_token::instruction::AuthorityType;
+use anchor_spl::token::{self, Mint, MintTo, SetAuthority, Token, TokenAccount, Transfer};
 use raydium_cpmm_cpi::states::AMM_CONFIG_SEED;
 
 use crate::error::LaunchpadError;
@@ -15,12 +15,17 @@ use raydium_cpmm_cpi::{
     states::{AmmConfig, OBSERVATION_SEED, POOL_LP_MINT_SEED, POOL_VAULT_SEED},
 };
 
+use autocrat::program::Autocrat;
+use autocrat::InitializeDaoParams;
+
+pub const PRICE_SCALE: u128 = 1_000_000_000_000;
+
 #[event_cpi]
 #[derive(Accounts)]
 pub struct CompleteLaunch<'info> {
     #[account(
         mut,
-        has_one = treasury_usdc_account,
+        // has_one = treasury_usdc_account,
         has_one = launch_usdc_vault,
         has_one = launch_token_vault,
         has_one = launch_signer,
@@ -46,8 +51,8 @@ pub struct CompleteLaunch<'info> {
 
     #[account(
         mut,
-        token::mint = usdc_mint,
-        token::authority = launch_signer,
+        associated_token::mint = usdc_mint,
+        associated_token::authority = launch_signer,
     )]
     pub launch_usdc_vault: Account<'info, TokenAccount>,
 
@@ -58,7 +63,11 @@ pub struct CompleteLaunch<'info> {
     )]
     pub launch_token_vault: Account<'info, TokenAccount>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        associated_token::mint = usdc_mint,
+        associated_token::authority = dao_treasury,
+    )]
     pub treasury_usdc_account: Account<'info, TokenAccount>,
 
     /// Use the lowest fee pool, can see fees at https://api-v3.raydium.io/main/cpmm-config
@@ -77,11 +86,9 @@ pub struct CompleteLaunch<'info> {
     #[account(mut)]
     pub pool_state: Signer<'info>,
 
-    /// Token_0 mint, the key must smaller then token_1 mint.
     #[account(mut)]
     pub token_mint: Box<Account<'info, Mint>>,
 
-    /// Token_1 mint, the key must grater then token_0 mint.
     pub usdc_mint: Box<Account<'info, Mint>>,
 
     /// CHECK: pool lp mint, init by cp-swap
@@ -145,10 +152,27 @@ pub struct CompleteLaunch<'info> {
     )]
     pub observation_state: UncheckedAccount<'info>,
 
+    /// CHECK: this is the DAO account, init by autocrat
+    #[account(mut)]
+    pub dao: Signer<'info>,
+
+    /// CHECK: this is the DAO treasury account
+    #[account(
+        seeds = [
+            dao.key().as_ref(),
+        ],
+        seeds::program = autocrat_program,
+        bump,
+    )]
+    pub dao_treasury: UncheckedAccount<'info>,
+
     pub cp_swap_program: Program<'info, RaydiumCpmm>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
+    pub autocrat_program: Program<'info, Autocrat>,
+    /// CHECK: checked by autocrat program
+    pub autocrat_event_authority: UncheckedAccount<'info>,
     pub rent: Sysvar<'info, Rent>,
 }
 
@@ -162,7 +186,11 @@ impl CompleteLaunch<'_> {
         );
 
         require!(
-            clock.slot >= self.launch.slot_started.saturating_add(self.launch.slots_for_launch),
+            clock.slot
+                >= self
+                    .launch
+                    .slot_started
+                    .saturating_add(self.launch.slots_for_launch),
             LaunchpadError::LaunchPeriodNotOver
         );
 
@@ -172,9 +200,43 @@ impl CompleteLaunch<'_> {
     pub fn handle(ctx: Context<Self>) -> Result<()> {
         let launch = &mut ctx.accounts.launch;
 
+        launch.dao = Some(ctx.accounts.dao.key());
+        launch.dao_treasury = Some(ctx.accounts.dao_treasury.key());
+
         let total_committed_amount = launch.total_committed_amount;
 
+        // For the DAO, we want proposals to start at the price of the launch,
+        // for the lagging TWAP to be able to move its latest observation by 5%
+        // per update (300% per hour), and for proposers to need to lock up 1%
+        // of the supply and an equivalent value of USDC.
+
+        let price_1e12 =
+            ((total_committed_amount as u128) * PRICE_SCALE) / (AVAILABLE_TOKENS as u128);
+
         if total_committed_amount >= launch.minimum_raise_amount {
+            autocrat::cpi::initialize_dao(
+                CpiContext::new(
+                    ctx.accounts.autocrat_program.to_account_info(),
+                    autocrat::cpi::accounts::InitializeDao {
+                        dao: ctx.accounts.dao.to_account_info(),
+                        payer: ctx.accounts.payer.to_account_info(),
+                        system_program: ctx.accounts.system_program.to_account_info(),
+                        token_mint: ctx.accounts.token_mint.to_account_info(),
+                        usdc_mint: ctx.accounts.usdc_mint.to_account_info(),
+                        event_authority: ctx.accounts.autocrat_event_authority.to_account_info(),
+                        program: ctx.accounts.autocrat_program.to_account_info(),
+                    },
+                ),
+                InitializeDaoParams {
+                    twap_initial_observation: price_1e12,
+                    twap_max_observation_change_per_update: price_1e12 / 20,
+                    min_quote_futarchic_liquidity: AVAILABLE_TOKENS / 100,
+                    min_base_futarchic_liquidity: total_committed_amount / 100,
+                    pass_threshold_bps: None,
+                    slots_per_proposal: None,
+                },
+            )?;
+
             let usdc_to_lp = total_committed_amount.saturating_div(10);
             let usdc_to_dao = total_committed_amount.saturating_sub(usdc_to_lp);
             let token_to_lp = AVAILABLE_TOKENS / 10;
@@ -187,6 +249,19 @@ impl CompleteLaunch<'_> {
                 &[launch.launch_signer_pda_bump],
             ];
             let signer = &[&seeds[..]];
+
+            token::transfer(
+                CpiContext::new_with_signer(
+                    ctx.accounts.token_program.to_account_info(),
+                    Transfer {
+                        from: ctx.accounts.launch_usdc_vault.to_account_info(),
+                        to: ctx.accounts.treasury_usdc_account.to_account_info(),
+                        authority: ctx.accounts.launch_signer.to_account_info(),
+                    },
+                    signer,
+                ),
+                usdc_to_dao,
+            )?;
 
             token::mint_to(
                 CpiContext::new_with_signer(
@@ -211,7 +286,7 @@ impl CompleteLaunch<'_> {
                     signer,
                 ),
                 AuthorityType::MintTokens,
-                Some(launch.dao_treasury),
+                Some(ctx.accounts.dao_treasury.key()),
             )?;
 
             system_program::transfer(
@@ -222,23 +297,12 @@ impl CompleteLaunch<'_> {
                         to: ctx.accounts.launch_signer.to_account_info(),
                     },
                 ),
-                3_000_000_000,
+                // pool fee + 0.1 SOL for rent, we only need 0.05 now but Raydium
+                // is upgradeable so I'd rather leave buffer
+                ctx.accounts.amm_config.create_pool_fee + 100_000_000,
             )?;
 
-
-            token::transfer(
-                CpiContext::new_with_signer(
-                    ctx.accounts.token_program.to_account_info(),
-                    Transfer {
-                        from: ctx.accounts.launch_usdc_vault.to_account_info(),
-                        to: ctx.accounts.treasury_usdc_account.to_account_info(),
-                        authority: ctx.accounts.launch_signer.to_account_info(),
-                    },
-                    signer,
-                ),
-                usdc_to_dao,
-            )?;
-
+            // Raydium requires that token_0 < token_1
             let (
                 token_0_mint,
                 token_1_mint,

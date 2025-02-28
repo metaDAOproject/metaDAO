@@ -31,21 +31,6 @@ export type Launchpad = {
           isSigner: true;
         },
         {
-          name: "dao";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "daoTreasury";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "treasuryUsdcAccount";
-          isMut: false;
-          isSigner: false;
-        },
-        {
           name: "usdcMint";
           isMut: false;
           isSigner: false;
@@ -232,13 +217,11 @@ export type Launchpad = {
           name: "tokenMint";
           isMut: true;
           isSigner: false;
-          docs: ["Token_0 mint, the key must smaller then token_1 mint."];
         },
         {
           name: "usdcMint";
           isMut: false;
           isSigner: false;
-          docs: ["Token_1 mint, the key must grater then token_0 mint."];
         },
         {
           name: "lpMint";
@@ -272,6 +255,16 @@ export type Launchpad = {
           isSigner: false;
         },
         {
+          name: "dao";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "daoTreasury";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "cpSwapProgram";
           isMut: false;
           isSigner: false;
@@ -288,6 +281,16 @@ export type Launchpad = {
         },
         {
           name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "autocratProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "autocratEventAuthority";
           isMut: false;
           isSigner: false;
         },
@@ -523,23 +526,6 @@ export type Launchpad = {
             type: "publicKey";
           },
           {
-            name: "dao";
-            docs: [
-              "The DAO that will control the USDC raised once the launch is over."
-            ];
-            type: "publicKey";
-          },
-          {
-            name: "daoTreasury";
-            docs: ["The DAO's treasury address."];
-            type: "publicKey";
-          },
-          {
-            name: "treasuryUsdcAccount";
-            docs: ["The DAO treasury's USDC account."];
-            type: "publicKey";
-          },
-          {
             name: "slotStarted";
             docs: ["The slot when the launch was started."];
             type: "u64";
@@ -567,6 +553,22 @@ export type Launchpad = {
             name: "slotsForLaunch";
             docs: ["The number of slots for the launch."];
             type: "u64";
+          },
+          {
+            name: "dao";
+            docs: ["The DAO, if the launch is complete."];
+            type: {
+              option: "publicKey";
+            };
+          },
+          {
+            name: "daoTreasury";
+            docs: [
+              "The DAO treasury that USDC / LP is sent to, if the launch is complete."
+            ];
+            type: {
+              option: "publicKey";
+            };
           }
         ];
       };
@@ -643,16 +645,6 @@ export type Launchpad = {
         },
         {
           name: "launch";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "dao";
-          type: "publicKey";
-          index: false;
-        },
-        {
-          name: "daoTreasury";
           type: "publicKey";
           index: false;
         },
@@ -923,21 +915,6 @@ export const IDL: Launchpad = {
           isSigner: true,
         },
         {
-          name: "dao",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "daoTreasury",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "treasuryUsdcAccount",
-          isMut: false,
-          isSigner: false,
-        },
-        {
           name: "usdcMint",
           isMut: false,
           isSigner: false,
@@ -1124,13 +1101,11 @@ export const IDL: Launchpad = {
           name: "tokenMint",
           isMut: true,
           isSigner: false,
-          docs: ["Token_0 mint, the key must smaller then token_1 mint."],
         },
         {
           name: "usdcMint",
           isMut: false,
           isSigner: false,
-          docs: ["Token_1 mint, the key must grater then token_0 mint."],
         },
         {
           name: "lpMint",
@@ -1164,6 +1139,16 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
+          name: "dao",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "daoTreasury",
+          isMut: false,
+          isSigner: false,
+        },
+        {
           name: "cpSwapProgram",
           isMut: false,
           isSigner: false,
@@ -1180,6 +1165,16 @@ export const IDL: Launchpad = {
         },
         {
           name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "autocratProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "autocratEventAuthority",
           isMut: false,
           isSigner: false,
         },
@@ -1415,23 +1410,6 @@ export const IDL: Launchpad = {
             type: "publicKey",
           },
           {
-            name: "dao",
-            docs: [
-              "The DAO that will control the USDC raised once the launch is over.",
-            ],
-            type: "publicKey",
-          },
-          {
-            name: "daoTreasury",
-            docs: ["The DAO's treasury address."],
-            type: "publicKey",
-          },
-          {
-            name: "treasuryUsdcAccount",
-            docs: ["The DAO treasury's USDC account."],
-            type: "publicKey",
-          },
-          {
             name: "slotStarted",
             docs: ["The slot when the launch was started."],
             type: "u64",
@@ -1459,6 +1437,22 @@ export const IDL: Launchpad = {
             name: "slotsForLaunch",
             docs: ["The number of slots for the launch."],
             type: "u64",
+          },
+          {
+            name: "dao",
+            docs: ["The DAO, if the launch is complete."],
+            type: {
+              option: "publicKey",
+            },
+          },
+          {
+            name: "daoTreasury",
+            docs: [
+              "The DAO treasury that USDC / LP is sent to, if the launch is complete.",
+            ],
+            type: {
+              option: "publicKey",
+            },
           },
         ],
       },
@@ -1535,16 +1529,6 @@ export const IDL: Launchpad = {
         },
         {
           name: "launch",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "dao",
-          type: "publicKey",
-          index: false,
-        },
-        {
-          name: "daoTreasury",
           type: "publicKey",
           index: false,
         },

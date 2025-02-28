@@ -1,8 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, MintTo};
 use anchor_spl::associated_token::AssociatedToken;
-use autocrat::ID as AUTOCRAT_PROGRAM_ID;
-use autocrat::Dao;
 
 use crate::state::{Launch, LaunchState};
 use crate::events::{LaunchInitializedEvent, CommonFields};
@@ -22,7 +20,7 @@ pub struct InitializeLaunch<'info> {
         init,
         payer = creator,
         space = 8 + std::mem::size_of::<Launch>(),
-        seeds = [b"launch", dao.key().as_ref()],
+        seeds = [b"launch", token_mint.key().as_ref()],
         bump
     )]
     pub launch: Account<'info, Launch>,
@@ -45,29 +43,9 @@ pub struct InitializeLaunch<'info> {
     #[account(mut)]
     pub creator: Signer<'info>,
     
-    pub dao: Account<'info, Dao>,
-
-    #[account(
-        constraint = dao_treasury.key() == dao.treasury
-    )]
-    /// CHECK: This is the DAO treasury
-    pub dao_treasury: AccountInfo<'info>,
-
-    #[account(
-        associated_token::mint = usdc_mint,
-        associated_token::authority = dao_treasury
-    )]
-    pub treasury_usdc_account: Account<'info, TokenAccount>,
-
-    
-    /// CHECK: This is USDC mint
-    #[account(
-        constraint = dao.usdc_mint == usdc_mint.key(),
-        mint::decimals = 6,
-    )]
+    #[account(mint::decimals = 6)]
     pub usdc_mint: Account<'info, Mint>,
 
-    /// CHECK: This is USDC mint
     #[account(
         mint::decimals = 6,
         mint::authority = launch_signer,
@@ -92,22 +70,12 @@ impl InitializeLaunch<'_> {
         ctx: Context<Self>,
         args: InitializeLaunchArgs,
     ) -> Result<()> {
-        let (dao_treasury, _) = Pubkey::find_program_address(
-            &[ctx.accounts.dao.key().as_ref()],
-            &AUTOCRAT_PROGRAM_ID
-        );
-
-        // We need a launch treasury because it needs to be the SOL payer for the raydium pool,
-        // and it doesn't work with PDAs that have data
         let (launch_signer, launch_signer_pda_bump) =
             Pubkey::find_program_address(&[b"launch_signer", ctx.accounts.launch.key().as_ref()], ctx.program_id);
 
         ctx.accounts.launch.set_inner(Launch {
             minimum_raise_amount: args.minimum_raise_amount,
-            dao: ctx.accounts.dao.key(),
             creator: ctx.accounts.creator.key(),
-            dao_treasury,
-            treasury_usdc_account: ctx.accounts.treasury_usdc_account.key(),
             launch_signer,
             launch_signer_pda_bump,
             launch_usdc_vault: ctx.accounts.usdc_vault.key(),
@@ -119,14 +87,14 @@ impl InitializeLaunch<'_> {
             state: LaunchState::Initialized,
             slot_started: 0,
             slots_for_launch: args.slots_for_launch,
+            dao: None,
+            dao_treasury: None,
         });
 
         let clock = Clock::get()?;
         emit_cpi!(LaunchInitializedEvent {
             common: CommonFields::new(&clock, 0),
             launch: ctx.accounts.launch.key(),
-            dao: ctx.accounts.dao.key(),
-            dao_treasury: ctx.accounts.dao_treasury.key(),
             creator: ctx.accounts.creator.key(),
             usdc_mint: ctx.accounts.usdc_mint.key(),
             token_mint: ctx.accounts.token_mint.key(),

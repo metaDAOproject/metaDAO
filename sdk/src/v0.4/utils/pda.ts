@@ -165,10 +165,10 @@ export const getAmmLpMintAddr = (
 
 export function getLaunchAddr(
   programId: PublicKey = LAUNCHPAD_PROGRAM_ID,
-  dao: PublicKey
+  tokenMint: PublicKey
 ): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
-    [Buffer.from("launch"), dao.toBuffer()],
+    [Buffer.from("launch"), tokenMint.toBuffer()],
     programId
   );
 }

@@ -22,8 +22,6 @@ impl CommonFields {
 pub struct LaunchInitializedEvent {
     pub common: CommonFields,
     pub launch: Pubkey,
-    pub dao: Pubkey,
-    pub dao_treasury: Pubkey,
     pub token_mint: Pubkey,
     pub creator: Pubkey,
     pub usdc_mint: Pubkey,

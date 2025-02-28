@@ -12,7 +12,7 @@ pub struct InitializeDaoParams {
 
 #[derive(Accounts)]
 #[event_cpi]
-pub struct InitializeDAO<'info> {
+pub struct InitializeDao<'info> {
     #[account(
         init,
         payer = payer,
@@ -28,7 +28,7 @@ pub struct InitializeDAO<'info> {
     pub usdc_mint: Account<'info, Mint>,
 }
 
-impl InitializeDAO<'_> {
+impl InitializeDao<'_> {
     pub fn handle(ctx: Context<Self>, params: InitializeDaoParams) -> Result<()> {
         let InitializeDaoParams {
             twap_initial_observation,

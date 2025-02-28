@@ -39,14 +39,14 @@ export default function suite() {
     USDC = await createMint(this.banksClient, this.payer, this.payer.publicKey, null, 6);
 
     // Initialize DAO
-    dao = await autocratClient.initializeDao(META, 400, 5, 5000, USDC);
-    [daoTreasury] = PublicKey.findProgramAddressSync(
-      [dao.toBuffer()],
-      autocratClient.autocrat.programId
-    );
+    // dao = await autocratClient.initializeDao(META, 400, 5, 5000, USDC);
+    // [daoTreasury] = PublicKey.findProgramAddressSync(
+    //   [dao.toBuffer()],
+    //   autocratClient.autocrat.programId
+    // );
 
     // Get accounts
-    [launch] = getLaunchAddr(launchpadClient.getProgramId(), dao);
+    [launch] = getLaunchAddr(launchpadClient.getProgramId(), META);
     [launchSigner] = getLaunchSignerAddr(launchpadClient.getProgramId(), launch);
     tokenVault = getAssociatedTokenAddressSync(META, launchSigner, true);
     usdcVault = getAssociatedTokenAddressSync(USDC, launchSigner, true);
@@ -55,7 +55,6 @@ export default function suite() {
 
     // // Initialize launch
     await launchpadClient.initializeLaunchIx(
-      dao,
       minRaise,
       maxRaise,
       USDC,

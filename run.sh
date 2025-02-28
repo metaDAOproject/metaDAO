@@ -16,6 +16,10 @@ build_vault() {
     find programs | entr -sc 'anchor build -p conditional_vault'
 }
 
+build_launchpad() {
+    find programs | entr -sc 'anchor build -p launchpad'
+}
+
 test_vault() {
     # anchor doesn't let you past test files, so we do this weird thing where we
     # modify the Anchor.toml and then put it back
@@ -114,6 +118,7 @@ bankrun_logs() {
 
 case "$1" in
     build) build ;;
+    build_launchpad) build_launchpad ;;
     test) test ;;
     test_logs) test_logs ;;
     vault) test_vault ;;

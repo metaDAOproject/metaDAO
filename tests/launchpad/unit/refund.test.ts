@@ -13,8 +13,6 @@ import { getAssociatedTokenAddressSync, createSetAuthorityInstruction, Authority
 export default function suite() {
   let autocratClient: AutocratClient;
   let launchpadClient: LaunchpadClient;
-  let dao: PublicKey;
-  let daoTreasury: PublicKey;
   let META: PublicKey;
   let USDC: PublicKey;
   let launch: PublicKey;
@@ -34,23 +32,14 @@ export default function suite() {
     // Create test tokens
     META = await createMint(this.banksClient, this.payer, this.payer.publicKey, null, 6);
     USDC = await createMint(this.banksClient, this.payer, this.payer.publicKey, null, 6);
-
-    // Initialize DAO
-    dao = await autocratClient.initializeDao(META, 400, 5, 5000, USDC);
-    [daoTreasury] = PublicKey.findProgramAddressSync(
-      [dao.toBuffer()],
-      autocratClient.autocrat.programId
-    );
-
     // Get accounts
-    [launch] = getLaunchAddr(launchpadClient.getProgramId(), dao);
+    [launch] = getLaunchAddr(launchpadClient.getProgramId(), META);
     [launchSigner] = getLaunchSignerAddr(launchpadClient.getProgramId(), launch);
     usdcVault = getAssociatedTokenAddressSync(USDC, launchSigner, true);
     funderUsdcAccount = getAssociatedTokenAddressSync(USDC, this.payer.publicKey);
 
     // Initialize launch
     await launchpadClient.initializeLaunchIx(
-      dao,
       minRaise,
       new BN(SLOTS_PER_DAY * 6),
       USDC,
@@ -86,7 +75,7 @@ export default function suite() {
     await this.advanceBySlots(BigInt(SLOTS_PER_DAY * 7));
 
     // Complete the launch (moves to refunding state)
-    await launchpadClient.completeLaunchIx(launch, USDC, META, daoTreasury).rpc();
+    await launchpadClient.completeLaunchIx(launch, USDC, META).rpc();
 
     const initialUsdcBalance = await this.getTokenBalance(USDC, this.payer.publicKey);
     const initialMetaBalance = await this.getTokenBalance(META, this.payer.publicKey);
@@ -122,7 +111,7 @@ export default function suite() {
   it("fails when user has no tokens to refund", async function () {
     // Move to refunding state without any funding
     await this.advanceBySlots(BigInt(SLOTS_PER_DAY * 7));
-    await launchpadClient.completeLaunchIx(launch, USDC, META, daoTreasury).rpc();
+    await launchpadClient.completeLaunchIx(launch, USDC, META).rpc();
 
     try {
       await launchpadClient.refundIx(launch, USDC, META).rpc();

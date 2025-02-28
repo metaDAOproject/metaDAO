@@ -34,11 +34,10 @@ export default function suite() {
     dao = await autocratClient.initializeDao(META, 400, 5, 5000, USDC);
 
     // Get launch address
-    [launch] = getLaunchAddr(launchpadClient.getProgramId(), dao);
+    [launch] = getLaunchAddr(launchpadClient.getProgramId(), META);
     [launchSigner] = getLaunchSignerAddr(launchpadClient.getProgramId(), launch);
     // Initialize launch
     await launchpadClient.initializeLaunchIx(
-      dao,
       minRaise,
       new BN(5000_000000),
       USDC,

@@ -36,22 +36,14 @@ export default function suite() {
     META = await createMint(this.banksClient, this.payer, this.payer.publicKey, null, 6);
     USDC = await createMint(this.banksClient, this.payer, this.payer.publicKey, null, 6);
 
-    // Initialize DAO
-    dao = await autocratClient.initializeDao(META, 400, 5, 5000, USDC);
-    [daoTreasury] = PublicKey.findProgramAddressSync(
-      [dao.toBuffer()],
-      autocratClient.autocrat.programId
-    );
-
     // Get accounts
-    [launch] = getLaunchAddr(launchpadClient.getProgramId(), dao);
+    [launch] = getLaunchAddr(launchpadClient.getProgramId(), META);
     [launchSigner] = getLaunchSignerAddr(launchpadClient.getProgramId(), launch);
     usdcVault = getAssociatedTokenAddressSync(USDC, launchSigner, true);
     funderUsdcAccount = getAssociatedTokenAddressSync(USDC, this.payer.publicKey);
 
     // Initialize launch
     await launchpadClient.initializeLaunchIx(
-      dao,
       minRaise,
       new BN(SLOTS_PER_DAY * 2),
       USDC,
@@ -86,7 +78,7 @@ export default function suite() {
   it("successfully claims tokens after launch completion", async function () {
     // // Advance clock and complete launch
     await this.advanceBySlots(BigInt(SLOTS_PER_DAY * 7));
-    await launchpadClient.completeLaunchIx(launch, USDC, META, daoTreasury).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 })]).rpc();
+    await launchpadClient.completeLaunchIx(launch, USDC, META).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 })]).rpc();
 
     const initialTokenBalance = await this.getTokenBalance(META, this.payer.publicKey);
     console.log("initialTokenBalance", initialTokenBalance.toString());

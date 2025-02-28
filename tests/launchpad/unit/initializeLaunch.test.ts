@@ -42,11 +42,10 @@ export default function suite() {
     const minRaise = new BN(1000_000000); // 1000 USDC
     const maxRaise = new BN(5000_000000); // 5000 USDC
 
-    const [launchAddr, pdaBump] = getLaunchAddr(launchpadClient.getProgramId(), dao);
+    const [launchAddr, pdaBump] = getLaunchAddr(launchpadClient.getProgramId(), META);
     const [launchSigner, launchSignerPdaBump] = getLaunchSignerAddr(launchpadClient.getProgramId(), launchAddr);
 
     await launchpadClient.initializeLaunchIx(
-      dao,
       minRaise,
       maxRaise,
       USDC,
@@ -70,12 +69,12 @@ export default function suite() {
     assert.ok(launch.launchTokenVault.equals(token.getAssociatedTokenAddressSync(META, launchSigner, true)));
     assert.ok(launch.tokenMint.equals(META));
     assert.equal(launch.pdaBump, pdaBump);
-    assert.ok(launch.dao.equals(dao));
-    assert.ok(launch.daoTreasury.equals(daoTreasury));
     assert.equal(launch.totalCommittedAmount.toString(), "0");
     assert.equal(launch.seqNum.toString(), "0");
     assert.exists(launch.state.initialized);
     assert.equal(launch.slotStarted.toString(), "0");
+    assert.equal(launch.dao, null);
+    assert.equal(launch.daoTreasury, null);
   });
 
   it("fails when vault doesn't have mint authority", async function () {
@@ -84,7 +83,6 @@ export default function suite() {
 
     try {
       await launchpadClient.initializeLaunchIx(
-        dao,
         minRaise,
         maxRaise,
         USDC,
@@ -100,13 +98,13 @@ export default function suite() {
     const minRaise = new BN(1000_000000); // 1000 USDC
     const maxRaise = new BN(5000_000000); // 5000 USDC
 
-    const [launchAddr] = getLaunchAddr(launchpadClient.getProgramId(), dao);
+    const META2 = await createMint(this.banksClient, this.payer, this.payer.publicKey, this.payer.publicKey, 6);
+
+    const [launchAddr] = getLaunchAddr(launchpadClient.getProgramId(), META2);
     const [launchSigner] = getLaunchSignerAddr(launchpadClient.getProgramId(), launchAddr);
 
-    const META2 = await createMint(this.banksClient, this.payer, this.payer.publicKey, this.payer.publicKey, 6);
     try {
       await launchpadClient.initializeLaunchIx(
-        dao,
         minRaise,
         maxRaise,
         USDC,
@@ -135,12 +133,11 @@ export default function suite() {
 
     await this.mintTo(META, this.payer.publicKey, this.payer, 1000n);
 
-    const [launchAddr] = getLaunchAddr(launchpadClient.getProgramId(), dao);
+    const [launchAddr] = getLaunchAddr(launchpadClient.getProgramId(), META);
     const [launchSigner] = getLaunchSignerAddr(launchpadClient.getProgramId(), launchAddr);
 
     try {
       await launchpadClient.initializeLaunchIx(
-        dao,
         minRaise,
         maxRaise,
         USDC,
