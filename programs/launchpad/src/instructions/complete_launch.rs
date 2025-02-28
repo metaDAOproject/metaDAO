@@ -232,8 +232,8 @@ impl CompleteLaunch<'_> {
                 InitializeDaoParams {
                     twap_initial_observation: price_1e12,
                     twap_max_observation_change_per_update: price_1e12 / 20,
-                    min_quote_futarchic_liquidity: AVAILABLE_TOKENS / 100,
-                    min_base_futarchic_liquidity: total_committed_amount / 100,
+                    min_quote_futarchic_liquidity: total_committed_amount / 100,
+                    min_base_futarchic_liquidity: AVAILABLE_TOKENS / 100,
                     pass_threshold_bps: None,
                     slots_per_proposal: None,
                 },
