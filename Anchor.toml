@@ -24,6 +24,7 @@ test = "npx mocha --import=tsx tests/main.test.ts"
 add-v03-metadata = "yarn run tsx scripts/addV03Metadata.ts"
 setup-devnet = "yarn run tsx scripts/setupDevnet.ts"
 initialize-launch = "yarn run tsx scripts/initializeLaunch.ts"
+create-proposal = "yarn run tsx scripts/createProposal.ts"
 
 [test]
 startup_wait = 5000

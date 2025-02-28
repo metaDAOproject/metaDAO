@@ -5,24 +5,48 @@ import {
   AmmClient,
   ConditionalVault,
   ConditionalVaultClient,
+  AutocratClient,
   getAmmAddr,
-  getQuestionAddr,
   getVaultAddr,
-} from "@metadaoproject/futarchy/v0.4";
-import { sha256 } from "@metadaoproject/futarchy";
-import { Question, Amm } from "@metadaoproject/futarchy/v0.4";
+} from "@metadaoproject/futarchy/v0.3";
 import { BN } from "bn.js";
+import { META } from "./consts.js";
+import { MEMO_PROGRAM_ID } from "@solana/spl-memo";
 
 const provider = anchor.AnchorProvider.env();
 const payer = provider.wallet["payer"];
 const vaultProgram: ConditionalVaultClient =
   ConditionalVaultClient.createClient({ provider });
 const ammProgram: AmmClient = AmmClient.createClient({ provider });
-
+const autocratProgram: AutocratClient = AutocratClient.createClient({ provider });
 const USDC = new PublicKey("CRWxbGNtVrTr9FAJX6SZpsvPZyi9R7VetuqecoZ1jCdD");
 
 async function main() {
   const dao = new PublicKey("33Pi6Dxur8Q87K7DmG8JAdZoiTwSRi2HCP6ZjLAPn2sE");
+
+  const storedDao = await autocratProgram.getDao(dao);
+
+  console.log(storedDao.tokenMint);
+  console.log(storedDao.usdcMint);
+
+  const ix = {
+    programId: MEMO_PROGRAM_ID,
+    data: Buffer.from("Hello, world!"),
+    accounts: [],
+  }
+
+  // const proposal = await autocratProgram.initializeProposal(dao, "https://www.google.com", ix, storedDao.minBaseFutarchicLiquidity, storedDao.minQuoteFutarchicLiquidity);
+
+  // console.log(proposal);
+
+
+
+  // const metaAccount = await token.getOrCreateAssociatedTokenAccount(provider.connection, payer, META, payer.publicKey);
+  // console.log(metaAccount);
+
+
+
+  return;
 
 
 
