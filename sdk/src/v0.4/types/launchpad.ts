@@ -805,6 +805,11 @@ export type Launchpad = {
           name: "usdcRefunded";
           type: "u64";
           index: false;
+        },
+        {
+          name: "fundingRecord";
+          type: "publicKey";
+          index: false;
         }
       ];
     },
@@ -1691,6 +1696,11 @@ export const IDL: Launchpad = {
         {
           name: "usdcRefunded",
           type: "u64",
+          index: false,
+        },
+        {
+          name: "fundingRecord",
+          type: "publicKey",
           index: false,
         },
       ],

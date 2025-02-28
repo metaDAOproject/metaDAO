@@ -80,6 +80,7 @@ impl Refund<'_> {
             launch: ctx.accounts.launch.key(),
             funder: ctx.accounts.funder.key(),
             usdc_refunded: funding_record.committed_amount,
+            funding_record: ctx.accounts.funding_record.key(),
         });
 
         Ok(())

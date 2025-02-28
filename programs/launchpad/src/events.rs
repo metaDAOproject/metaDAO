@@ -64,6 +64,7 @@ pub struct LaunchRefundedEvent {
     pub launch: Pubkey,
     pub funder: Pubkey,
     pub usdc_refunded: u64,
+    pub funding_record: Pubkey,
 }
 
 #[event]
