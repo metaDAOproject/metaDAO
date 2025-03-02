@@ -22,16 +22,20 @@ const ammProgram: AmmClient = AmmClient.createClient({ provider });
 const USDC = new PublicKey("CRWxbGNtVrTr9FAJX6SZpsvPZyi9R7VetuqecoZ1jCdD");
 
 async function main() {
-  const outcomeQuestionId = sha256(
-    new TextEncoder().encode(
-      "Will Futarded Foundation fund a Go SDK for Anchor?/No/Yes"
-    )
-  );
-  const metricQuestionId = sha256(
-    new TextEncoder().encode(
-      "How effective will the Go SDK for Anchor be deemed?/Down/Up"
-    )
-  );
+  const dao = new PublicKey("33Pi6Dxur8Q87K7DmG8JAdZoiTwSRi2HCP6ZjLAPn2sE");
+
+
+
+  // const outcomeQuestionId = sha256(
+  //   new TextEncoder().encode(
+  //     "Will Futarded Foundation fund a Go SDK for Anchor?/No/Yes"
+  //   )
+  // );
+  // const metricQuestionId = sha256(
+  //   new TextEncoder().encode(
+  //     "How effective will the Go SDK for Anchor be deemed?/Down/Up"
+  //   )
+  // );
 
   // await token.createAssociatedTokenAccount(provider.connection, payer, USDC, payer.publicKey);
 
