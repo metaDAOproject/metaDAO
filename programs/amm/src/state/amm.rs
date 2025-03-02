@@ -44,6 +44,8 @@ pub struct TwapOracle {
     pub max_observation_change_per_update: u128,
     /// What the initial `latest_observation` is set to.
     pub initial_observation: u128,
+    /// Number of slots after amm.created_at_slot to start recording TWAP
+    pub start_delay_slots: u64,
 }
 
 impl TwapOracle {
@@ -51,6 +53,7 @@ impl TwapOracle {
         current_slot: Slot,
         initial_observation: u128,
         max_observation_change_per_update: u128,
+        start_delay_slots: u64,
     ) -> Self {
         Self {
             last_updated_slot: current_slot,
@@ -59,6 +62,7 @@ impl TwapOracle {
             aggregator: 0,
             max_observation_change_per_update,
             initial_observation,
+            start_delay_slots,
         }
     }
 }
@@ -179,6 +183,13 @@ impl Amm {
     /// Returns an observation if one was recorded.
     pub fn update_twap(&mut self, current_slot: Slot) -> Result<Option<u128>> {
         let oracle = &mut self.oracle;
+
+        // Check if the start delay has passed
+        let twap_start_slot = self.created_at_slot + oracle.start_delay_slots;
+        if current_slot < twap_start_slot {
+            return Ok(None);
+        }
+
         // a manipulator is likely to be "bursty" with their usage, such as a
         // validator who abuses their slots to manipulate the TWAP.
         // meanwhile, regular trading is less likely to happen in each slot.
@@ -228,7 +239,9 @@ impl Amm {
             max(price, min_observation)
         };
 
-        let slot_difference = (current_slot - oracle.last_updated_slot) as u128;
+        // Adjust slot difference to account for the delay
+        let effective_last_updated_slot = oracle.last_updated_slot.max(twap_start_slot);
+        let slot_difference = (current_slot - effective_last_updated_slot) as u128;
 
         // if this saturates, the aggregator will wrap back to 0, so this value doesn't
         // really matter. we just can't panic.
@@ -241,9 +254,10 @@ impl Amm {
             last_price: price,
             last_observation: new_observation,
             aggregator: new_aggregator,
-            // these two shouldn't change
+            // these three shouldn't change
             max_observation_change_per_update: oracle.max_observation_change_per_update,
             initial_observation: oracle.initial_observation,
+            start_delay_slots: oracle.start_delay_slots,
         };
 
         require!(new_oracle.last_updated_slot > oracle.last_updated_slot, AmmError::AssertFailed);
