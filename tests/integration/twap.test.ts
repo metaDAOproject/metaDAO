@@ -51,7 +51,7 @@ export default async function test() {
     );
 
     // Advance slots to get past the delay period
-    await advanceBySlots(this.context, twapStartDelaySlots + 1n);
+    await advanceBySlots(this.context, twapStartDelaySlots);
     
     // Crank the TWAP - should update now
     await this.ammClient
@@ -78,7 +78,7 @@ export default async function test() {
     await this.ammClient.swap(amm, { sell: {} }, 0.2, 100);
     
     // Advance slots and crank again
-    await advanceBySlots(this.context, 151n);
+    await advanceBySlots(this.context, 150n);
     await this.ammClient
         .crankThatTwapIx(amm)
         .preInstructions([
@@ -95,10 +95,19 @@ export default async function test() {
         "TWAP should update after swap and crank"
     );
 
-    // Verify TWAP value changed
+    // Verify TWAP value changed after swaps
     const finalTwap = AmmMath.getTwap(ammAfterSwap);
     assert.isTrue(
         !finalTwap.eq(initialTwap),
         "TWAP value should change after swaps and crank"
+    );
+
+    // Verify that the TWAP is calculated correctly
+    const expectedTwap = ammAfterSwap.oracle.aggregator.div(
+        ammAfterSwap.oracle.lastUpdatedSlot.sub(ammAfterSwap.createdAtSlot)
+    );
+    assert.isTrue(
+        finalTwap.eq(expectedTwap),
+        "Calculated TWAP should match the expected value"
     );
 }
