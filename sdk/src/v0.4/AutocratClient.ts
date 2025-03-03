@@ -239,7 +239,8 @@ export class AutocratClient {
     minBaseFutarchicLiquidity: number,
     minQuoteFutarchicLiquidity: number,
     usdcMint: PublicKey = MAINNET_USDC,
-    daoKeypair: Keypair = Keypair.generate()
+    daoKeypair: Keypair = Keypair.generate(),
+    twapStartDelaySlots: BN
   ): Promise<PublicKey> {
     let tokenDecimals = unpackMint(
       tokenMint,
@@ -260,6 +261,7 @@ export class AutocratClient {
       daoKeypair,
       tokenMint,
       {
+        twapStartDelaySlots,
         twapInitialObservation: scaledPrice,
         twapMaxObservationChangePerUpdate: scaledPrice.divn(50),
         minQuoteFutarchicLiquidity: new BN(minQuoteFutarchicLiquidity).mul(
@@ -351,12 +353,14 @@ export class AutocratClient {
           this.ammClient.initializeAmmIx(
             passBaseMint,
             passQuoteMint,
+            storedDao.twapStartDelaySlots,
             storedDao.twapInitialObservation,
             storedDao.twapMaxObservationChangePerUpdate
           ),
           this.ammClient.initializeAmmIx(
             failBaseMint,
             failQuoteMint,
+            storedDao.twapStartDelaySlots,
             storedDao.twapInitialObservation,
             storedDao.twapMaxObservationChangePerUpdate
           )
