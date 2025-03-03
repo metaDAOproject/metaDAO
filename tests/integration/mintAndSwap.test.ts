@@ -45,6 +45,7 @@ export default async function test() {
     .initializeAmmIx(
       YES,
       NO,
+      new BN(0),
       new BN(100), 
       new BN(1000)
     )
