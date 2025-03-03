@@ -72,3 +72,22 @@ export type ConditionalVaultEvent =
   | RedeemTokensEvent
   | ResolveQuestionEvent
   | SplitTokensEvent;
+
+export type LaunchClaimEvent = IdlEvents<LaunchpadProgram>["LaunchClaimEvent"];
+export type LaunchCompletedEvent =
+  IdlEvents<LaunchpadProgram>["LaunchCompletedEvent"];
+export type LaunchFundedEvent =
+  IdlEvents<LaunchpadProgram>["LaunchFundedEvent"];
+export type LaunchInitializedEvent =
+  IdlEvents<LaunchpadProgram>["LaunchInitializedEvent"];
+export type LaunchRefundedEvent =
+  IdlEvents<LaunchpadProgram>["LaunchRefundedEvent"];
+export type LaunchStartedEvent =
+  IdlEvents<LaunchpadProgram>["LaunchStartedEvent"];
+export type LaunchpadEvent =
+  | LaunchClaimEvent
+  | LaunchCompletedEvent
+  | LaunchFundedEvent
+  | LaunchInitializedEvent
+  | LaunchRefundedEvent
+  | LaunchStartedEvent;
