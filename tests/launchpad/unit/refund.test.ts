@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3.js";
+import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import {
   AutocratClient,
@@ -13,6 +13,7 @@ import { getAssociatedTokenAddressSync, createSetAuthorityInstruction, Authority
 export default function suite() {
   let autocratClient: AutocratClient;
   let launchpadClient: LaunchpadClient;
+  let METAKP: Keypair;
   let META: PublicKey;
   let USDC: PublicKey;
   let launch: PublicKey;
@@ -26,12 +27,14 @@ export default function suite() {
   before(async function () {
     autocratClient = this.autocratClient;
     launchpadClient = this.launchpadClient;
+    USDC = await createMint(this.banksClient, this.payer, this.payer.publicKey, null, 6);
+    await this.createTokenAccount(USDC, this.payer.publicKey);
   });
 
   beforeEach(async function () {
     // Create test tokens
-    META = await createMint(this.banksClient, this.payer, this.payer.publicKey, null, 6);
-    USDC = await createMint(this.banksClient, this.payer, this.payer.publicKey, null, 6);
+    METAKP = Keypair.generate();
+    META = METAKP.publicKey;
     // Get accounts
     [launch] = getLaunchAddr(launchpadClient.getProgramId(), META);
     [launchSigner] = getLaunchSignerAddr(launchpadClient.getProgramId(), launch);
@@ -40,24 +43,19 @@ export default function suite() {
 
     // Initialize launch
     await launchpadClient.initializeLaunchIx(
+      "META",
+      "MTA",
+      "https://example.com",
       minRaise,
       new BN(SLOTS_PER_DAY * 6),
       USDC,
-      META
-    ).preInstructions([
-      createSetAuthorityInstruction(
-        META,
-        this.payer.publicKey,
-        AuthorityType.MintTokens,
-        launchSigner
-      )
-    ]).rpc();
+      METAKP
+    ).rpc();
 
     await launchpadClient.startLaunchIx(launch).rpc();
 
     // Setup funder accounts
     await this.createTokenAccount(META, this.payer.publicKey);
-    await this.createTokenAccount(USDC, this.payer.publicKey);
   });
 
   it("allows refunds when launch is in refunding state", async function () {

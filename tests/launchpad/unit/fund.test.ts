@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3.js";
+import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import {
   AutocratClient,
@@ -16,6 +16,7 @@ export default function suite() {
   let launchpadClient: LaunchpadClient;
   let dao: PublicKey;
   let daoTreasury: PublicKey;
+  let METAKP: Keypair;
   let META: PublicKey;
   let USDC: PublicKey;
   let launch: PublicKey;
@@ -31,20 +32,15 @@ export default function suite() {
   before(async function () {
     autocratClient = this.autocratClient;
     launchpadClient = this.launchpadClient;
+    USDC = await createMint(this.banksClient, this.payer, this.payer.publicKey, null, 6);
+    await this.createTokenAccount(USDC, this.payer.publicKey);
+    await this.mintTo(USDC, this.payer.publicKey, this.payer, 1_000_000000);
   });
 
   beforeEach(async function () {
     // Create test tokens
-    META = await createMint(this.banksClient, this.payer, this.payer.publicKey, null, 6);
-    USDC = await createMint(this.banksClient, this.payer, this.payer.publicKey, null, 6);
-
-    // Initialize DAO
-    // dao = await autocratClient.initializeDao(META, 400, 5, 5000, USDC);
-    // [daoTreasury] = PublicKey.findProgramAddressSync(
-    //   [dao.toBuffer()],
-    //   autocratClient.autocrat.programId
-    // );
-
+    METAKP = Keypair.generate();
+    META = METAKP.publicKey;
     // Get accounts
     [launch] = getLaunchAddr(launchpadClient.getProgramId(), META);
     [launchSigner] = getLaunchSignerAddr(launchpadClient.getProgramId(), launch);
@@ -55,24 +51,18 @@ export default function suite() {
 
     // // Initialize launch
     await launchpadClient.initializeLaunchIx(
+      "MTN",
+      "MTN",
+      "https://example.com",
       minRaise,
       maxRaise,
       USDC,
-      META
-    ).preInstructions([
-      createSetAuthorityInstruction(
-        META,
-        this.payer.publicKey,
-        AuthorityType.MintTokens,
-        launchSigner
-      )
-    ]).rpc();
+      METAKP
+    ).rpc();
 
     await launchpadClient.startLaunchIx(launch).rpc();
 
     await this.createTokenAccount(META, this.payer.publicKey);
-    await this.createTokenAccount(USDC, this.payer.publicKey);
-    await this.mintTo(USDC, this.payer.publicKey, this.payer, 1_000_000000);
     // await this.mintTo(META, this.payer.publicKey, this.payer, maxRaise.toNumber());
   });
 

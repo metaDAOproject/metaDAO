@@ -1,4 +1,4 @@
-import { ComputeBudgetProgram, PublicKey } from "@solana/web3.js";
+import { ComputeBudgetProgram, Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import {
   AutocratClient,
@@ -15,6 +15,7 @@ import * as anchor from "@coral-xyz/anchor";
 export default function suite() {
   let autocratClient: AutocratClient;
   let launchpadClient: LaunchpadClient;
+  let METAKP: Keypair;
   let META: PublicKey;
   let USDC: PublicKey;
   let launch: PublicKey;
@@ -26,12 +27,14 @@ export default function suite() {
   before(async function () {
     autocratClient = this.autocratClient;
     launchpadClient = this.launchpadClient;
+    USDC = await createMint(this.banksClient, this.payer, this.payer.publicKey, null, 6);
+    await this.createTokenAccount(USDC, this.payer.publicKey);
   });
 
   beforeEach(async function () {
     // Create test tokens
-    META = await createMint(this.banksClient, this.payer, this.payer.publicKey, null, 6);
-    USDC = await createMint(this.banksClient, this.payer, this.payer.publicKey, null, 6);
+    METAKP = Keypair.generate();
+    META = METAKP.publicKey;
 
     // Get accounts
     [launch] = getLaunchAddr(launchpadClient.getProgramId(), META);
@@ -39,27 +42,22 @@ export default function suite() {
 
     // Initialize launch
     await launchpadClient.initializeLaunchIx(
+      "MTN",
+      "MTN",
+      "https://example.com",
       minRaise,
       new BN(SLOTS_PER_DAY * 5),
       USDC,
-      META
-    ).preInstructions([
-      createSetAuthorityInstruction(
-        META,
-        this.payer.publicKey,
-        AuthorityType.MintTokens,
-        launchSigner
-      )
-    ]).rpc();
+      METAKP
+    ).rpc();
 
     await launchpadClient.startLaunchIx(launch).rpc();
+    await this.createTokenAccount(META, this.payer.publicKey);
+    await this.mintTo(USDC, this.payer.publicKey, this.payer, minRaise.toNumber());
   });
 
   it("completes launch successfully when minimum raise is met and time has passed", async function () {
     // Fund the launch with exactly minimum raise
-    await this.createTokenAccount(USDC, this.payer.publicKey);
-    await this.createTokenAccount(META, this.payer.publicKey);
-    await this.mintTo(USDC, this.payer.publicKey, this.payer, minRaise.toNumber());
 
     await launchpadClient.fundIx(
       launch,
@@ -86,9 +84,6 @@ export default function suite() {
 
   it("fails when launch period has not passed", async function () {
     // Fund the launch with exactly minimum raise
-    const userUsdcAccount = await this.createTokenAccount(USDC, this.payer.publicKey);
-    const userTokenAccount = await this.createTokenAccount(META, this.payer.publicKey);
-    await this.mintTo(USDC, this.payer.publicKey, this.payer, minRaise.toNumber());
 
     await launchpadClient.fundIx(
       launch,
@@ -104,7 +99,7 @@ export default function suite() {
       assert.include(e.message, "LaunchPeriodNotOver");
     }
 
-    // Advance by 6 days (still not enough)
+    // Advance by 3 days (still not enough)
     await this.advanceBySlots(BigInt(SLOTS_PER_DAY * 3));
 
     try {
@@ -117,10 +112,7 @@ export default function suite() {
 
   it("moves to refunding state when minimum raise is not met after period", async function () {
     // Fund the launch with less than minimum raise
-    const userUsdcAccount = await this.createTokenAccount(USDC, this.payer.publicKey);
-    const userTokenAccount = await this.createTokenAccount(META, this.payer.publicKey);
     const partialAmount = minRaise.divn(2);
-    await this.mintTo(USDC, this.payer.publicKey, this.payer, partialAmount.toNumber());
 
     await launchpadClient.fundIx(
       launch,

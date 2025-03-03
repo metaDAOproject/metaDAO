@@ -16,6 +16,7 @@ import {
   DEVNET_RAYDIUM_AUTHORITY,
   DEVNET_LOW_FEE_RAYDIUM_CONFIG,
   DEVNET_RAYDIUM_CREATE_POOL_FEE_RECEIVE,
+  MPL_TOKEN_METADATA_PROGRAM_ID,
 } from "./constants.js";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
@@ -29,6 +30,7 @@ import {
   getFundingRecordAddr,
   getLaunchAddr,
   getLaunchSignerAddr,
+  getMetadataAddr,
 } from "./utils/pda.js";
 import { AutocratClient } from "./AutocratClient.js";
 import * as anchor from "@coral-xyz/anchor";
@@ -103,13 +105,19 @@ export class LaunchpadClient {
   }
 
   initializeLaunchIx(
+    tokenName: string,
+    tokenSymbol: string,
+    tokenUri: string,
     minimumRaiseAmount: BN,
     slotsForLaunch: BN,
     usdcMint: PublicKey,
-    tokenMint: PublicKey,
+    tokenMintKp: Keypair,
     creator: PublicKey = this.provider.publicKey
   ) {
-    const [launch] = getLaunchAddr(this.launchpad.programId, tokenMint);
+    const [launch] = getLaunchAddr(
+      this.launchpad.programId,
+      tokenMintKp.publicKey
+    );
     const [launchSigner] = getLaunchSignerAddr(
       this.launchpad.programId,
       launch
@@ -119,16 +127,21 @@ export class LaunchpadClient {
       launchSigner,
       true
     );
+
     const tokenVault = getAssociatedTokenAddressSync(
-      tokenMint,
+      tokenMintKp.publicKey,
       launchSigner,
       true
     );
+    const [tokenMetadata] = getMetadataAddr(tokenMintKp.publicKey);
 
     return this.launchpad.methods
       .initializeLaunch({
         minimumRaiseAmount,
         slotsForLaunch,
+        tokenName,
+        tokenSymbol,
+        tokenUri,
       })
       .accounts({
         launch,
@@ -137,22 +150,19 @@ export class LaunchpadClient {
         tokenVault,
         creator,
         usdcMint,
-        tokenMint,
+        tokenMint: tokenMintKp.publicKey,
+        tokenMetadata,
+        tokenMetadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
       })
       .preInstructions([
-        createAssociatedTokenAccountIdempotentInstruction(
-          creator,
-          getAssociatedTokenAddressSync(tokenMint, launchSigner, true),
-          launchSigner,
-          tokenMint
-        ),
         createAssociatedTokenAccountIdempotentInstruction(
           creator,
           getAssociatedTokenAddressSync(usdcMint, launchSigner, true),
           launchSigner,
           usdcMint
         ),
-      ]);
+      ])
+      .signers([tokenMintKp]);
   }
 
   startLaunchIx(

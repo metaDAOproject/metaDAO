@@ -20,12 +20,14 @@ use autocrat::InitializeDaoParams;
 
 pub const PRICE_SCALE: u128 = 1_000_000_000_000;
 
+// TODO: transfer metadata upgrade authority to DAO treasury, don't need
+//       to do this for the MVP
+
 #[event_cpi]
 #[derive(Accounts)]
 pub struct CompleteLaunch<'info> {
     #[account(
         mut,
-        // has_one = treasury_usdc_account,
         has_one = launch_usdc_vault,
         has_one = launch_token_vault,
         has_one = launch_signer,
@@ -138,7 +140,7 @@ pub struct CompleteLaunch<'info> {
     /// create pool fee account
     #[account(
         mut,
-        address= raydium_cpmm_cpi::create_pool_fee_reveiver::id(),
+        address = raydium_cpmm_cpi::create_pool_fee_reveiver::id(),
     )]
     pub create_pool_fee: Box<Account<'info, TokenAccount>>,
 

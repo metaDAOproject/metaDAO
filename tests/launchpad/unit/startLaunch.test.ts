@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3.js";
+import { Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import {
   AutocratClient,
@@ -14,6 +14,7 @@ export default function suite() {
   let autocratClient: AutocratClient;
   let launchpadClient: LaunchpadClient;
   let dao: PublicKey;
+  let METAKP: Keypair;
   let META: PublicKey;
   let USDC: PublicKey;
   let launch: PublicKey;
@@ -23,33 +24,25 @@ export default function suite() {
   before(async function () {
     autocratClient = this.autocratClient;
     launchpadClient = this.launchpadClient;
+    USDC = await createMint(this.banksClient, this.payer, this.payer.publicKey, null, 6);
   });
 
   beforeEach(async function () {
     // Create test tokens
-    META = await createMint(this.banksClient, this.payer, this.payer.publicKey, null, 6);
-    USDC = await createMint(this.banksClient, this.payer, this.payer.publicKey, null, 6);
-
-    // Initialize DAO
-    dao = await autocratClient.initializeDao(META, 400, 5, 5000, USDC);
-
-    // Get launch address
+    METAKP = Keypair.generate();
+    META = METAKP.publicKey;
     [launch] = getLaunchAddr(launchpadClient.getProgramId(), META);
-    [launchSigner] = getLaunchSignerAddr(launchpadClient.getProgramId(), launch);
+
     // Initialize launch
     await launchpadClient.initializeLaunchIx(
+      "META",
+      "MTA",
+      "https://example.com",
       minRaise,
       new BN(5000_000000),
       USDC,
-      META
-    ).preInstructions([
-      createSetAuthorityInstruction(
-        META,
-        this.payer.publicKey,
-        AuthorityType.MintTokens,
-        launchSigner
-      )
-    ]).rpc();
+      METAKP
+    ).rpc();
   });
 
   it("starts launch correctly", async function () {

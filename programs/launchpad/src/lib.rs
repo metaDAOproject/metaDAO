@@ -27,7 +27,7 @@ pub const AVAILABLE_TOKENS: u64 = 10_000_000 * 1_000_000;
 pub mod launchpad {
     use super::*;
 
-    #[access_control(ctx.accounts.validate(args))]
+    #[access_control(ctx.accounts.validate(&args))]
     pub fn initialize_launch(
         ctx: Context<InitializeLaunch>,
         args: InitializeLaunchArgs,

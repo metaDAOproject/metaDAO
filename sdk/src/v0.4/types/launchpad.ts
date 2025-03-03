@@ -11,6 +11,16 @@ export type Launchpad = {
           isSigner: false;
         },
         {
+          name: "tokenMint";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "tokenMetadata";
+          isMut: true;
+          isSigner: false;
+        },
+        {
           name: "launchSigner";
           isMut: false;
           isSigner: false;
@@ -22,7 +32,7 @@ export type Launchpad = {
         },
         {
           name: "tokenVault";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
@@ -36,7 +46,7 @@ export type Launchpad = {
           isSigner: false;
         },
         {
-          name: "tokenMint";
+          name: "rent";
           isMut: false;
           isSigner: false;
         },
@@ -52,6 +62,11 @@ export type Launchpad = {
         },
         {
           name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenMetadataProgram";
           isMut: false;
           isSigner: false;
         },
@@ -612,6 +627,18 @@ export type Launchpad = {
           {
             name: "slotsForLaunch";
             type: "u64";
+          },
+          {
+            name: "tokenName";
+            type: "string";
+          },
+          {
+            name: "tokenSymbol";
+            type: "string";
+          },
+          {
+            name: "tokenUri";
+            type: "string";
           }
         ];
       };
@@ -900,6 +927,16 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
+          name: "tokenMint",
+          isMut: true,
+          isSigner: true,
+        },
+        {
+          name: "tokenMetadata",
+          isMut: true,
+          isSigner: false,
+        },
+        {
           name: "launchSigner",
           isMut: false,
           isSigner: false,
@@ -911,7 +948,7 @@ export const IDL: Launchpad = {
         },
         {
           name: "tokenVault",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
@@ -925,7 +962,7 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
-          name: "tokenMint",
+          name: "rent",
           isMut: false,
           isSigner: false,
         },
@@ -941,6 +978,11 @@ export const IDL: Launchpad = {
         },
         {
           name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenMetadataProgram",
           isMut: false,
           isSigner: false,
         },
@@ -1501,6 +1543,18 @@ export const IDL: Launchpad = {
           {
             name: "slotsForLaunch",
             type: "u64",
+          },
+          {
+            name: "tokenName",
+            type: "string",
+          },
+          {
+            name: "tokenSymbol",
+            type: "string",
+          },
+          {
+            name: "tokenUri",
+            type: "string",
           },
         ],
       },
