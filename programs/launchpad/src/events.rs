@@ -22,10 +22,16 @@ impl CommonFields {
 pub struct LaunchInitializedEvent {
     pub common: CommonFields,
     pub launch: Pubkey,
-    pub token_mint: Pubkey,
+    pub minimum_raise_amount: u64,
     pub creator: Pubkey,
+    pub launch_signer: Pubkey,
+    pub launch_signer_pda_bump: u8,
+    pub launch_usdc_vault: Pubkey,
+    pub launch_token_vault: Pubkey,
+    pub token_mint: Pubkey,
     pub usdc_mint: Pubkey,
     pub pda_bump: u8,
+    pub slots_for_launch: u64,
 }
 
 #[event]

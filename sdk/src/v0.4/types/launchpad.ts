@@ -681,12 +681,37 @@ export type Launchpad = {
           index: false;
         },
         {
-          name: "tokenMint";
-          type: "publicKey";
+          name: "minimumRaiseAmount";
+          type: "u64";
           index: false;
         },
         {
           name: "creator";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "launchSigner";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "launchSignerPdaBump";
+          type: "u8";
+          index: false;
+        },
+        {
+          name: "launchUsdcVault";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "launchTokenVault";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "tokenMint";
           type: "publicKey";
           index: false;
         },
@@ -698,6 +723,11 @@ export type Launchpad = {
         {
           name: "pdaBump";
           type: "u8";
+          index: false;
+        },
+        {
+          name: "slotsForLaunch";
+          type: "u64";
           index: false;
         }
       ];
@@ -1597,12 +1627,37 @@ export const IDL: Launchpad = {
           index: false,
         },
         {
-          name: "tokenMint",
-          type: "publicKey",
+          name: "minimumRaiseAmount",
+          type: "u64",
           index: false,
         },
         {
           name: "creator",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "launchSigner",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "launchSignerPdaBump",
+          type: "u8",
+          index: false,
+        },
+        {
+          name: "launchUsdcVault",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "launchTokenVault",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "tokenMint",
           type: "publicKey",
           index: false,
         },
@@ -1614,6 +1669,11 @@ export const IDL: Launchpad = {
         {
           name: "pdaBump",
           type: "u8",
+          index: false,
+        },
+        {
+          name: "slotsForLaunch",
+          type: "u64",
           index: false,
         },
       ],

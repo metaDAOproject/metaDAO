@@ -116,10 +116,16 @@ impl InitializeLaunch<'_> {
         emit_cpi!(LaunchInitializedEvent {
             common: CommonFields::new(&clock, 0),
             launch: ctx.accounts.launch.key(),
+            minimum_raise_amount: args.minimum_raise_amount,
             creator: ctx.accounts.creator.key(),
-            usdc_mint: ctx.accounts.usdc_mint.key(),
+            launch_signer: ctx.accounts.launch_signer.key(),
+            launch_signer_pda_bump: ctx.bumps.launch_signer,
+            launch_usdc_vault: ctx.accounts.usdc_vault.key(),
+            launch_token_vault: ctx.accounts.token_vault.key(),
             token_mint: ctx.accounts.token_mint.key(),
+            usdc_mint: ctx.accounts.usdc_mint.key(),
             pda_bump: ctx.bumps.launch,
+            slots_for_launch: args.slots_for_launch,
         });
 
         let launch_key = ctx.accounts.launch.key();
