@@ -1,6 +1,7 @@
 use super::*;
 
 use amm::program::Amm as AmmProgram;
+use conditional_vault::program::ConditionalVault as ConditionalVaultProgram;
 use amm::state::ONE_MINUTE_IN_SLOTS;
 use anchor_spl::token::{self, Token, TokenAccount, Transfer};
 use anchor_spl::associated_token::{self, AssociatedToken};
@@ -24,6 +25,8 @@ pub struct InitializeProposalParams {
 #[instruction(args: InitializeProposalParams)]
 #[event_cpi]
 pub struct InitializeProposal<'info> {
+    #[account(mut)]
+    pub proposer: Signer<'info>,
     #[account(
         init,
         payer = proposer,
@@ -41,11 +44,13 @@ pub struct InitializeProposal<'info> {
     #[account(
         constraint = quote_vault.underlying_token_mint == dao.usdc_mint,
         has_one = question,
+        mut,
     )]
     pub quote_vault: Account<'info, ConditionalVaultAccount>,
     #[account(
         constraint = base_vault.underlying_token_mint == dao.token_mint,
         has_one = question,
+        mut,
     )]
     pub base_vault: Box<Account<'info, ConditionalVaultAccount>>,
     /// CHECK: checked by AMM program
@@ -70,6 +75,12 @@ pub struct InitializeProposal<'info> {
         associated_token::authority = proposer,
     )]
     pub pass_quote_user_account: Box<Account<'info, TokenAccount>>,
+    /// CHECK: checked by vault program
+    // #[account(mut)]
+    // pub pass_base_mint: UncheckedAccount<'info>,
+    /// CHECK: checked by vault program
+    // #[account(mut)]
+    // pub pass_quote_mint: UncheckedAccount<'info>,
     /// CHECK: checked by AMM program
     #[account(mut)]
     pub fail_base_user_account: UncheckedAccount<'info>,
@@ -94,24 +105,27 @@ pub struct InitializeProposal<'info> {
     /// CHECK: checked by AMM program
     #[account(mut)]
     pub fail_lp_user_account: UncheckedAccount<'info>,
+    /// CHECK: checked by AMM program
     #[account(
         mut,
         // associated_token::mint = pass_amm.lp_mint,
         // associated_token::authority = dao.treasury,
     )]
-    pub pass_lp_vault_account: Box<Account<'info, TokenAccount>>,
+    pub pass_lp_vault_account: UncheckedAccount<'info>,
+    /// CHECK: checked by AMM program
     #[account(
-        mut,
+        mut
         // associated_token::mint = fail_amm.lp_mint,
         // associated_token::authority = dao.treasury,
     )]
-    pub fail_lp_vault_account: Box<Account<'info, TokenAccount>>,
-    #[account(mut)]
-    pub proposer: Signer<'info>,
+    pub fail_lp_vault_account: UncheckedAccount<'info>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
     pub amm_program: Program<'info, AmmProgram>,
+    pub conditional_vault_program: Program<'info, ConditionalVaultProgram>,
+    /// CHECK: checked by vault program
+    pub vault_event_authority: UncheckedAccount<'info>,
     /// CHECK: checked by AMM program
     pub amm_event_authority: UncheckedAccount<'info>,
 }
@@ -141,18 +155,19 @@ impl InitializeProposal<'_> {
         // }
 
         // Should never be the case because the oracle is the proposal account, and you can't re-initialize a proposal
-        assert!(!self.question.is_resolved());
+        // assert!(!self.question.is_resolved());
 
         Ok(())
     }
 
     pub fn handle(ctx: Context<Self>, params: InitializeProposalParams) -> Result<()> {
         let Self {
+            proposer,
+            proposal,
+            dao,
             base_vault,
             quote_vault,
             question,
-            proposal,
-            dao,
             pass_amm,
             fail_amm,
             pass_lp_mint,
@@ -163,20 +178,25 @@ impl InitializeProposal<'_> {
             fail_quote_user_account,
             pass_amm_base_vault,
             pass_amm_quote_vault,
+            // pass_base_mint,
+            // pass_quote_mint,
             fail_amm_base_vault,
             fail_amm_quote_vault,
             pass_lp_user_account,
             fail_lp_user_account,
             pass_lp_vault_account,
             fail_lp_vault_account,
-            proposer,
             token_program,
             system_program,
             event_authority: _,
             program: _,
+            // proposer,
+            // proposal,
             amm_program,
             associated_token_program,
             amm_event_authority,
+            vault_event_authority,
+            conditional_vault_program,
         } = ctx.accounts;
 
         let InitializeProposalParams {
@@ -188,6 +208,23 @@ impl InitializeProposal<'_> {
             base_tokens_to_lp,
             quote_tokens_to_lp,
         } = params;
+
+        conditional_vault::cpi::split_tokens(
+            CpiContext::new(
+                conditional_vault_program.to_account_info(),
+                conditional_vault::cpi::accounts::InteractWithVault {
+                    question: question.to_account_info(),
+                    vault: base_vault.to_account_info(),
+                    vault_underlying_token_account: pass_quote_user_account.to_account_info(),
+                    authority: proposer.to_account_info(),
+                    user_underlying_token_account: pass_quote_user_account.to_account_info(),
+                    event_authority: vault_event_authority.to_account_info(),
+                    program: conditional_vault_program.to_account_info(),
+                    token_program: token_program.to_account_info(),
+                },
+            ),
+            base_tokens_to_lp,
+        )?;
 
         associated_token::create(
             CpiContext::new(

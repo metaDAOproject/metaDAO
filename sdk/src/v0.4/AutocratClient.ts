@@ -626,13 +626,16 @@ export class AutocratClient {
         quoteTokensToLp,
       })
       .accounts({
-        question,
         proposal,
+        proposer: this.provider.publicKey,
         dao,
+        question,
         baseVault,
         quoteVault,
         passAmm,
         failAmm,
+        // passBaseMint,
+        // passQuoteMint,
         passLpMint: passLp,
         failLpMint: failLp,
         passAmmBaseVault: getAssociatedTokenAddressSync(
@@ -655,6 +658,7 @@ export class AutocratClient {
           failAmm,
           true
         ),
+        conditionalVaultProgram: this.vaultClient.vaultProgram.programId,
         passQuoteUserAccount: getAssociatedTokenAddressSync(
           passQuoteMint,
           this.provider.publicKey
@@ -681,26 +685,28 @@ export class AutocratClient {
         ),
         passLpVaultAccount,
         failLpVaultAccount,
-        proposer: this.provider.publicKey,
         ammProgram: this.ammClient.program.programId,
         ammEventAuthority: getEventAuthorityAddr(
           this.ammClient.program.programId
         )[0],
-      })
-      .preInstructions([
-        createAssociatedTokenAccountIdempotentInstruction(
-          this.provider.publicKey,
-          passLpVaultAccount,
-          daoTreasury,
-          passLp
-        ),
-        createAssociatedTokenAccountIdempotentInstruction(
-          this.provider.publicKey,
-          failLpVaultAccount,
-          daoTreasury,
-          failLp
-        ),
-      ]);
+        vaultEventAuthority: getEventAuthorityAddr(
+          this.vaultClient.vaultProgram.programId
+        )[0],
+      });
+    // .preInstructions([
+    //   createAssociatedTokenAccountIdempotentInstruction(
+    //     this.provider.publicKey,
+    //     passLpVaultAccount,
+    //     daoTreasury,
+    //     passLp
+    //   ),
+    //   createAssociatedTokenAccountIdempotentInstruction(
+    //     this.provider.publicKey,
+    //     failLpVaultAccount,
+    //     daoTreasury,
+    //     failLp
+    //   ),
+    // ]);
   }
 
   async finalizeProposal(proposal: PublicKey) {

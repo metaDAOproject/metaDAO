@@ -1,6 +1,6 @@
 import conditionalVault from "./conditionalVault/main.test.js";
 import amm from "./amm/main.test.js";
-import autocrat from "./autocrat/autocrat.js";
+import autocrat from "./autocrat/main.test.js";
 import launchpad from "./launchpad/main.test.js";
 
 import { Clock, startAnchor } from "solana-bankrun";
@@ -13,13 +13,6 @@ import {
   LaunchpadClient,
   RAYDIUM_CREATE_POOL_FEE_RECEIVE,
 } from "@metadaoproject/futarchy/v0.4";
-// import {
-//   // AmmClient,
-//   // AutocratClient,
-//   // ConditionalVaultClient,
-//   getVersion,
-//   VersionKey
-// } from "@metadaoproject/futarchy";
 import { PublicKey, Keypair } from "@solana/web3.js";
 import {
   createAssociatedTokenAccount,
@@ -88,6 +81,7 @@ before(async function () {
   this.banksClient = this.context.banksClient;
   let provider = new BankrunProvider(this.context);
   anchor.setProvider(provider);
+  this.provider = provider;
 
   // umi = createUmi(anchor.AnchorProvider.env().connection);
 
@@ -189,6 +183,10 @@ before(async function () {
       )
     );
   };
+
+  console.log("CURRENT SLOT", (await this.banksClient.getClock()).slot)
+  await this.advanceBySlots(100n);
+  console.log("ADVANCED SLOT", (await this.banksClient.getClock()).slot)
 
 });
 

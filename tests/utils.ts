@@ -46,7 +46,7 @@ export const advanceBySlots = async (
       currentClock.epochStartTimestamp,
       currentClock.epoch,
       currentClock.leaderScheduleEpoch,
-      50n
+      currentClock.unixTimestamp + 10n,
     )
   );
 };

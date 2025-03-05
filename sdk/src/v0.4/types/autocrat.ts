@@ -54,6 +54,11 @@ export type Autocrat = {
       name: "initializeProposal";
       accounts: [
         {
+          name: "proposer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
           name: "proposal";
           isMut: true;
           isSigner: false;
@@ -70,12 +75,12 @@ export type Autocrat = {
         },
         {
           name: "quoteVault";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
           name: "baseVault";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
@@ -159,11 +164,6 @@ export type Autocrat = {
           isSigner: false;
         },
         {
-          name: "proposer";
-          isMut: true;
-          isSigner: true;
-        },
-        {
           name: "tokenProgram";
           isMut: false;
           isSigner: false;
@@ -180,6 +180,16 @@ export type Autocrat = {
         },
         {
           name: "ammProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "conditionalVaultProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "vaultEventAuthority";
           isMut: false;
           isSigner: false;
         },
@@ -1099,6 +1109,11 @@ export const IDL: Autocrat = {
       name: "initializeProposal",
       accounts: [
         {
+          name: "proposer",
+          isMut: true,
+          isSigner: true,
+        },
+        {
           name: "proposal",
           isMut: true,
           isSigner: false,
@@ -1115,12 +1130,12 @@ export const IDL: Autocrat = {
         },
         {
           name: "quoteVault",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
           name: "baseVault",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
@@ -1204,11 +1219,6 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
-          name: "proposer",
-          isMut: true,
-          isSigner: true,
-        },
-        {
           name: "tokenProgram",
           isMut: false,
           isSigner: false,
@@ -1225,6 +1235,16 @@ export const IDL: Autocrat = {
         },
         {
           name: "ammProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "conditionalVaultProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "vaultEventAuthority",
           isMut: false,
           isSigner: false,
         },
