@@ -403,6 +403,8 @@ impl CompleteLaunch<'_> {
             launch: launch.key(),
             final_state: launch.state,
             total_committed: launch.total_committed_amount,
+            dao: launch.dao,
+            dao_treasury: launch.dao_treasury,
         });
 
         Ok(())

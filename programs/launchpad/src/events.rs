@@ -60,6 +60,8 @@ pub struct LaunchCompletedEvent {
     pub launch: Pubkey,
     pub final_state: LaunchState,
     pub total_committed: u64,
+    pub dao: Option<Pubkey>,
+    pub dao_treasury: Option<Pubkey>,
 }
 
 #[event]

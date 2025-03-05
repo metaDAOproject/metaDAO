@@ -832,6 +832,20 @@ export type Launchpad = {
           name: "totalCommitted";
           type: "u64";
           index: false;
+        },
+        {
+          name: "dao";
+          type: {
+            option: "publicKey";
+          };
+          index: false;
+        },
+        {
+          name: "daoTreasury";
+          type: {
+            option: "publicKey";
+          };
+          index: false;
         }
       ];
     },
@@ -1777,6 +1791,20 @@ export const IDL: Launchpad = {
         {
           name: "totalCommitted",
           type: "u64",
+          index: false,
+        },
+        {
+          name: "dao",
+          type: {
+            option: "publicKey",
+          },
+          index: false,
+        },
+        {
+          name: "daoTreasury",
+          type: {
+            option: "publicKey",
+          },
           index: false,
         },
       ],
