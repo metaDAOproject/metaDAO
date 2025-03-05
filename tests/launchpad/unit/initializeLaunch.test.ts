@@ -53,7 +53,7 @@ export default function suite() {
     const storedLaunch = await launchpadClient.fetchLaunch(launch);
 
     assert.equal(storedLaunch.minimumRaiseAmount.toString(), minRaise.toString());
-    assert.ok(storedLaunch.creator.equals(this.payer.publicKey));
+    assert.ok(storedLaunch.launchAuthority.equals(this.payer.publicKey));
     assert.ok(storedLaunch.launchSigner.equals(launchSigner));
     assert.equal(storedLaunch.launchSignerPdaBump, launchSignerPdaBump);
     assert.ok(storedLaunch.launchUsdcVault.equals(token.getAssociatedTokenAddressSync(USDC, launchSigner, true)));
@@ -88,6 +88,7 @@ export default function suite() {
         launchSigner: fakeLaunchSigner.publicKey,
         usdcVault: token.getAssociatedTokenAddressSync(USDC, fakeLaunchSigner.publicKey, true),
         tokenVault: token.getAssociatedTokenAddressSync(META, fakeLaunchSigner.publicKey, true),
+        launchAuthority: this.payer.publicKey,
         usdcMint: USDC,
         tokenMint: META,
         tokenMetadata,

@@ -112,7 +112,7 @@ export class LaunchpadClient {
     slotsForLaunch: BN,
     usdcMint: PublicKey,
     tokenMintKp: Keypair,
-    creator: PublicKey = this.provider.publicKey
+    launchAuthority: PublicKey = this.provider.publicKey
   ) {
     const [launch] = getLaunchAddr(
       this.launchpad.programId,
@@ -148,7 +148,7 @@ export class LaunchpadClient {
         launchSigner,
         usdcVault,
         tokenVault,
-        creator,
+        launchAuthority,
         usdcMint,
         tokenMint: tokenMintKp.publicKey,
         tokenMetadata,
@@ -156,7 +156,7 @@ export class LaunchpadClient {
       })
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(
-          creator,
+          launchAuthority,
           getAssociatedTokenAddressSync(usdcMint, launchSigner, true),
           launchSigner,
           usdcMint
@@ -167,11 +167,11 @@ export class LaunchpadClient {
 
   startLaunchIx(
     launch: PublicKey,
-    creator: PublicKey = this.provider.publicKey
+    launchAuthority: PublicKey = this.provider.publicKey
   ) {
     return this.launchpad.methods.startLaunch().accounts({
       launch,
-      creator,
+      launchAuthority,
     });
   }
 

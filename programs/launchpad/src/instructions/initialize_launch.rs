@@ -25,7 +25,7 @@ pub struct InitializeLaunchArgs {
 pub struct InitializeLaunch<'info> {
     #[account(
         init,
-        payer = creator,
+        payer = payer,
         space = 8 + std::mem::size_of::<Launch>(),
         seeds = [b"launch", token_mint.key().as_ref()],
         bump
@@ -34,7 +34,7 @@ pub struct InitializeLaunch<'info> {
 
     #[account(
         init,
-        payer = creator,
+        payer = payer,
         mint::decimals = 6,
         mint::authority = launch_signer,
     )]
@@ -64,14 +64,16 @@ pub struct InitializeLaunch<'info> {
 
     #[account(
         init,
-        payer = creator,
+        payer = payer,
         associated_token::mint = token_mint,
         associated_token::authority = launch_signer
     )]
     pub token_vault: Account<'info, TokenAccount>,
 
     #[account(mut)]
-    pub creator: Signer<'info>,
+    pub payer: Signer<'info>,
+    /// CHECK: account not used, just for constraints
+    pub launch_authority: UncheckedAccount<'info>,
     
     #[account(mint::decimals = 6)]
     pub usdc_mint: Account<'info, Mint>,
@@ -95,7 +97,7 @@ impl InitializeLaunch<'_> {
     ) -> Result<()> {
         ctx.accounts.launch.set_inner(Launch {
             minimum_raise_amount: args.minimum_raise_amount,
-            creator: ctx.accounts.creator.key(),
+            launch_authority: ctx.accounts.launch_authority.key(),
             launch_signer: ctx.accounts.launch_signer.key(),
             launch_signer_pda_bump: ctx.bumps.launch_signer,
             launch_usdc_vault: ctx.accounts.usdc_vault.key(),
@@ -117,7 +119,7 @@ impl InitializeLaunch<'_> {
             common: CommonFields::new(&clock, 0),
             launch: ctx.accounts.launch.key(),
             minimum_raise_amount: args.minimum_raise_amount,
-            creator: ctx.accounts.creator.key(),
+            launch_authority: ctx.accounts.launch_authority.key(),
             launch_signer: ctx.accounts.launch_signer.key(),
             launch_signer_pda_bump: ctx.bumps.launch_signer,
             launch_usdc_vault: ctx.accounts.usdc_vault.key(),
@@ -143,7 +145,7 @@ impl InitializeLaunch<'_> {
             metadata: ctx.accounts.token_metadata.to_account_info(),
             mint: ctx.accounts.token_mint.to_account_info(),
             mint_authority: ctx.accounts.launch_signer.to_account_info(),
-            payer: ctx.accounts.creator.to_account_info(),
+            payer: ctx.accounts.payer.to_account_info(),
             update_authority: ctx.accounts.launch_signer.to_account_info(),
             system_program: ctx.accounts.system_program.to_account_info(),
             rent: ctx.accounts.rent.to_account_info(),

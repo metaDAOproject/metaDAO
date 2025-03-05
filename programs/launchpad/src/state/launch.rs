@@ -15,8 +15,8 @@ pub struct Launch {
     /// The minimum amount of USDC that must be raised, otherwise
     /// everyone can get their USDC back.
     pub minimum_raise_amount: u64,
-    /// The creator of the launch.
-    pub creator: Pubkey,
+    /// The account that can start the launch.
+    pub launch_authority: Pubkey,
     /// The launch signer address. Needed because Raydium pools need a SOL payer and this PDA can't hold SOL.
     pub launch_signer: Pubkey,
     /// The PDA bump for the launch signer.

@@ -23,6 +23,13 @@ declare_id!("AfJJJ5UqxhBKoE3grkKAZZsoXDE9kncbMKvqSHGsCNrE");
 /// 10M tokens with 6 decimals
 pub const AVAILABLE_TOKENS: u64 = 10_000_000 * 1_000_000;
 
+
+/// TODO:
+/// - Have DAO be a PDA
+/// - Check USDC is actually USDC
+/// - Use unix timestamp over slots
+/// - Check that current time is within funding period
+
 #[program]
 pub mod launchpad {
     use super::*;

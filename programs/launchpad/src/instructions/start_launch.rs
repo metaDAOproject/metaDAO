@@ -8,11 +8,11 @@ use crate::events::{LaunchStartedEvent, CommonFields};
 pub struct StartLaunch<'info> {
     #[account(
         mut,
-        has_one = creator,
+        has_one = launch_authority,
     )]
     pub launch: Account<'info, Launch>,
 
-    pub creator: Signer<'info>,
+    pub launch_authority: Signer<'info>,
 }
 
 impl StartLaunch<'_> {
@@ -37,7 +37,7 @@ impl StartLaunch<'_> {
         emit_cpi!(LaunchStartedEvent {
             common: CommonFields::new(&clock, launch.seq_num),
             launch: ctx.accounts.launch.key(),
-            creator: ctx.accounts.creator.key(),
+            launch_authority: ctx.accounts.launch_authority.key(),
             slot_started: clock.slot,
         });
 

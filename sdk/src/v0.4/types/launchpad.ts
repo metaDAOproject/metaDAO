@@ -1,6 +1,14 @@
 export type Launchpad = {
   version: "0.4.0";
   name: "launchpad";
+  docs: [
+    "TODO:",
+    "- Adopt payer-signer pattern",
+    "- Have DAO be a PDA",
+    "- Check USDC is actually USDC",
+    "- Use unix timestamp over slots",
+    "- Check that current time is within funding period"
+  ];
   instructions: [
     {
       name: "initializeLaunch";
@@ -36,9 +44,14 @@ export type Launchpad = {
           isSigner: false;
         },
         {
-          name: "creator";
+          name: "payer";
           isMut: true;
           isSigner: true;
+        },
+        {
+          name: "launchAuthority";
+          isMut: false;
+          isSigner: false;
         },
         {
           name: "usdcMint";
@@ -99,7 +112,7 @@ export type Launchpad = {
           isSigner: false;
         },
         {
-          name: "creator";
+          name: "launchAuthority";
           isMut: false;
           isSigner: true;
         },
@@ -505,8 +518,8 @@ export type Launchpad = {
             type: "u64";
           },
           {
-            name: "creator";
-            docs: ["The creator of the launch."];
+            name: "launchAuthority";
+            docs: ["The account that can start the launch."];
             type: "publicKey";
           },
           {
@@ -686,7 +699,7 @@ export type Launchpad = {
           index: false;
         },
         {
-          name: "creator";
+          name: "launchAuthority";
           type: "publicKey";
           index: false;
         },
@@ -748,7 +761,7 @@ export type Launchpad = {
           index: false;
         },
         {
-          name: "creator";
+          name: "launchAuthority";
           type: "publicKey";
           index: false;
         },
@@ -961,6 +974,14 @@ export type Launchpad = {
 export const IDL: Launchpad = {
   version: "0.4.0",
   name: "launchpad",
+  docs: [
+    "TODO:",
+    "- Adopt payer-signer pattern",
+    "- Have DAO be a PDA",
+    "- Check USDC is actually USDC",
+    "- Use unix timestamp over slots",
+    "- Check that current time is within funding period",
+  ],
   instructions: [
     {
       name: "initializeLaunch",
@@ -996,9 +1017,14 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
-          name: "creator",
+          name: "payer",
           isMut: true,
           isSigner: true,
+        },
+        {
+          name: "launchAuthority",
+          isMut: false,
+          isSigner: false,
         },
         {
           name: "usdcMint",
@@ -1059,7 +1085,7 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
-          name: "creator",
+          name: "launchAuthority",
           isMut: false,
           isSigner: true,
         },
@@ -1465,8 +1491,8 @@ export const IDL: Launchpad = {
             type: "u64",
           },
           {
-            name: "creator",
-            docs: ["The creator of the launch."],
+            name: "launchAuthority",
+            docs: ["The account that can start the launch."],
             type: "publicKey",
           },
           {
@@ -1646,7 +1672,7 @@ export const IDL: Launchpad = {
           index: false,
         },
         {
-          name: "creator",
+          name: "launchAuthority",
           type: "publicKey",
           index: false,
         },
@@ -1708,7 +1734,7 @@ export const IDL: Launchpad = {
           index: false,
         },
         {
-          name: "creator",
+          name: "launchAuthority",
           type: "publicKey",
           index: false,
         },

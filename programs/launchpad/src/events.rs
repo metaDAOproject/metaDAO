@@ -23,7 +23,7 @@ pub struct LaunchInitializedEvent {
     pub common: CommonFields,
     pub launch: Pubkey,
     pub minimum_raise_amount: u64,
-    pub creator: Pubkey,
+    pub launch_authority: Pubkey,
     pub launch_signer: Pubkey,
     pub launch_signer_pda_bump: u8,
     pub launch_usdc_vault: Pubkey,
@@ -38,7 +38,7 @@ pub struct LaunchInitializedEvent {
 pub struct LaunchStartedEvent {
     pub common: CommonFields,
     pub launch: Pubkey,
-    pub creator: Pubkey,
+    pub launch_authority: Pubkey,
     pub slot_started: u64,
 }
 
