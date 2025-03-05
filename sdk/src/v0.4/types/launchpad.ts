@@ -3,7 +3,6 @@ export type Launchpad = {
   name: "launchpad";
   docs: [
     "TODO:",
-    "- Check USDC is actually USDC",
     "- Use unix timestamp over slots",
     "- Check that current time is within funding period"
   ];
@@ -557,9 +556,9 @@ export type Launchpad = {
             type: "publicKey";
           },
           {
-            name: "slotStarted";
-            docs: ["The slot when the launch was started."];
-            type: "u64";
+            name: "unixTimestampStarted";
+            docs: ["The unix timestamp when the launch was started."];
+            type: "i64";
           },
           {
             name: "totalCommittedAmount";
@@ -581,9 +580,9 @@ export type Launchpad = {
             type: "u64";
           },
           {
-            name: "slotsForLaunch";
-            docs: ["The number of slots for the launch."];
-            type: "u64";
+            name: "secondsForLaunch";
+            docs: ["The number of seconds that the launch will be live for."];
+            type: "u32";
           },
           {
             name: "dao";
@@ -636,8 +635,8 @@ export type Launchpad = {
             type: "u64";
           },
           {
-            name: "slotsForLaunch";
-            type: "u64";
+            name: "secondsForLaunch";
+            type: "u32";
           },
           {
             name: "tokenName";
@@ -737,8 +736,8 @@ export type Launchpad = {
           index: false;
         },
         {
-          name: "slotsForLaunch";
-          type: "u64";
+          name: "secondsForLaunch";
+          type: "u32";
           index: false;
         }
       ];
@@ -938,31 +937,36 @@ export type Launchpad = {
     },
     {
       code: 6002;
+      name: "InvalidSecondsForLaunch";
+      msg: "Launch period must be between 1 hour and 2 weeks";
+    },
+    {
+      code: 6003;
       name: "InsufficientFunds";
       msg: "Insufficient funds";
     },
     {
-      code: 6003;
+      code: 6004;
       name: "InvalidLaunchState";
       msg: "Invalid launch state";
     },
     {
-      code: 6004;
+      code: 6005;
       name: "LaunchPeriodNotOver";
       msg: "Launch period not over";
     },
     {
-      code: 6005;
+      code: 6006;
       name: "LaunchNotRefunding";
       msg: "Launch needs to be in refunding state to get a refund";
     },
     {
-      code: 6006;
+      code: 6007;
       name: "LaunchNotInitialized";
       msg: "Launch must be initialized to be started";
     },
     {
-      code: 6007;
+      code: 6008;
       name: "FreezeAuthoritySet";
       msg: "Freeze authority can't be set on launchpad tokens";
     }
@@ -974,7 +978,6 @@ export const IDL: Launchpad = {
   name: "launchpad",
   docs: [
     "TODO:",
-    "- Check USDC is actually USDC",
     "- Use unix timestamp over slots",
     "- Check that current time is within funding period",
   ],
@@ -1528,9 +1531,9 @@ export const IDL: Launchpad = {
             type: "publicKey",
           },
           {
-            name: "slotStarted",
-            docs: ["The slot when the launch was started."],
-            type: "u64",
+            name: "unixTimestampStarted",
+            docs: ["The unix timestamp when the launch was started."],
+            type: "i64",
           },
           {
             name: "totalCommittedAmount",
@@ -1552,9 +1555,9 @@ export const IDL: Launchpad = {
             type: "u64",
           },
           {
-            name: "slotsForLaunch",
-            docs: ["The number of slots for the launch."],
-            type: "u64",
+            name: "secondsForLaunch",
+            docs: ["The number of seconds that the launch will be live for."],
+            type: "u32",
           },
           {
             name: "dao",
@@ -1607,8 +1610,8 @@ export const IDL: Launchpad = {
             type: "u64",
           },
           {
-            name: "slotsForLaunch",
-            type: "u64",
+            name: "secondsForLaunch",
+            type: "u32",
           },
           {
             name: "tokenName",
@@ -1708,8 +1711,8 @@ export const IDL: Launchpad = {
           index: false,
         },
         {
-          name: "slotsForLaunch",
-          type: "u64",
+          name: "secondsForLaunch",
+          type: "u32",
           index: false,
         },
       ],
@@ -1909,31 +1912,36 @@ export const IDL: Launchpad = {
     },
     {
       code: 6002,
+      name: "InvalidSecondsForLaunch",
+      msg: "Launch period must be between 1 hour and 2 weeks",
+    },
+    {
+      code: 6003,
       name: "InsufficientFunds",
       msg: "Insufficient funds",
     },
     {
-      code: 6003,
+      code: 6004,
       name: "InvalidLaunchState",
       msg: "Invalid launch state",
     },
     {
-      code: 6004,
+      code: 6005,
       name: "LaunchPeriodNotOver",
       msg: "Launch period not over",
     },
     {
-      code: 6005,
+      code: 6006,
       name: "LaunchNotRefunding",
       msg: "Launch needs to be in refunding state to get a refund",
     },
     {
-      code: 6006,
+      code: 6007,
       name: "LaunchNotInitialized",
       msg: "Launch must be initialized to be started",
     },
     {
-      code: 6007,
+      code: 6008,
       name: "FreezeAuthoritySet",
       msg: "Freeze authority can't be set on launchpad tokens",
     },

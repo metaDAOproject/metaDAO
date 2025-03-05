@@ -30,7 +30,6 @@ pub mod usdc_mint {
 }
 
 /// TODO:
-/// - Check USDC is actually USDC
 /// - Use unix timestamp over slots
 /// - Check that current time is within funding period
 

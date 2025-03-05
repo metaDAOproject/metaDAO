@@ -5,6 +5,7 @@ use anchor_spl::associated_token::AssociatedToken;
 use crate::state::{Launch, LaunchState};
 use crate::events::{LaunchInitializedEvent, CommonFields};
 use crate::AVAILABLE_TOKENS;
+use crate::error::LaunchpadError;
 use anchor_spl::metadata::{
     create_metadata_accounts_v3, mpl_token_metadata::types::DataV2, CreateMetadataAccountsV3,
     Metadata, mpl_token_metadata::ID as MPL_TOKEN_METADATA_PROGRAM_ID,
@@ -14,7 +15,7 @@ use crate::usdc_mint;
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct InitializeLaunchArgs {
     pub minimum_raise_amount: u64,
-    pub slots_for_launch: u64,
+    pub seconds_for_launch: u32,
     pub token_name: String,
     pub token_symbol: String,
     pub token_uri: String,
@@ -87,7 +88,19 @@ pub struct InitializeLaunch<'info> {
 }
 
 impl InitializeLaunch<'_> {
-    pub fn validate(&self, _args: &InitializeLaunchArgs) -> Result<()> {
+    pub fn validate(&self, args: &InitializeLaunchArgs) -> Result<()> {
+        require_gte!(
+            args.seconds_for_launch,
+            60 * 60,
+            LaunchpadError::InvalidSecondsForLaunch
+        );
+
+        require_gte!(
+            60 * 60 * 24 * 14,
+            args.seconds_for_launch,
+            LaunchpadError::InvalidSecondsForLaunch
+        );
+
         Ok(())
     }
 
@@ -108,8 +121,8 @@ impl InitializeLaunch<'_> {
             pda_bump: ctx.bumps.launch,
             seq_num: 0,
             state: LaunchState::Initialized,
-            slot_started: 0,
-            slots_for_launch: args.slots_for_launch,
+            unix_timestamp_started: 0,
+            seconds_for_launch: args.seconds_for_launch,
             dao: None,
             dao_treasury: None,
         });
@@ -127,7 +140,7 @@ impl InitializeLaunch<'_> {
             token_mint: ctx.accounts.token_mint.key(),
             usdc_mint: ctx.accounts.usdc_mint.key(),
             pda_bump: ctx.bumps.launch,
-            slots_for_launch: args.slots_for_launch,
+            seconds_for_launch: args.seconds_for_launch,
         });
 
         let launch_key = ctx.accounts.launch.key();

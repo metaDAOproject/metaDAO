@@ -111,7 +111,7 @@ export class LaunchpadClient {
     tokenSymbol: string,
     tokenUri: string,
     minimumRaiseAmount: BN,
-    slotsForLaunch: BN,
+    secondsForLaunch: number,
     tokenMintKp: Keypair,
     launchAuthority: PublicKey = this.provider.publicKey
   ) {
@@ -139,7 +139,7 @@ export class LaunchpadClient {
     return this.launchpad.methods
       .initializeLaunch({
         minimumRaiseAmount,
-        slotsForLaunch,
+        secondsForLaunch,
         tokenName,
         tokenSymbol,
         tokenUri,

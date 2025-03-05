@@ -22,7 +22,6 @@ export default function suite() {
   let funderUsdcAccount: PublicKey;
 
   const minRaise = new BN(1000_000000); // 1000 USDC
-  const SLOTS_PER_DAY = 216_000;
 
   before(async function () {
     autocratClient = this.autocratClient;
@@ -45,7 +44,7 @@ export default function suite() {
       "MTA",
       "https://example.com",
       minRaise,
-      new BN(SLOTS_PER_DAY * 6),
+      60 * 60 * 24 * 6,
       METAKP
     ).rpc();
 
@@ -65,7 +64,7 @@ export default function suite() {
     ).rpc();
 
     // Advance clock past 7 days
-    await this.advanceBySlots(BigInt(SLOTS_PER_DAY * 7));
+    await this.advanceBySeconds(60 * 60 * 24 * 7);
 
     // Complete the launch (moves to refunding state)
     await launchpadClient.completeLaunchIx(launch, META).rpc();
@@ -101,7 +100,7 @@ export default function suite() {
 
   it("fails when user has no tokens to refund", async function () {
     // Move to refunding state without any funding
-    await this.advanceBySlots(BigInt(SLOTS_PER_DAY * 7));
+    await this.advanceBySeconds(60 * 60 * 24 * 7);
     await launchpadClient.completeLaunchIx(launch, META).rpc();
 
     try {

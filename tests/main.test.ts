@@ -201,6 +201,13 @@ before(async function () {
     );
   };
 
+  this.advanceBySeconds = async (
+    seconds: number
+  ) => {
+    const currentClock = await this.context.banksClient.getClock();
+    this.context.setClock(new Clock(currentClock.slot, currentClock.epochStartTimestamp, currentClock.epoch, currentClock.leaderScheduleEpoch, BigInt(currentClock.unixTimestamp + BigInt(seconds))));
+  };
+
   await this.createTokenAccount(MAINNET_USDC, this.payer.publicKey);
   await mintToOverride(this.context, token.getAssociatedTokenAddressSync(MAINNET_USDC, this.payer.publicKey), 100_000n * (10n ** 6n));
 

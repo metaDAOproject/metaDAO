@@ -6,12 +6,8 @@ import {
   getLaunchSignerAddr,
   LaunchpadClient,
   MAINNET_USDC,
-  RAYDIUM_CP_SWAP_PROGRAM_ID,
 } from "@metadaoproject/futarchy/v0.4";
-import { createMint } from "spl-token-bankrun";
 import { BN } from "bn.js";
-import { createSetAuthorityInstruction, AuthorityType, getAssociatedTokenAddressSync } from "@solana/spl-token";
-import * as anchor from "@coral-xyz/anchor";
 
 export default function suite() {
   let autocratClient: AutocratClient;
@@ -44,7 +40,7 @@ export default function suite() {
       "MTN",
       "https://example.com",
       minRaise,
-      new BN(SLOTS_PER_DAY * 5),
+      60 * 60 * 24 * 10,
       METAKP
     ).rpc();
 
@@ -61,7 +57,7 @@ export default function suite() {
     ).rpc();
 
     // Advance clock past 7 days
-    await this.advanceBySlots(BigInt(SLOTS_PER_DAY * 7));
+    await this.advanceBySeconds(60 * 60 * 24 * 11);
 
     // Complete the launch
     await launchpadClient.completeLaunchIx(launch, META).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 })]).rpc();
@@ -93,8 +89,8 @@ export default function suite() {
       assert.include(e.message, "LaunchPeriodNotOver");
     }
 
-    // Advance by 3 days (still not enough)
-    await this.advanceBySlots(BigInt(SLOTS_PER_DAY * 3));
+    // Advance by 9 days (still not enough)
+    await this.advanceBySeconds(60 * 60 * 24 * 9);
 
     try {
       await launchpadClient.completeLaunchIx(launch, META).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 })]).rpc();
@@ -113,8 +109,7 @@ export default function suite() {
       partialAmount,
     ).rpc();
 
-    // Advance clock past 7 days
-    await this.advanceBySlots(BigInt(SLOTS_PER_DAY * 7));
+    await this.advanceBySeconds(60 * 60 * 24 * 11);
 
     // Complete the launch
     // I'm only 5 bytes under the limit, so make sure we don't go over
@@ -125,15 +120,13 @@ export default function suite() {
       ]).rpc();
 
     const launchAccount = await launchpadClient.fetchLaunch(launch);
-    // const treasuryBalance = await this.getTokenBalance(USDC, daoTreasury);
 
     assert.exists(launchAccount.state.refunding);
-    // assert.equal(treasuryBalance.toString(), "0");
   });
 
   it("fails when launch is not in live state", async function () {
     // Advance clock past 7 days
-    await this.advanceBySlots(BigInt(SLOTS_PER_DAY * 7));
+    await this.advanceBySeconds(60 * 60 * 24 * 11);
 
     // Complete launch first time
     await launchpadClient.completeLaunchIx(launch, META).rpc();

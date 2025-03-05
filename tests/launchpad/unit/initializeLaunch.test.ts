@@ -34,8 +34,7 @@ export default function suite() {
 
   it("initializes a launch with valid parameters", async function () {
     const minRaise = new BN(1000_000000); // 1000 USDC
-    const slots = new BN(5000_000000); 
-
+    const secondsForLaunch = 60 * 60 * 24 * 7; // 1 week
     const [, pdaBump] = getLaunchAddr(launchpadClient.getProgramId(), META);
     const [launchSigner, launchSignerPdaBump] = getLaunchSignerAddr(launchpadClient.getProgramId(), launch);
 
@@ -44,7 +43,7 @@ export default function suite() {
       "META",
       "https://example.com",
       minRaise,
-      slots,
+      secondsForLaunch,
       METAKP
     ).rpc();
 
@@ -61,15 +60,14 @@ export default function suite() {
     assert.equal(storedLaunch.totalCommittedAmount.toString(), "0");
     assert.equal(storedLaunch.seqNum.toString(), "0");
     assert.exists(storedLaunch.state.initialized);
-    assert.equal(storedLaunch.slotStarted.toString(), "0");
+    assert.equal(storedLaunch.unixTimestampStarted.toString(), "0");
     assert.equal(storedLaunch.dao, null);
     assert.equal(storedLaunch.daoTreasury, null);
   });
 
   it("fails when launch signer is faked", async function () {
     const minimumRaiseAmount = new BN(1000_000000); // 1000 USDC
-    const slotsForLaunch = new BN(5000_000000); // 5000 USDC
-
+    const secondsForLaunch = 60 * 60 * 24 * 7; // 1 week
     const fakeLaunchSigner = Keypair.generate();
 
     const [tokenMetadata] = getMetadataAddr(META);
@@ -80,7 +78,7 @@ export default function suite() {
         tokenSymbol: "META",
         tokenUri: "https://example.com",
         minimumRaiseAmount,
-        slotsForLaunch,
+        secondsForLaunch,
       }).accounts({
         launch,
         launchSigner: fakeLaunchSigner.publicKey,

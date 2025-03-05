@@ -48,7 +48,7 @@ export default function suite() {
       "MTN",
       "https://example.com",
       minRaise,
-      new BN(SLOTS_PER_DAY * 2),
+      60 * 60 * 24 * 2,
       METAKP
     ).rpc();
 
@@ -69,7 +69,7 @@ export default function suite() {
 
   it("successfully claims tokens after launch completion", async function () {
     // // Advance clock and complete launch
-    await this.advanceBySlots(BigInt(SLOTS_PER_DAY * 7));
+    await this.advanceBySeconds(60 * 60 * 24 * 3);
     await launchpadClient.completeLaunchIx(launch, META).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 })]).rpc();
 
     const initialTokenBalance = await this.getTokenBalance(META, this.payer.publicKey);

@@ -6,6 +6,8 @@ pub enum LaunchpadError {
     InvalidAmount,
     #[msg("Supply must be zero")]
     SupplyNonZero,
+    #[msg("Launch period must be between 1 hour and 2 weeks")]
+    InvalidSecondsForLaunch,
     #[msg("Insufficient funds")]
     InsufficientFunds,
     #[msg("Invalid launch state")]

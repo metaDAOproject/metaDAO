@@ -197,11 +197,11 @@ impl CompleteLaunch<'_> {
         );
 
         require!(
-            clock.slot
+            clock.unix_timestamp
                 >= self
                     .launch
-                    .slot_started
-                    .saturating_add(self.launch.slots_for_launch),
+                    .unix_timestamp_started
+                    .saturating_add(self.launch.seconds_for_launch.try_into().unwrap()),
             LaunchpadError::LaunchPeriodNotOver
         );
 

@@ -51,17 +51,31 @@ export default function suite() {
       "MTN",
       "https://example.com",
       minRaise,
-      new BN(400),
+      60 * 60,
       METAKP
     ).rpc();
 
-    await launchpadClient.startLaunchIx(launch).rpc();
+  });
 
+  it("fails to fund the launch before it's started", async function () {
     await this.createTokenAccount(META, this.payer.publicKey);
-    // await this.mintTo(META, this.payer.publicKey, this.payer, maxRaise.toNumber());
+    const fundAmount = new BN(100_000000); // 100 USDC
+
+    try {
+      await launchpadClient.fundIx(
+        launch,
+        fundAmount,
+      ).rpc();
+      assert.fail("Expected fund instruction to fail");
+    } catch (e) {
+      assert.include(e.message, "InvalidLaunchState");
+    }
   });
 
   it("successfully funds the launch", async function () {
+    await launchpadClient.startLaunchIx(launch).rpc();
+    await this.createTokenAccount(META, this.payer.publicKey);
+
     const fundAmount = new BN(100_000000); // 100 USDC
 
     await launchpadClient.fundIx(
@@ -89,6 +103,9 @@ export default function suite() {
   });
 
   it("successfully funds the launch multiple times", async function () {
+    await launchpadClient.startLaunchIx(launch).rpc();
+    await this.createTokenAccount(META, this.payer.publicKey);
+
     const fundAmount1 = new BN(100_000000); // 100 USDC
     const fundAmount2 = new BN(200_000000); // 200 USDC
     const totalAmount = fundAmount1.add(fundAmount2);

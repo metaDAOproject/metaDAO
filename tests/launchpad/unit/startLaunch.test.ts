@@ -37,7 +37,7 @@ export default function suite() {
       "MTA",
       "https://example.com",
       minRaise,
-      new BN(5000_000000),
+      60 * 60 * 24 * 2,
       METAKP
     ).rpc();
   });
@@ -45,18 +45,18 @@ export default function suite() {
   it("starts launch correctly", async function () {
     // Check initial state
     let launchAccount = await launchpadClient.fetchLaunch(launch);
-    assert.equal(launchAccount.slotStarted.toString(), "0");
+    assert.equal(launchAccount.unixTimestampStarted.toString(), "0");
     assert.exists(launchAccount.state.initialized);
 
     // Get current slot for comparison
-    const slot = await this.banksClient.getClock().then(clock => clock.slot);
+    const clock = await this.banksClient.getClock();
 
     // Start the launch
     await launchpadClient.startLaunchIx(launch).rpc();
 
     // Check final state
     launchAccount = await launchpadClient.fetchLaunch(launch);
-    assert.equal(launchAccount.slotStarted.toString(), slot.toString());
+    assert.equal(launchAccount.unixTimestampStarted.toString(), clock.unixTimestamp.toString());
     assert.exists(launchAccount.state.live);
   });
 } 
