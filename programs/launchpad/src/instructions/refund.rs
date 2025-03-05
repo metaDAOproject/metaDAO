@@ -1,9 +1,9 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Token, TokenAccount, Transfer};
 
-use crate::state::{Launch, LaunchState, FundingRecord};
 use crate::error::LaunchpadError;
-use crate::events::{LaunchRefundedEvent, CommonFields};
+use crate::events::{CommonFields, LaunchRefundedEvent};
+use crate::state::{FundingRecord, Launch, LaunchState};
 
 #[event_cpi]
 #[derive(Accounts)]
@@ -42,7 +42,10 @@ pub struct Refund<'info> {
 
 impl Refund<'_> {
     pub fn validate(&self) -> Result<()> {
-        require!(self.launch.state == LaunchState::Refunding, LaunchpadError::LaunchNotRefunding);
+        require!(
+            self.launch.state == LaunchState::Refunding,
+            LaunchpadError::LaunchNotRefunding
+        );
         Ok(())
     }
 
@@ -71,7 +74,7 @@ impl Refund<'_> {
             ),
             funding_record.committed_amount,
         )?;
-        
+
         launch.seq_num += 1;
 
         let clock = Clock::get()?;
@@ -85,4 +88,4 @@ impl Refund<'_> {
 
         Ok(())
     }
-} 
+}

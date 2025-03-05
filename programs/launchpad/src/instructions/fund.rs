@@ -1,15 +1,15 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Token, TokenAccount, Transfer};
 
-use crate::state::{Launch, LaunchState, FundingRecord};
 use crate::error::LaunchpadError;
-use crate::events::{LaunchFundedEvent, CommonFields};
+use crate::events::{CommonFields, LaunchFundedEvent};
+use crate::state::{FundingRecord, Launch, LaunchState};
 
 #[event_cpi]
 #[derive(Accounts)]
 pub struct Fund<'info> {
     #[account(
-        mut, 
+        mut,
         has_one = launch_signer,
         has_one = launch_usdc_vault,
     )]
@@ -48,13 +48,24 @@ impl Fund<'_> {
     pub fn validate(&self, amount: u64) -> Result<()> {
         require!(amount > 0, LaunchpadError::InvalidAmount);
 
-        require_gte!(self.funder_usdc_account.amount, amount, LaunchpadError::InsufficientFunds);
+        require_gte!(
+            self.funder_usdc_account.amount,
+            amount,
+            LaunchpadError::InsufficientFunds
+        );
 
-        require!(self.launch.state == LaunchState::Live, LaunchpadError::InvalidLaunchState);
+        require!(
+            self.launch.state == LaunchState::Live,
+            LaunchpadError::InvalidLaunchState
+        );
 
         let clock = Clock::get()?;
 
-        require_gte!(self.launch.unix_timestamp_started + self.launch.seconds_for_launch as i64, clock.unix_timestamp, LaunchpadError::LaunchExpired);
+        require_gte!(
+            self.launch.unix_timestamp_started + self.launch.seconds_for_launch as i64,
+            clock.unix_timestamp,
+            LaunchpadError::LaunchExpired
+        );
 
         Ok(())
     }
@@ -107,4 +118,4 @@ impl Fund<'_> {
 
         Ok(())
     }
-} 
+}

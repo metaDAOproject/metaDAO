@@ -33,14 +33,14 @@ use conditional_vault::Question;
 // use conditional_vault::VaultStatus;
 
 pub mod error;
+pub mod events;
 pub mod instructions;
 pub mod state;
-pub mod events;
 
 pub use error::AutocratError;
+pub use events::*;
 pub use instructions::*;
 pub use state::*;
-pub use events::*;
 
 use amm::state::Amm;
 

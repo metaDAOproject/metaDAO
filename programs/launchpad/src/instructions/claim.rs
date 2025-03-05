@@ -1,9 +1,9 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Token, TokenAccount, Mint, Transfer};
+use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
-use crate::state::{Launch, LaunchState, FundingRecord};
 use crate::error::LaunchpadError;
-use crate::events::{LaunchClaimEvent, CommonFields};
+use crate::events::{CommonFields, LaunchClaimEvent};
+use crate::state::{FundingRecord, Launch, LaunchState};
 use crate::AVAILABLE_TOKENS;
 
 #[event_cpi]
@@ -54,7 +54,10 @@ pub struct Claim<'info> {
 
 impl Claim<'_> {
     pub fn validate(&self) -> Result<()> {
-        require!(self.launch.state == LaunchState::Complete, LaunchpadError::InvalidLaunchState);
+        require!(
+            self.launch.state == LaunchState::Complete,
+            LaunchpadError::InvalidLaunchState
+        );
 
         Ok(())
     }
@@ -103,4 +106,4 @@ impl Claim<'_> {
 
         Ok(())
     }
-} 
+}

@@ -1,6 +1,5 @@
 use anchor_lang::prelude::*;
 
-
 #[account]
 pub struct FundingRecord {
     /// The PDA bump.

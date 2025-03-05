@@ -22,4 +22,4 @@ pub enum LaunchpadError {
     LaunchNotInitialized,
     #[msg("Freeze authority can't be set on launchpad tokens")]
     FreezeAuthoritySet,
-} 
+}

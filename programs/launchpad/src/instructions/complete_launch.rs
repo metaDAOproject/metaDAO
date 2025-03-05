@@ -226,11 +226,7 @@ impl CompleteLaunch<'_> {
 
         let launch_key = launch.key();
 
-        let seeds = &[
-            b"launch_dao",
-            launch_key.as_ref(),
-            &[ctx.bumps.dao],
-        ];
+        let seeds = &[b"launch_dao", launch_key.as_ref(), &[ctx.bumps.dao]];
         let signer = &[&seeds[..]];
 
         if total_committed_amount >= launch.minimum_raise_amount {

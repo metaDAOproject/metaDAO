@@ -81,4 +81,4 @@ pub struct ExecuteProposalEvent {
     pub common: CommonFields,
     pub proposal: Pubkey,
     pub dao: Pubkey,
-} 
+}

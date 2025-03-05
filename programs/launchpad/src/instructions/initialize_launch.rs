@@ -1,16 +1,16 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Mint, Token, TokenAccount, MintTo};
 use anchor_spl::associated_token::AssociatedToken;
+use anchor_spl::token::{self, Mint, MintTo, Token, TokenAccount};
 
-use crate::state::{Launch, LaunchState};
-use crate::events::{LaunchInitializedEvent, CommonFields};
-use crate::AVAILABLE_TOKENS;
 use crate::error::LaunchpadError;
-use anchor_spl::metadata::{
-    create_metadata_accounts_v3, mpl_token_metadata::types::DataV2, CreateMetadataAccountsV3,
-    Metadata, mpl_token_metadata::ID as MPL_TOKEN_METADATA_PROGRAM_ID,
-};
+use crate::events::{CommonFields, LaunchInitializedEvent};
+use crate::state::{Launch, LaunchState};
 use crate::usdc_mint;
+use crate::AVAILABLE_TOKENS;
+use anchor_spl::metadata::{
+    create_metadata_accounts_v3, mpl_token_metadata::types::DataV2,
+    mpl_token_metadata::ID as MPL_TOKEN_METADATA_PROGRAM_ID, CreateMetadataAccountsV3, Metadata,
+};
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct InitializeLaunchArgs {
@@ -75,7 +75,7 @@ pub struct InitializeLaunch<'info> {
     pub payer: Signer<'info>,
     /// CHECK: account not used, just for constraints
     pub launch_authority: UncheckedAccount<'info>,
-    
+
     #[account(mint::decimals = 6, address = usdc_mint::id())]
     pub usdc_mint: Account<'info, Mint>,
 
@@ -104,10 +104,7 @@ impl InitializeLaunch<'_> {
         Ok(())
     }
 
-    pub fn handle(
-        ctx: Context<Self>,
-        args: InitializeLaunchArgs,
-    ) -> Result<()> {
+    pub fn handle(ctx: Context<Self>, args: InitializeLaunchArgs) -> Result<()> {
         ctx.accounts.launch.set_inner(Launch {
             minimum_raise_amount: args.minimum_raise_amount,
             launch_authority: ctx.accounts.launch_authority.key(),
