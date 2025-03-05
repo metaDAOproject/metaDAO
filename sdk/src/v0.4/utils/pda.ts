@@ -193,3 +193,13 @@ export const getFundingRecordAddr = (
     programId
   );
 };
+
+export const getLaunchDaoAddr = (
+  programId: PublicKey = LAUNCHPAD_PROGRAM_ID,
+  launch: PublicKey
+): [PublicKey, number] => {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("launch_dao"), launch.toBuffer()],
+    programId
+  );
+};

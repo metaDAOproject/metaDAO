@@ -29,6 +29,7 @@ import {
   getEventAuthorityAddr,
   getFundingRecordAddr,
   getLaunchAddr,
+  getLaunchDaoAddr,
   getLaunchSignerAddr,
   getMetadataAddr,
 } from "./utils/pda.js";
@@ -228,10 +229,11 @@ export class LaunchpadClient {
       true
     );
 
-    const daoKp = Keypair.generate();
+    // const daoKp = Keypair.generate();
+    const [dao] = getLaunchDaoAddr(this.launchpad.programId, launch);
     const [daoTreasury] = getDaoTreasuryAddr(
       this.autocratClient.getProgramId(),
-      daoKp.publicKey
+      dao
     );
     const treasuryUsdcAccount = getAssociatedTokenAddressSync(
       usdcMint,
@@ -292,7 +294,7 @@ export class LaunchpadClient {
         launchSigner,
         launchUsdcVault,
         launchTokenVault,
-        dao: daoKp.publicKey,
+        dao,
         daoTreasury,
         treasuryUsdcAccount,
         usdcMint,
@@ -314,7 +316,7 @@ export class LaunchpadClient {
         autocratProgram: this.autocratClient.getProgramId(),
         autocratEventAuthority,
       })
-      .signers([poolStateKp, daoKp])
+      .signers([poolStateKp])
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(
           this.provider.publicKey,

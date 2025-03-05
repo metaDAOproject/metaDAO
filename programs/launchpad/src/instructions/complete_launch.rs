@@ -34,7 +34,7 @@ pub struct CompleteLaunch<'info> {
         has_one = token_mint,
         has_one = usdc_mint,
     )]
-    pub launch: Account<'info, Launch>,
+    pub launch: Box<Account<'info, Launch>>,
 
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -58,21 +58,21 @@ pub struct CompleteLaunch<'info> {
         associated_token::mint = usdc_mint,
         associated_token::authority = launch_signer,
     )]
-    pub launch_usdc_vault: Account<'info, TokenAccount>,
+    pub launch_usdc_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
         associated_token::mint = token_mint,
         associated_token::authority = launch_signer,
     )]
-    pub launch_token_vault: Account<'info, TokenAccount>,
+    pub launch_token_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
         associated_token::mint = usdc_mint,
         associated_token::authority = dao_treasury,
     )]
-    pub treasury_usdc_account: Account<'info, TokenAccount>,
+    pub treasury_usdc_account: Box<Account<'info, TokenAccount>>,
 
     /// Use the lowest fee pool, can see fees at https://api-v3.raydium.io/main/cpmm-config
     #[account(
@@ -157,8 +157,15 @@ pub struct CompleteLaunch<'info> {
     pub observation_state: UncheckedAccount<'info>,
 
     /// CHECK: this is the DAO account, init by autocrat
-    #[account(mut)]
-    pub dao: Signer<'info>,
+    #[account(
+        mut,
+        seeds = [
+            b"launch_dao",
+            launch.key().as_ref(),
+        ],
+        bump,
+    )]
+    pub dao: UncheckedAccount<'info>,
 
     /// CHECK: this is the DAO treasury account
     #[account(
@@ -217,9 +224,18 @@ impl CompleteLaunch<'_> {
         let price_1e12 =
             ((total_committed_amount as u128) * PRICE_SCALE) / (AVAILABLE_TOKENS as u128);
 
+        let launch_key = launch.key();
+
+        let seeds = &[
+            b"launch_dao",
+            launch_key.as_ref(),
+            &[ctx.bumps.dao],
+        ];
+        let signer = &[&seeds[..]];
+
         if total_committed_amount >= launch.minimum_raise_amount {
             autocrat::cpi::initialize_dao(
-                CpiContext::new(
+                CpiContext::new_with_signer(
                     ctx.accounts.autocrat_program.to_account_info(),
                     autocrat::cpi::accounts::InitializeDao {
                         dao: ctx.accounts.dao.to_account_info(),
@@ -230,6 +246,7 @@ impl CompleteLaunch<'_> {
                         event_authority: ctx.accounts.autocrat_event_authority.to_account_info(),
                         program: ctx.accounts.autocrat_program.to_account_info(),
                     },
+                    signer,
                 ),
                 InitializeDaoParams {
                     twap_initial_observation: price_1e12,
@@ -292,6 +309,8 @@ impl CompleteLaunch<'_> {
                 AuthorityType::MintTokens,
                 Some(ctx.accounts.dao_treasury.key()),
             )?;
+
+            msg!("{:?}", ctx.accounts.amm_config);
 
             system_program::transfer(
                 CpiContext::new(

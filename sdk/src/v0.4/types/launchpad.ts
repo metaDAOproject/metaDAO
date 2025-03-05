@@ -3,7 +3,6 @@ export type Launchpad = {
   name: "launchpad";
   docs: [
     "TODO:",
-    "- Adopt payer-signer pattern",
     "- Have DAO be a PDA",
     "- Check USDC is actually USDC",
     "- Use unix timestamp over slots",
@@ -285,7 +284,7 @@ export type Launchpad = {
         {
           name: "dao";
           isMut: true;
-          isSigner: true;
+          isSigner: false;
         },
         {
           name: "daoTreasury";
@@ -976,7 +975,6 @@ export const IDL: Launchpad = {
   name: "launchpad",
   docs: [
     "TODO:",
-    "- Adopt payer-signer pattern",
     "- Have DAO be a PDA",
     "- Check USDC is actually USDC",
     "- Use unix timestamp over slots",
@@ -1258,7 +1256,7 @@ export const IDL: Launchpad = {
         {
           name: "dao",
           isMut: true,
-          isSigner: true,
+          isSigner: false,
         },
         {
           name: "daoTreasury",
