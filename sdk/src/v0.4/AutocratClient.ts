@@ -587,6 +587,8 @@ export class AutocratClient {
       failAmm,
       passBaseMint,
       passQuoteMint,
+      failBaseMint,
+      failQuoteMint,
     } = this.getProposalPdas(proposal, baseMint, quoteMint, dao);
 
     // const
@@ -643,12 +645,30 @@ export class AutocratClient {
           passAmm,
           true
         ),
+        failAmmBaseVault: getAssociatedTokenAddressSync(
+          failBaseMint,
+          failAmm,
+          true
+        ),
+        failAmmQuoteVault: getAssociatedTokenAddressSync(
+          failQuoteMint,
+          failAmm,
+          true
+        ),
+        passQuoteUserAccount: getAssociatedTokenAddressSync(
+          passQuoteMint,
+          this.provider.publicKey
+        ),
         passBaseUserAccount: getAssociatedTokenAddressSync(
           passBaseMint,
           this.provider.publicKey
         ),
-        passQuoteUserAccount: getAssociatedTokenAddressSync(
-          passQuoteMint,
+        failBaseUserAccount: getAssociatedTokenAddressSync(
+          failBaseMint,
+          this.provider.publicKey
+        ),
+        failQuoteUserAccount: getAssociatedTokenAddressSync(
+          failQuoteMint,
           this.provider.publicKey
         ),
         passLpUserAccount: getAssociatedTokenAddressSync(

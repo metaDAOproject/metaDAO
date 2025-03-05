@@ -404,38 +404,6 @@ export default function suite() {
       )
       .rpc();
 
-    await ammClient.addLiquidityIx(
-      failAmm,
-      failBaseMint,
-      failQuoteMint,
-      quoteTokensToLP,
-      baseTokensToLP,
-      new BN(0)
-    ).rpc();
-
-    // await ammClient
-    //   .addLiquidityIx(
-    //     passAmm,
-    //     passBaseMint,
-    //     passQuoteMint,
-    //     quoteTokensToLP,
-    //     baseTokensToLP,
-    //     new BN(0)
-    //   )
-    //   .postInstructions(
-    //     await InstructionUtils.getInstructions(
-    //       ammClient.addLiquidityIx(
-    //         failAmm,
-    //         failBaseMint,
-    //         failQuoteMint,
-    //         quoteTokensToLP,
-    //         baseTokensToLP,
-    //         new BN(0)
-    //       )
-    //     )
-    //   )
-    //   .rpc();
-
     // this is how many original tokens are created
     const lpTokens = quoteTokensToLP;
 

@@ -90,12 +90,12 @@ export type Autocrat = {
         },
         {
           name: "failLpMint";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
           name: "failAmm";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
@@ -109,12 +109,32 @@ export type Autocrat = {
           isSigner: false;
         },
         {
+          name: "failBaseUserAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "failQuoteUserAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
           name: "passAmmBaseVault";
           isMut: true;
           isSigner: false;
         },
         {
           name: "passAmmQuoteVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "failAmmBaseVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "failAmmQuoteVault";
           isMut: true;
           isSigner: false;
         },
@@ -1115,12 +1135,12 @@ export const IDL: Autocrat = {
         },
         {
           name: "failLpMint",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
           name: "failAmm",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
@@ -1134,12 +1154,32 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
+          name: "failBaseUserAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "failQuoteUserAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
           name: "passAmmBaseVault",
           isMut: true,
           isSigner: false,
         },
         {
           name: "passAmmQuoteVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "failAmmBaseVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "failAmmQuoteVault",
           isMut: true,
           isSigner: false,
         },
