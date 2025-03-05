@@ -957,16 +957,21 @@ export type Launchpad = {
     },
     {
       code: 6006;
+      name: "LaunchExpired";
+      msg: "Launch is complete, no more funding allowed";
+    },
+    {
+      code: 6007;
       name: "LaunchNotRefunding";
       msg: "Launch needs to be in refunding state to get a refund";
     },
     {
-      code: 6007;
+      code: 6008;
       name: "LaunchNotInitialized";
       msg: "Launch must be initialized to be started";
     },
     {
-      code: 6008;
+      code: 6009;
       name: "FreezeAuthoritySet";
       msg: "Freeze authority can't be set on launchpad tokens";
     }
@@ -1932,16 +1937,21 @@ export const IDL: Launchpad = {
     },
     {
       code: 6006,
+      name: "LaunchExpired",
+      msg: "Launch is complete, no more funding allowed",
+    },
+    {
+      code: 6007,
       name: "LaunchNotRefunding",
       msg: "Launch needs to be in refunding state to get a refund",
     },
     {
-      code: 6007,
+      code: 6008,
       name: "LaunchNotInitialized",
       msg: "Launch must be initialized to be started",
     },
     {
-      code: 6008,
+      code: 6009,
       name: "FreezeAuthoritySet",
       msg: "Freeze authority can't be set on launchpad tokens",
     },

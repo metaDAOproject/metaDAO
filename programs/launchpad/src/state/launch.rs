@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use solana_program::clock::UnixTimestamp;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq)]
 pub enum LaunchState {

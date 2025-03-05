@@ -14,6 +14,8 @@ pub enum LaunchpadError {
     InvalidLaunchState,
     #[msg("Launch period not over")]
     LaunchPeriodNotOver,
+    #[msg("Launch is complete, no more funding allowed")]
+    LaunchExpired,
     #[msg("Launch needs to be in refunding state to get a refund")]
     LaunchNotRefunding,
     #[msg("Launch must be initialized to be started")]

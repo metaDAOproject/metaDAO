@@ -138,4 +138,24 @@ export default function suite() {
     assert.equal(fundingRecordAccount.committedAmount.toString(), totalAmount.toString());
     assert.ok(fundingRecordAccount.seqNum.eqn(1));
   });
+
+  it("fails to fund the launch after time expires", async function () {
+    await launchpadClient.startLaunchIx(launch).rpc();
+    await this.createTokenAccount(META, this.payer.publicKey);
+
+    const fundAmount = new BN(100_000000); // 100 USDC
+    
+    // Fast forward time past the launch period (60 * 60 seconds)
+    await this.advanceBySeconds(60 * 60 * 2);
+
+    try {
+      await launchpadClient.fundIx(
+        launch,
+        fundAmount,
+      ).rpc();
+      assert.fail("Expected fund instruction to fail");
+    } catch (e) {
+      assert.include(e.message, "LaunchExpired");
+    }
+  });
 } 

@@ -52,6 +52,10 @@ impl Fund<'_> {
 
         require!(self.launch.state == LaunchState::Live, LaunchpadError::InvalidLaunchState);
 
+        let clock = Clock::get()?;
+
+        require_gte!(self.launch.unix_timestamp_started + self.launch.seconds_for_launch as i64, clock.unix_timestamp, LaunchpadError::LaunchExpired);
+
         Ok(())
     }
 
