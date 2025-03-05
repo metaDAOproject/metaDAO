@@ -3,7 +3,6 @@ export type Launchpad = {
   name: "launchpad";
   docs: [
     "TODO:",
-    "- Have DAO be a PDA",
     "- Check USDC is actually USDC",
     "- Use unix timestamp over slots",
     "- Check that current time is within funding period"
@@ -975,7 +974,6 @@ export const IDL: Launchpad = {
   name: "launchpad",
   docs: [
     "TODO:",
-    "- Have DAO be a PDA",
     "- Check USDC is actually USDC",
     "- Use unix timestamp over slots",
     "- Check that current time is within funding period",

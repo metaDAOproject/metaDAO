@@ -5,6 +5,7 @@ import {
   getLaunchAddr,
   getLaunchSignerAddr,
   LaunchpadClient,
+  MAINNET_USDC,
 } from "@metadaoproject/futarchy/v0.4";
 import { createMint } from "spl-token-bankrun";
 import { BN } from "bn.js";
@@ -15,7 +16,6 @@ export default function suite() {
   let launchpadClient: LaunchpadClient;
   let METAKP: Keypair;
   let META: PublicKey;
-  let USDC: PublicKey;
   let launch: PublicKey;
   let launchSigner: PublicKey;
   let usdcVault: PublicKey;
@@ -27,8 +27,6 @@ export default function suite() {
   before(async function () {
     autocratClient = this.autocratClient;
     launchpadClient = this.launchpadClient;
-    USDC = await createMint(this.banksClient, this.payer, this.payer.publicKey, null, 6);
-    await this.createTokenAccount(USDC, this.payer.publicKey);
   });
 
   beforeEach(async function () {
@@ -38,8 +36,8 @@ export default function suite() {
     // Get accounts
     [launch] = getLaunchAddr(launchpadClient.getProgramId(), META);
     [launchSigner] = getLaunchSignerAddr(launchpadClient.getProgramId(), launch);
-    usdcVault = getAssociatedTokenAddressSync(USDC, launchSigner, true);
-    funderUsdcAccount = getAssociatedTokenAddressSync(USDC, this.payer.publicKey);
+    usdcVault = getAssociatedTokenAddressSync(MAINNET_USDC, launchSigner, true);
+    funderUsdcAccount = getAssociatedTokenAddressSync(MAINNET_USDC, this.payer.publicKey);
 
     // Initialize launch
     await launchpadClient.initializeLaunchIx(
@@ -48,7 +46,6 @@ export default function suite() {
       "https://example.com",
       minRaise,
       new BN(SLOTS_PER_DAY * 6),
-      USDC,
       METAKP
     ).rpc();
 
@@ -61,27 +58,25 @@ export default function suite() {
   it("allows refunds when launch is in refunding state", async function () {
     // Fund the launch with less than minimum raise
     const partialAmount = minRaise.divn(2);
-    await this.mintTo(USDC, this.payer.publicKey, this.payer, partialAmount.toNumber());
 
     await launchpadClient.fundIx(
       launch,
       partialAmount,
-      USDC,
     ).rpc();
 
     // Advance clock past 7 days
     await this.advanceBySlots(BigInt(SLOTS_PER_DAY * 7));
 
     // Complete the launch (moves to refunding state)
-    await launchpadClient.completeLaunchIx(launch, USDC, META).rpc();
+    await launchpadClient.completeLaunchIx(launch, META).rpc();
 
-    const initialUsdcBalance = await this.getTokenBalance(USDC, this.payer.publicKey);
+    const initialUsdcBalance = await this.getTokenBalance(MAINNET_USDC, this.payer.publicKey);
     const initialMetaBalance = await this.getTokenBalance(META, this.payer.publicKey);
 
     // Get refund
-    await launchpadClient.refundIx(launch, USDC, META).rpc();
+    await launchpadClient.refundIx(launch).rpc();
 
-    const finalUsdcBalance = await this.getTokenBalance(USDC, this.payer.publicKey);
+    const finalUsdcBalance = await this.getTokenBalance(MAINNET_USDC, this.payer.publicKey);
     const finalMetaBalance = await this.getTokenBalance(META, this.payer.publicKey);
     
     assert.equal((finalUsdcBalance - initialUsdcBalance).toString(), partialAmount.toString());
@@ -90,16 +85,14 @@ export default function suite() {
 
   it("fails when launch is not in refunding state", async function () {
     const partialAmount = minRaise.divn(2);
-    await this.mintTo(USDC, this.payer.publicKey, this.payer, partialAmount.toNumber());
 
     await launchpadClient.fundIx(
       launch,
       partialAmount,
-      USDC,
     ).rpc();
 
     try {
-      await launchpadClient.refundIx(launch, USDC, META).rpc();
+      await launchpadClient.refundIx(launch).rpc();
       assert.fail("Should have thrown error");
     } catch (e) {
       assert.include(e.message, "LaunchNotRefunding");
@@ -109,10 +102,10 @@ export default function suite() {
   it("fails when user has no tokens to refund", async function () {
     // Move to refunding state without any funding
     await this.advanceBySlots(BigInt(SLOTS_PER_DAY * 7));
-    await launchpadClient.completeLaunchIx(launch, USDC, META).rpc();
+    await launchpadClient.completeLaunchIx(launch, META).rpc();
 
     try {
-      await launchpadClient.refundIx(launch, USDC, META).rpc();
+      await launchpadClient.refundIx(launch).rpc();
       assert.fail("Should have thrown error");
     } catch (e) {
       // assert.include(e.message, "InvalidAmount");

@@ -11,6 +11,7 @@ import {
   AutocratClient,
   ConditionalVaultClient,
   LaunchpadClient,
+  MAINNET_USDC,
   RAYDIUM_CREATE_POOL_FEE_RECEIVE,
 } from "@metadaoproject/futarchy/v0.4";
 // import {
@@ -28,6 +29,7 @@ import {
   getAccount,
   transfer,
   getMint,
+  mintToOverride,
 } from "spl-token-bankrun";
 import * as token from "@solana/spl-token";
 import { assert } from "chai";
@@ -81,6 +83,15 @@ before(async function () {
           executable: false,
           owner: token.TOKEN_PROGRAM_ID,
           lamports: 6858_402_039_280
+        }
+      },
+      {
+        address: MAINNET_USDC,
+        info: {
+          data: fs.readFileSync("./tests/fixtures/usdc"),
+          executable: false,
+          owner: token.TOKEN_PROGRAM_ID,
+          lamports: 377_950_832_219
         }
       }
     ]
@@ -189,6 +200,9 @@ before(async function () {
       )
     );
   };
+
+  await this.createTokenAccount(MAINNET_USDC, this.payer.publicKey);
+  await mintToOverride(this.context, token.getAssociatedTokenAddressSync(MAINNET_USDC, this.payer.publicKey), 100_000n * (10n ** 6n));
 
 });
 

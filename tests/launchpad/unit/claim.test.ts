@@ -6,10 +6,10 @@ import {
   getLaunchAddr,
   getLaunchSignerAddr,
   LaunchpadClient,
+  MAINNET_USDC,
 } from "@metadaoproject/futarchy/v0.4";
-import { createMint } from "spl-token-bankrun";
 import { BN } from "bn.js";
-import { getAssociatedTokenAddressSync, createSetAuthorityInstruction, AuthorityType } from "@solana/spl-token";
+import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 
 export default function suite() {
   let autocratClient: AutocratClient;
@@ -18,7 +18,6 @@ export default function suite() {
   let daoTreasury: PublicKey;
   let METAKP: Keypair;
   let META: PublicKey;
-  let USDC: PublicKey;
   let launch: PublicKey;
   let launchSigner: PublicKey;
   let usdcVault: PublicKey;
@@ -30,8 +29,6 @@ export default function suite() {
   before(async function () {
     autocratClient = this.autocratClient;
     launchpadClient = this.launchpadClient;
-    USDC = await createMint(this.banksClient, this.payer, this.payer.publicKey, null, 6);
-    await this.createTokenAccount(USDC, this.payer.publicKey);
   });
 
   beforeEach(async function () {
@@ -42,8 +39,8 @@ export default function suite() {
     // Get accounts
     [launch] = getLaunchAddr(launchpadClient.getProgramId(), META);
     [launchSigner] = getLaunchSignerAddr(launchpadClient.getProgramId(), launch);
-    usdcVault = getAssociatedTokenAddressSync(USDC, launchSigner, true);
-    funderUsdcAccount = getAssociatedTokenAddressSync(USDC, this.payer.publicKey);
+    usdcVault = getAssociatedTokenAddressSync(MAINNET_USDC, launchSigner, true);
+    funderUsdcAccount = getAssociatedTokenAddressSync(MAINNET_USDC, this.payer.publicKey);
 
     // Initialize launch
     await launchpadClient.initializeLaunchIx(
@@ -52,7 +49,6 @@ export default function suite() {
       "https://example.com",
       minRaise,
       new BN(SLOTS_PER_DAY * 2),
-      USDC,
       METAKP
     ).rpc();
 
@@ -62,22 +58,19 @@ export default function suite() {
 
     // Setup funder accounts
 
-    await this.mintTo(USDC, this.payer.publicKey, this.payer, 1_000_000000);
-
     const fundAmount = new BN(1000_000000); // 1000 USDC
 
     // Fund the launch
     await launchpadClient.fundIx(
       launch,
       fundAmount,
-      USDC,
     ).rpc();
   });
 
   it("successfully claims tokens after launch completion", async function () {
     // // Advance clock and complete launch
     await this.advanceBySlots(BigInt(SLOTS_PER_DAY * 7));
-    await launchpadClient.completeLaunchIx(launch, USDC, META).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 })]).rpc();
+    await launchpadClient.completeLaunchIx(launch, META).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 })]).rpc();
 
     const initialTokenBalance = await this.getTokenBalance(META, this.payer.publicKey);
     console.log("initialTokenBalance", initialTokenBalance.toString());

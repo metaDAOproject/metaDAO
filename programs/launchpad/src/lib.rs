@@ -23,9 +23,13 @@ declare_id!("AfJJJ5UqxhBKoE3grkKAZZsoXDE9kncbMKvqSHGsCNrE");
 /// 10M tokens with 6 decimals
 pub const AVAILABLE_TOKENS: u64 = 10_000_000 * 1_000_000;
 
+pub mod usdc_mint {
+    use anchor_lang::prelude::declare_id;
+
+    declare_id!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
+}
 
 /// TODO:
-/// - Have DAO be a PDA
 /// - Check USDC is actually USDC
 /// - Use unix timestamp over slots
 /// - Check that current time is within funding period

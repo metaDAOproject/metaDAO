@@ -5,6 +5,7 @@ import {
   getLaunchAddr,
   getLaunchSignerAddr,
   LaunchpadClient,
+  MAINNET_USDC,
   RAYDIUM_CP_SWAP_PROGRAM_ID,
 } from "@metadaoproject/futarchy/v0.4";
 import { createMint } from "spl-token-bankrun";
@@ -17,7 +18,6 @@ export default function suite() {
   let launchpadClient: LaunchpadClient;
   let METAKP: Keypair;
   let META: PublicKey;
-  let USDC: PublicKey;
   let launch: PublicKey;
   let launchSigner: PublicKey;
 
@@ -27,8 +27,6 @@ export default function suite() {
   before(async function () {
     autocratClient = this.autocratClient;
     launchpadClient = this.launchpadClient;
-    USDC = await createMint(this.banksClient, this.payer, this.payer.publicKey, null, 6);
-    await this.createTokenAccount(USDC, this.payer.publicKey);
   });
 
   beforeEach(async function () {
@@ -47,13 +45,11 @@ export default function suite() {
       "https://example.com",
       minRaise,
       new BN(SLOTS_PER_DAY * 5),
-      USDC,
       METAKP
     ).rpc();
 
     await launchpadClient.startLaunchIx(launch).rpc();
     await this.createTokenAccount(META, this.payer.publicKey);
-    await this.mintTo(USDC, this.payer.publicKey, this.payer, minRaise.toNumber());
   });
 
   it("completes launch successfully when minimum raise is met and time has passed", async function () {
@@ -62,17 +58,16 @@ export default function suite() {
     await launchpadClient.fundIx(
       launch,
       minRaise,
-      USDC,
     ).rpc();
 
     // Advance clock past 7 days
     await this.advanceBySlots(BigInt(SLOTS_PER_DAY * 7));
 
     // Complete the launch
-    await launchpadClient.completeLaunchIx(launch, USDC, META).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 })]).rpc();
+    await launchpadClient.completeLaunchIx(launch, META).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 })]).rpc();
 
     const launchAccount = await launchpadClient.fetchLaunch(launch);
-    const treasuryBalance = await this.getTokenBalance(USDC, launchAccount.daoTreasury);
+    const treasuryBalance = await this.getTokenBalance(MAINNET_USDC, launchAccount.daoTreasury);
 
     assert.exists(launchAccount.state.complete);
     assert.equal(treasuryBalance.toString(), minRaise.muln(9).divn(10).toString());
@@ -88,12 +83,11 @@ export default function suite() {
     await launchpadClient.fundIx(
       launch,
       minRaise,
-      USDC,
     ).rpc();
 
     // Try to complete immediately (should fail)
     try {
-      await launchpadClient.completeLaunchIx(launch, USDC, META).rpc();
+      await launchpadClient.completeLaunchIx(launch, META).rpc();
       assert.fail("Should have thrown error");
     } catch (e) {
       assert.include(e.message, "LaunchPeriodNotOver");
@@ -103,7 +97,7 @@ export default function suite() {
     await this.advanceBySlots(BigInt(SLOTS_PER_DAY * 3));
 
     try {
-      await launchpadClient.completeLaunchIx(launch, USDC, META).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 })]).rpc();
+      await launchpadClient.completeLaunchIx(launch, META).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 })]).rpc();
       assert.fail("Should have thrown error");
     } catch (e) {
       assert.include(e.message, "LaunchPeriodNotOver");
@@ -117,7 +111,6 @@ export default function suite() {
     await launchpadClient.fundIx(
       launch,
       partialAmount,
-      USDC,
     ).rpc();
 
     // Advance clock past 7 days
@@ -125,7 +118,7 @@ export default function suite() {
 
     // Complete the launch
     // I'm only 5 bytes under the limit, so make sure we don't go over
-    await launchpadClient.completeLaunchIx(launch, USDC, META)
+    await launchpadClient.completeLaunchIx(launch, META)
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
         ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
@@ -143,12 +136,12 @@ export default function suite() {
     await this.advanceBySlots(BigInt(SLOTS_PER_DAY * 7));
 
     // Complete launch first time
-    await launchpadClient.completeLaunchIx(launch, USDC, META).rpc();
+    await launchpadClient.completeLaunchIx(launch, META).rpc();
 
     // Try to complete again
     try {
       // CU price so that the VM doesn't think it's a duplicate tx
-      await launchpadClient.completeLaunchIx(launch, USDC, META).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }), ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 })]).rpc();
+      await launchpadClient.completeLaunchIx(launch, META).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }), ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 })]).rpc();
       assert.fail("Should have thrown error");
     } catch (e) {
       assert.include(e.message, "InvalidLaunchState");

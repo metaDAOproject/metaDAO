@@ -11,7 +11,7 @@ import { createMint, mintTo } from "spl-token-bankrun";
 import { BN } from "bn.js";
 import { createMintToInstruction, createTransferInstruction, getAssociatedTokenAddressSync } from "@solana/spl-token";
 import * as token from "@solana/spl-token";
-import { MPL_TOKEN_METADATA_PROGRAM_ID } from "@metadaoproject/futarchy/v0.3";
+import { MAINNET_USDC, MPL_TOKEN_METADATA_PROGRAM_ID } from "@metadaoproject/futarchy/v0.4";
 
 export default function suite() {
   let autocratClient: AutocratClient;
@@ -24,7 +24,6 @@ export default function suite() {
   before(async function () {
     autocratClient = this.autocratClient;
     launchpadClient = this.launchpadClient;
-    USDC = await createMint(this.banksClient, this.payer, this.payer.publicKey, null, 6);
   });
 
   beforeEach(async function () {
@@ -46,7 +45,6 @@ export default function suite() {
       "https://example.com",
       minRaise,
       slots,
-      USDC,
       METAKP
     ).rpc();
 
@@ -56,7 +54,7 @@ export default function suite() {
     assert.ok(storedLaunch.launchAuthority.equals(this.payer.publicKey));
     assert.ok(storedLaunch.launchSigner.equals(launchSigner));
     assert.equal(storedLaunch.launchSignerPdaBump, launchSignerPdaBump);
-    assert.ok(storedLaunch.launchUsdcVault.equals(token.getAssociatedTokenAddressSync(USDC, launchSigner, true)));
+    assert.ok(storedLaunch.launchUsdcVault.equals(token.getAssociatedTokenAddressSync(MAINNET_USDC, launchSigner, true)));
     assert.ok(storedLaunch.launchTokenVault.equals(token.getAssociatedTokenAddressSync(META, launchSigner, true)));
     assert.ok(storedLaunch.tokenMint.equals(META));
     assert.equal(storedLaunch.pdaBump, pdaBump);
@@ -86,10 +84,10 @@ export default function suite() {
       }).accounts({
         launch,
         launchSigner: fakeLaunchSigner.publicKey,
-        usdcVault: token.getAssociatedTokenAddressSync(USDC, fakeLaunchSigner.publicKey, true),
+        usdcVault: token.getAssociatedTokenAddressSync(MAINNET_USDC, fakeLaunchSigner.publicKey, true),
         tokenVault: token.getAssociatedTokenAddressSync(META, fakeLaunchSigner.publicKey, true),
         launchAuthority: this.payer.publicKey,
-        usdcMint: USDC,
+        usdcMint: MAINNET_USDC,
         tokenMint: META,
         tokenMetadata,
         tokenMetadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
@@ -97,9 +95,9 @@ export default function suite() {
         .preInstructions([
           token.createAssociatedTokenAccountIdempotentInstruction(
             this.payer.publicKey,
-            getAssociatedTokenAddressSync(USDC, fakeLaunchSigner.publicKey, true),
+            getAssociatedTokenAddressSync(MAINNET_USDC, fakeLaunchSigner.publicKey, true),
             fakeLaunchSigner.publicKey,
-            USDC
+            MAINNET_USDC
           ),
         ])
         .remainingAccounts([{

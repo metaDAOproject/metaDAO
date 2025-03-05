@@ -17,6 +17,7 @@ import {
   DEVNET_LOW_FEE_RAYDIUM_CONFIG,
   DEVNET_RAYDIUM_CREATE_POOL_FEE_RECEIVE,
   MPL_TOKEN_METADATA_PROGRAM_ID,
+  MAINNET_USDC,
 } from "./constants.js";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
@@ -111,7 +112,6 @@ export class LaunchpadClient {
     tokenUri: string,
     minimumRaiseAmount: BN,
     slotsForLaunch: BN,
-    usdcMint: PublicKey,
     tokenMintKp: Keypair,
     launchAuthority: PublicKey = this.provider.publicKey
   ) {
@@ -124,7 +124,7 @@ export class LaunchpadClient {
       launch
     );
     const usdcVault = getAssociatedTokenAddressSync(
-      usdcMint,
+      MAINNET_USDC,
       launchSigner,
       true
     );
@@ -150,7 +150,7 @@ export class LaunchpadClient {
         usdcVault,
         tokenVault,
         launchAuthority,
-        usdcMint,
+        usdcMint: MAINNET_USDC,
         tokenMint: tokenMintKp.publicKey,
         tokenMetadata,
         tokenMetadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
@@ -158,9 +158,9 @@ export class LaunchpadClient {
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(
           launchAuthority,
-          getAssociatedTokenAddressSync(usdcMint, launchSigner, true),
+          getAssociatedTokenAddressSync(MAINNET_USDC, launchSigner, true),
           launchSigner,
-          usdcMint
+          MAINNET_USDC
         ),
       ])
       .signers([tokenMintKp]);
@@ -179,7 +179,6 @@ export class LaunchpadClient {
   fundIx(
     launch: PublicKey,
     amount: BN,
-    usdcMint: PublicKey,
     funder: PublicKey = this.provider.publicKey
   ) {
     const [launchSigner] = getLaunchSignerAddr(
@@ -187,11 +186,14 @@ export class LaunchpadClient {
       launch
     );
     const launchUsdcVault = getAssociatedTokenAddressSync(
-      usdcMint,
+      MAINNET_USDC,
       launchSigner,
       true
     );
-    const funderUsdcAccount = getAssociatedTokenAddressSync(usdcMint, funder);
+    const funderUsdcAccount = getAssociatedTokenAddressSync(
+      MAINNET_USDC,
+      funder
+    );
     const [fundingRecord] = getFundingRecordAddr(
       this.launchpad.programId,
       launch,
@@ -210,7 +212,6 @@ export class LaunchpadClient {
 
   completeLaunchIx(
     launch: PublicKey,
-    usdcMint: PublicKey,
     tokenMint: PublicKey,
     isDevnet: boolean = false
   ) {
@@ -219,7 +220,7 @@ export class LaunchpadClient {
       launch
     );
     const launchUsdcVault = getAssociatedTokenAddressSync(
-      usdcMint,
+      MAINNET_USDC,
       launchSigner,
       true
     );
@@ -236,7 +237,7 @@ export class LaunchpadClient {
       dao
     );
     const treasuryUsdcAccount = getAssociatedTokenAddressSync(
-      usdcMint,
+      MAINNET_USDC,
       daoTreasury,
       true
     );
@@ -270,7 +271,7 @@ export class LaunchpadClient {
       [
         anchor.utils.bytes.utf8.encode("pool_vault"),
         poolStateKp.publicKey.toBuffer(),
-        usdcMint.toBuffer(),
+        MAINNET_USDC.toBuffer(),
       ],
       cpSwapProgramId
     );
@@ -297,7 +298,7 @@ export class LaunchpadClient {
         dao,
         daoTreasury,
         treasuryUsdcAccount,
-        usdcMint,
+        usdcMint: MAINNET_USDC,
         tokenMint,
         lpMint,
         lpVault,
@@ -322,17 +323,12 @@ export class LaunchpadClient {
           this.provider.publicKey,
           treasuryUsdcAccount,
           daoTreasury,
-          usdcMint
+          MAINNET_USDC
         ),
       ]);
   }
 
-  refundIx(
-    launch: PublicKey,
-    usdcMint: PublicKey,
-    tokenMint: PublicKey,
-    funder: PublicKey = this.provider.publicKey
-  ) {
+  refundIx(launch: PublicKey, funder: PublicKey = this.provider.publicKey) {
     const [launchSigner] = getLaunchSignerAddr(
       this.launchpad.programId,
       launch
@@ -345,11 +341,14 @@ export class LaunchpadClient {
     );
 
     const launchUsdcVault = getAssociatedTokenAddressSync(
-      usdcMint,
+      MAINNET_USDC,
       launchSigner,
       true
     );
-    const funderUsdcAccount = getAssociatedTokenAddressSync(usdcMint, funder);
+    const funderUsdcAccount = getAssociatedTokenAddressSync(
+      MAINNET_USDC,
+      funder
+    );
 
     return this.launchpad.methods.refund().accounts({
       launch,

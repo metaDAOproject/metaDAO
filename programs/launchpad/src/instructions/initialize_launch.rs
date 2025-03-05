@@ -4,12 +4,12 @@ use anchor_spl::associated_token::AssociatedToken;
 
 use crate::state::{Launch, LaunchState};
 use crate::events::{LaunchInitializedEvent, CommonFields};
-use crate::error::LaunchpadError;
 use crate::AVAILABLE_TOKENS;
 use anchor_spl::metadata::{
     create_metadata_accounts_v3, mpl_token_metadata::types::DataV2, CreateMetadataAccountsV3,
     Metadata, mpl_token_metadata::ID as MPL_TOKEN_METADATA_PROGRAM_ID,
 };
+use crate::usdc_mint;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct InitializeLaunchArgs {
@@ -75,7 +75,7 @@ pub struct InitializeLaunch<'info> {
     /// CHECK: account not used, just for constraints
     pub launch_authority: UncheckedAccount<'info>,
     
-    #[account(mint::decimals = 6)]
+    #[account(mint::decimals = 6, address = usdc_mint::id())]
     pub usdc_mint: Account<'info, Mint>,
 
     pub rent: Sysvar<'info, Rent>,
@@ -87,7 +87,7 @@ pub struct InitializeLaunch<'info> {
 }
 
 impl InitializeLaunch<'_> {
-    pub fn validate(&self, args: &InitializeLaunchArgs) -> Result<()> {
+    pub fn validate(&self, _args: &InitializeLaunchArgs) -> Result<()> {
         Ok(())
     }
 

@@ -16,7 +16,6 @@ export default function suite() {
   let dao: PublicKey;
   let METAKP: Keypair;
   let META: PublicKey;
-  let USDC: PublicKey;
   let launch: PublicKey;
   let launchSigner: PublicKey;
   const minRaise = new BN(1000_000000); // 1000 USDC
@@ -24,7 +23,6 @@ export default function suite() {
   before(async function () {
     autocratClient = this.autocratClient;
     launchpadClient = this.launchpadClient;
-    USDC = await createMint(this.banksClient, this.payer, this.payer.publicKey, null, 6);
   });
 
   beforeEach(async function () {
@@ -40,7 +38,6 @@ export default function suite() {
       "https://example.com",
       minRaise,
       new BN(5000_000000),
-      USDC,
       METAKP
     ).rpc();
   });

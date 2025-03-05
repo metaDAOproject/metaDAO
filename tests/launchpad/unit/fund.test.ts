@@ -6,6 +6,7 @@ import {
   getLaunchAddr,
   getLaunchSignerAddr,
   LaunchpadClient,
+  MAINNET_USDC,
 } from "@metadaoproject/futarchy/v0.4";
 import { createMint, mintTo, getAccount } from "spl-token-bankrun";
 import { BN } from "bn.js";
@@ -18,7 +19,6 @@ export default function suite() {
   let daoTreasury: PublicKey;
   let METAKP: Keypair;
   let META: PublicKey;
-  let USDC: PublicKey;
   let launch: PublicKey;
   let launchSigner: PublicKey;
   let tokenVault: PublicKey;
@@ -27,14 +27,10 @@ export default function suite() {
   let funderUsdcAccount: PublicKey;
 
   const minRaise = new BN(1000_000000); // 1000 USDC
-  const maxRaise = new BN(5000_000000); // 5000 USDC
 
   before(async function () {
     autocratClient = this.autocratClient;
     launchpadClient = this.launchpadClient;
-    USDC = await createMint(this.banksClient, this.payer, this.payer.publicKey, null, 6);
-    await this.createTokenAccount(USDC, this.payer.publicKey);
-    await this.mintTo(USDC, this.payer.publicKey, this.payer, 1_000_000000);
   });
 
   beforeEach(async function () {
@@ -45,9 +41,9 @@ export default function suite() {
     [launch] = getLaunchAddr(launchpadClient.getProgramId(), META);
     [launchSigner] = getLaunchSignerAddr(launchpadClient.getProgramId(), launch);
     tokenVault = getAssociatedTokenAddressSync(META, launchSigner, true);
-    usdcVault = getAssociatedTokenAddressSync(USDC, launchSigner, true);
+    usdcVault = getAssociatedTokenAddressSync(MAINNET_USDC, launchSigner, true);
     funderTokenAccount = getAssociatedTokenAddressSync(META, this.payer.publicKey);
-    funderUsdcAccount = getAssociatedTokenAddressSync(USDC, this.payer.publicKey);
+    funderUsdcAccount = getAssociatedTokenAddressSync(MAINNET_USDC, this.payer.publicKey);
 
     // // Initialize launch
     await launchpadClient.initializeLaunchIx(
@@ -55,8 +51,7 @@ export default function suite() {
       "MTN",
       "https://example.com",
       minRaise,
-      maxRaise,
-      USDC,
+      new BN(400),
       METAKP
     ).rpc();
 
@@ -72,7 +67,6 @@ export default function suite() {
     await launchpadClient.fundIx(
       launch,
       fundAmount,
-      USDC,
     ).rpc();
 
     const launchAccount = await launchpadClient.fetchLaunch(launch);
@@ -103,14 +97,12 @@ export default function suite() {
     await launchpadClient.fundIx(
       launch,
       fundAmount1,
-      USDC,
     ).rpc();
 
     // Second funding
     await launchpadClient.fundIx(
       launch,
       fundAmount2,
-      USDC,
     ).rpc();
 
     const launchAccount = await launchpadClient.fetchLaunch(launch);
