@@ -38,11 +38,10 @@ import {
   AUTOCRAT_PROGRAM_ID,
   CONDITIONAL_VAULT_PROGRAM_ID,
   AmmClient,
-  getAmmAddr,
-  getAmmLpMintAddr,
-  getVaultAddr,
   AmmMath,
   getEventAuthorityAddr,
+  getProposalAddr,
+  InstructionUtils,
 } from "@metadaoproject/futarchy/v0.4";
 import { PriceMath } from "@metadaoproject/futarchy/v0.4";
 import {
@@ -55,7 +54,13 @@ import {
   SystemProgram,
   Transaction,
   TransactionInstruction,
+  AddressLookupTableProgram,
+  VersionedTransaction,
+  VersionedMessage,
+  TransactionMessage,
 } from "@solana/web3.js";
+import { sha256 } from "@metadaoproject/futarchy";
+
 
 // const AutocratIDL: Autocrat = require("../target/idl/autocrat.json");
 // const ConditionalVaultIDL: ConditionalVault = require("../target/idl/conditional_vault.json");
@@ -98,7 +103,8 @@ export default function suite() {
     treasuryMetaAccount,
     treasuryUsdcAccount,
     mertdTreasuryMertdAccount,
-    mertdTreasuryUsdcAccount;
+    mertdTreasuryUsdcAccount,
+    lookupTableAddress;
 
   before(async function () {
     context = await startAnchor("./", [], []);
@@ -173,9 +179,52 @@ export default function suite() {
       getAssociatedTokenAddressSync(USDC, payer.publicKey),
       200_000n * 1_000_000n
     );
+
+    const slot = await context.banksClient.getSlot();
+    let lookupTableInst;
+    [lookupTableInst, lookupTableAddress] = AddressLookupTableProgram.createLookupTable({
+      authority: payer.publicKey,
+      payer: payer.publicKey,
+      recentSlot: slot - 1n, // Must be a recent slot
+    });
+
+    // 2. Create the extend instruction to add addresses
+    const extendInstruction = AddressLookupTableProgram.extendLookupTable({
+      payer: payer.publicKey,
+      authority: payer.publicKey,
+      lookupTable: lookupTableAddress,
+      addresses: [
+        // Add the addresses you want to include
+        // vault,
+        vaultProgram.programId,
+        autocrat.programId,
+        ammClient.program.programId,
+        getEventAuthorityAddr(ammClient.program.programId)[0],
+        SystemProgram.programId,
+        token.TOKEN_PROGRAM_ID,
+        // question,
+        // tokenAccount,
+        // ... other addresses
+      ],
+    });
+
+    // 3. Create and send the transaction
+    const tx = new Transaction()
+      .add(lookupTableInst)
+      .add(extendInstruction);
+
+    tx.recentBlockhash = (await context.banksClient.getLatestBlockhash())[0];
+    tx.feePayer = payer.publicKey;
+    tx.sign(payer);
+
+    // 4. Process the transaction
+    await context.banksClient.processTransaction(tx);
+
+    // const lookupTableAccount = await context.banksClient.getAccount(lookupTableAddress);
+    // console.log("LOOKUP", lookupTableAccount);
   });
 
-  describe("#initialize_dao", async function () {
+  describe.only("#initialize_dao", async function () {
     it("initializes the DAO", async function () {
       dao = await autocratClient.initializeDao(META, 400, 5, 5000, USDC);
 
@@ -237,7 +286,7 @@ export default function suite() {
   });
 
   describe("#initialize_proposal", async function () {
-    it("initializes proposals", async function () {
+    it.only("initializes proposals", async function () {
       const accounts = [
         {
           pubkey: dao,
@@ -274,6 +323,156 @@ export default function suite() {
           getAssociatedTokenAddressSync(USDC, payer.publicKey)
         )
       ).amount;
+
+    const storedDao = await autocratClient.getDao(dao);
+
+
+    const baseTokensToLP = PriceMath.getChainAmount(5, 9);
+    const quoteTokensToLP = PriceMath.getChainAmount(5000, 6);
+
+    const nonce = new BN(Math.random() * 2 ** 50);
+
+    let [proposal] = getProposalAddr(
+      autocratClient.getProgramId(),
+      payer.publicKey,
+      nonce
+    );
+
+    await vaultClient.initializeQuestion(
+      sha256(`Will ${proposal} pass?/FAIL/PASS`),
+      proposal,
+      2
+    );
+
+    const {
+      baseVault,
+      quoteVault,
+      passAmm,
+      failAmm,
+      passBaseMint,
+      passQuoteMint,
+      failBaseMint,
+      failQuoteMint,
+      question,
+    } = autocratClient.getProposalPdas(
+      proposal,
+      storedDao.tokenMint,
+      storedDao.usdcMint,
+      dao
+    );
+
+    // it's important that these happen in a single atomic transaction
+    await vaultClient
+      .initializeVaultIx(question, storedDao.tokenMint, 2)
+      .postInstructions(
+        await InstructionUtils.getInstructions(
+          vaultClient.initializeVaultIx(question, storedDao.usdcMint, 2),
+          ammClient.initializeAmmIx(
+            passBaseMint,
+            passQuoteMint,
+            storedDao.twapInitialObservation,
+            storedDao.twapMaxObservationChangePerUpdate
+          ),
+          ammClient.initializeAmmIx(
+            failBaseMint,
+            failQuoteMint,
+            storedDao.twapInitialObservation,
+            storedDao.twapMaxObservationChangePerUpdate
+          )
+        )
+      )
+      .rpc();
+
+    await vaultClient
+      .splitTokensIx(
+        question,
+        baseVault,
+        storedDao.tokenMint,
+        baseTokensToLP,
+        2
+      )
+      .postInstructions(
+        await InstructionUtils.getInstructions(
+          vaultClient.splitTokensIx(
+            question,
+            quoteVault,
+            storedDao.usdcMint,
+            quoteTokensToLP,
+            2
+          )
+        )
+      )
+      .rpc();
+
+    await ammClient.addLiquidityIx(
+      failAmm,
+      failBaseMint,
+      failQuoteMint,
+      quoteTokensToLP,
+      baseTokensToLP,
+      new BN(0)
+    ).rpc();
+
+    // await ammClient
+    //   .addLiquidityIx(
+    //     passAmm,
+    //     passBaseMint,
+    //     passQuoteMint,
+    //     quoteTokensToLP,
+    //     baseTokensToLP,
+    //     new BN(0)
+    //   )
+    //   .postInstructions(
+    //     await InstructionUtils.getInstructions(
+    //       ammClient.addLiquidityIx(
+    //         failAmm,
+    //         failBaseMint,
+    //         failQuoteMint,
+    //         quoteTokensToLP,
+    //         baseTokensToLP,
+    //         new BN(0)
+    //       )
+    //     )
+    //   )
+    //   .rpc();
+
+    // this is how many original tokens are created
+    const lpTokens = quoteTokensToLP;
+
+
+      const tx = await autocratClient.initializeProposalIx(
+        "",
+        instruction,
+        dao,
+        META,
+        USDC,
+        lpTokens,
+        lpTokens,
+        nonce,
+        question,
+        baseTokensToLP,
+        quoteTokensToLP
+      ).transaction();
+
+      const versionedTx = new VersionedTransaction(
+        new TransactionMessage({
+          payerKey: payer.publicKey,
+          instructions: tx.instructions,
+          recentBlockhash: (await context.banksClient.getLatestBlockhash())[0],
+        }).compileToV0Message(),
+      )
+
+      console.log(versionedTx.serialize().length);
+
+      console.log(passAmm.toBase58());
+
+      console.log(await context.banksClient.getAccount(token.getAssociatedTokenAddressSync(META, passAmm, true)));
+
+      await context.banksClient.processTransaction(versionedTx);
+
+
+
+      return;
 
       await autocratClient.initializeProposal(
         dao,

@@ -424,7 +424,9 @@ export class AutocratClient {
       lpTokens,
       lpTokens,
       nonce,
-      question
+      question,
+      baseTokensToLP,
+      quoteTokensToLP
     ).rpc();
 
     return proposal;
@@ -568,7 +570,9 @@ export class AutocratClient {
     passLpTokensToLock: BN,
     failLpTokensToLock: BN,
     nonce: BN,
-    question: PublicKey
+    question: PublicKey,
+    baseTokensToLp: BN,
+    quoteTokensToLp: BN
   ) {
     let [proposal] = getProposalAddr(
       this.autocrat.programId,
@@ -576,12 +580,18 @@ export class AutocratClient {
       nonce
     );
     const [daoTreasury] = getDaoTreasuryAddr(this.autocrat.programId, dao);
-    const { baseVault, quoteVault, passAmm, failAmm } = this.getProposalPdas(
-      proposal,
-      baseMint,
-      quoteMint,
-      dao
-    );
+    const {
+      baseVault,
+      quoteVault,
+      passAmm,
+      failAmm,
+      passBaseMint,
+      passQuoteMint,
+    } = this.getProposalPdas(proposal, baseMint, quoteMint, dao);
+
+    // const
+
+    // console.log(passAmm.toBase58());
 
     const [passLp] = getAmmLpMintAddr(
       this.ammClient.program.programId,
@@ -610,6 +620,8 @@ export class AutocratClient {
         passLpTokensToLock,
         failLpTokensToLock,
         nonce,
+        baseTokensToLp,
+        quoteTokensToLp,
       })
       .accounts({
         question,
@@ -621,6 +633,24 @@ export class AutocratClient {
         failAmm,
         passLpMint: passLp,
         failLpMint: failLp,
+        passAmmBaseVault: getAssociatedTokenAddressSync(
+          passBaseMint,
+          passAmm,
+          true
+        ),
+        passAmmQuoteVault: getAssociatedTokenAddressSync(
+          passQuoteMint,
+          passAmm,
+          true
+        ),
+        passBaseUserAccount: getAssociatedTokenAddressSync(
+          passBaseMint,
+          this.provider.publicKey
+        ),
+        passQuoteUserAccount: getAssociatedTokenAddressSync(
+          passQuoteMint,
+          this.provider.publicKey
+        ),
         passLpUserAccount: getAssociatedTokenAddressSync(
           passLp,
           this.provider.publicKey
@@ -632,6 +662,10 @@ export class AutocratClient {
         passLpVaultAccount,
         failLpVaultAccount,
         proposer: this.provider.publicKey,
+        ammProgram: this.ammClient.program.programId,
+        ammEventAuthority: getEventAuthorityAddr(
+          this.ammClient.program.programId
+        )[0],
       })
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(

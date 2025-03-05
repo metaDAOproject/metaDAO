@@ -12,6 +12,10 @@ test_logs() {
     find programs tests sdk | entr -sc 'anchor build && (cd sdk && yarn build) && anchor test --skip-build'
 }
 
+test_no_build_logs() {
+    find programs tests sdk | entr -sc '(cd sdk && yarn build) && anchor test --skip-build'
+}
+
 build_vault() {
     find programs | entr -sc 'anchor build -p conditional_vault'
 }
@@ -124,6 +128,7 @@ case "$1" in
     vault) test_vault ;;
     build_vault) build_vault ;;
     test_no_build) test_no_build ;;
+    test_no_build_logs) test_no_build_logs ;;
     build_verifiable) build_verifiable "$2" ;;
     deploy) deploy "$2" "$3" ;;
     deploy_verifiable) deploy_verifiable "$2" "$3" ;;

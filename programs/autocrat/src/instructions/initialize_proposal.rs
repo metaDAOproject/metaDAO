@@ -1,7 +1,13 @@
 use super::*;
 
+use amm::program::Amm as AmmProgram;
 use amm::state::ONE_MINUTE_IN_SLOTS;
 use anchor_spl::token::{self, Token, TokenAccount, Transfer};
+use anchor_spl::associated_token::AssociatedToken;
+// use amm::cpi::accounts::AddOrRemoveLiquidity;
+use amm::instructions::AddLiquidityArgs;
+
+// use amm::AddLiquidityArgs;
 
 #[derive(Debug, Clone, AnchorSerialize, AnchorDeserialize)]
 pub struct InitializeProposalParams {
@@ -10,6 +16,8 @@ pub struct InitializeProposalParams {
     pub pass_lp_tokens_to_lock: u64,
     pub fail_lp_tokens_to_lock: u64,
     pub nonce: u64,
+    pub base_tokens_to_lp: u64,
+    pub quote_tokens_to_lp: u64,
 }
 
 #[derive(Accounts)]
@@ -39,16 +47,17 @@ pub struct InitializeProposal<'info> {
         constraint = base_vault.underlying_token_mint == dao.token_mint,
         has_one = question,
     )]
-    pub base_vault: Account<'info, ConditionalVaultAccount>,
+    pub base_vault: Box<Account<'info, ConditionalVaultAccount>>,
     #[account(
+        mut,
         constraint = pass_amm.base_mint == base_vault.conditional_token_mints[PASS_INDEX],
         constraint = pass_amm.quote_mint == quote_vault.conditional_token_mints[PASS_INDEX],
     )]
     pub pass_amm: Box<Account<'info, Amm>>,
-    #[account(constraint = pass_amm.lp_mint == pass_lp_mint.key())]
-    pub pass_lp_mint: Account<'info, Mint>,
+    #[account(mut, constraint = pass_amm.lp_mint == pass_lp_mint.key())]
+    pub pass_lp_mint: Box<Account<'info, Mint>>,
     #[account(constraint = fail_amm.lp_mint == fail_lp_mint.key())]
-    pub fail_lp_mint: Account<'info, Mint>,
+    pub fail_lp_mint: Box<Account<'info, Mint>>,
     #[account(
         constraint = fail_amm.base_mint == base_vault.conditional_token_mints[FAIL_INDEX],
         constraint = fail_amm.quote_mint == quote_vault.conditional_token_mints[FAIL_INDEX],
@@ -56,32 +65,62 @@ pub struct InitializeProposal<'info> {
     pub fail_amm: Box<Account<'info, Amm>>,
     #[account(
         mut,
-        associated_token::mint = pass_amm.lp_mint,
+        associated_token::mint = base_vault.conditional_token_mints[PASS_INDEX],
         associated_token::authority = proposer,
     )]
-    pub pass_lp_user_account: Account<'info, TokenAccount>,
+    pub pass_base_user_account: Box<Account<'info, TokenAccount>>,
+    #[account(
+        mut,
+        associated_token::mint = quote_vault.conditional_token_mints[PASS_INDEX],
+        associated_token::authority = proposer,
+    )]
+    pub pass_quote_user_account: Box<Account<'info, TokenAccount>>,
+    #[account(
+        mut,
+        associated_token::mint = base_vault.conditional_token_mints[PASS_INDEX],
+        associated_token::authority = pass_amm,
+    )]
+    pub pass_amm_base_vault: Box<Account<'info, TokenAccount>>,
+    #[account(
+        mut,
+        associated_token::mint = quote_vault.conditional_token_mints[PASS_INDEX],
+        associated_token::authority = pass_amm,
+    )]
+    pub pass_amm_quote_vault: Box<Account<'info, TokenAccount>>,
+    #[account(
+        // mut,
+        init_if_needed,
+        payer = proposer,
+        associated_token::mint = pass_lp_mint,
+        associated_token::authority = proposer,
+    )]
+    pub pass_lp_user_account: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
         associated_token::mint = fail_amm.lp_mint,
         associated_token::authority = proposer,
     )]
-    pub fail_lp_user_account: Account<'info, TokenAccount>,
+    pub fail_lp_user_account: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
         associated_token::mint = pass_amm.lp_mint,
         associated_token::authority = dao.treasury,
     )]
-    pub pass_lp_vault_account: Account<'info, TokenAccount>,
+    pub pass_lp_vault_account: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
         associated_token::mint = fail_amm.lp_mint,
         associated_token::authority = dao.treasury,
     )]
-    pub fail_lp_vault_account: Account<'info, TokenAccount>,
+    pub fail_lp_vault_account: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
     pub proposer: Signer<'info>,
     pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
+    pub amm_program: Program<'info, AmmProgram>,
+    /// CHECK: checked by AMM program
+    pub amm_event_authority: UncheckedAccount<'info>,
 }
 
 impl InitializeProposal<'_> {
@@ -125,6 +164,10 @@ impl InitializeProposal<'_> {
             fail_amm,
             pass_lp_mint,
             fail_lp_mint,
+            pass_base_user_account,
+            pass_quote_user_account,
+            pass_amm_base_vault,
+            pass_amm_quote_vault,
             pass_lp_user_account,
             fail_lp_user_account,
             pass_lp_vault_account,
@@ -134,6 +177,9 @@ impl InitializeProposal<'_> {
             system_program: _,
             event_authority: _,
             program: _,
+            amm_program,
+            associated_token_program,
+            amm_event_authority,
         } = ctx.accounts;
 
         let InitializeProposalParams {
@@ -142,7 +188,38 @@ impl InitializeProposal<'_> {
             pass_lp_tokens_to_lock,
             fail_lp_tokens_to_lock,
             nonce,
+            base_tokens_to_lp,
+            quote_tokens_to_lp,
         } = params;
+
+        amm::cpi::add_liquidity(
+            CpiContext::new(
+                amm_program.to_account_info(),
+                amm::cpi::accounts::AddOrRemoveLiquidity {
+                    user: proposer.to_account_info(),
+                    amm: pass_amm.to_account_info(),
+                    lp_mint: pass_lp_mint.to_account_info(),
+                    user_lp_account: pass_lp_user_account.to_account_info(),
+                    user_base_account: pass_base_user_account.to_account_info(),
+                    user_quote_account: pass_quote_user_account.to_account_info(),
+                    vault_ata_base: pass_amm_base_vault.to_account_info(),
+                    vault_ata_quote: pass_amm_quote_vault.to_account_info(),
+                    event_authority: amm_event_authority.to_account_info(),
+                    program: amm_program.to_account_info(),
+                    token_program: token_program.to_account_info(),
+                },
+            ),
+            AddLiquidityArgs {
+                quote_amount: quote_tokens_to_lp,
+                max_base_amount: base_tokens_to_lp,
+                min_lp_tokens: 0,
+            },
+        )?;
+
+        pass_lp_user_account.reload()?;
+        fail_lp_user_account.reload()?;
+        pass_lp_mint.reload()?;
+        pass_amm.reload()?;
 
         require_gte!(
             pass_lp_user_account.amount,

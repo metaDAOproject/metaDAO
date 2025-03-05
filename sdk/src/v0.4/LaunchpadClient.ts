@@ -285,6 +285,8 @@ export class LaunchpadClient {
       this.autocratClient.getProgramId()
     );
 
+    console.log(DEVNET_LOW_FEE_RAYDIUM_CONFIG.toBase58());
+
     return this.launchpad.methods
       .completeLaunch()
       .accounts({

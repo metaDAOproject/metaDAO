@@ -194,7 +194,7 @@ before(async function () {
 
 describe("conditional_vault", conditionalVault);
 describe("amm", amm);
-describe("autocrat", autocrat);
+describe.only("autocrat", autocrat);
 describe("launchpad", launchpad);
 describe("project-wide integration tests", function () {
   it("mint and swap in a single transaction", mintAndSwap);

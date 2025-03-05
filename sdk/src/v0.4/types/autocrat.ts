@@ -80,12 +80,12 @@ export type Autocrat = {
         },
         {
           name: "passAmm";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
           name: "passLpMint";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
@@ -96,6 +96,26 @@ export type Autocrat = {
         {
           name: "failAmm";
           isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "passBaseUserAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "passQuoteUserAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "passAmmBaseVault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "passAmmQuoteVault";
+          isMut: true;
           isSigner: false;
         },
         {
@@ -129,7 +149,22 @@ export type Autocrat = {
           isSigner: false;
         },
         {
+          name: "associatedTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
           name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "ammProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "ammEventAuthority";
           isMut: false;
           isSigner: false;
         },
@@ -536,6 +571,14 @@ export type Autocrat = {
           },
           {
             name: "nonce";
+            type: "u64";
+          },
+          {
+            name: "baseTokensToLp";
+            type: "u64";
+          },
+          {
+            name: "quoteTokensToLp";
             type: "u64";
           }
         ];
@@ -1062,12 +1105,12 @@ export const IDL: Autocrat = {
         },
         {
           name: "passAmm",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
           name: "passLpMint",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
@@ -1078,6 +1121,26 @@ export const IDL: Autocrat = {
         {
           name: "failAmm",
           isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "passBaseUserAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "passQuoteUserAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "passAmmBaseVault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "passAmmQuoteVault",
+          isMut: true,
           isSigner: false,
         },
         {
@@ -1111,7 +1174,22 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
+          name: "associatedTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
           name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "ammProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "ammEventAuthority",
           isMut: false,
           isSigner: false,
         },
@@ -1518,6 +1596,14 @@ export const IDL: Autocrat = {
           },
           {
             name: "nonce",
+            type: "u64",
+          },
+          {
+            name: "baseTokensToLp",
+            type: "u64",
+          },
+          {
+            name: "quoteTokensToLp",
             type: "u64",
           },
         ],

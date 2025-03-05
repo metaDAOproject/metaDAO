@@ -4,7 +4,6 @@ use anchor_spl::associated_token::AssociatedToken;
 
 use crate::state::{Launch, LaunchState};
 use crate::events::{LaunchInitializedEvent, CommonFields};
-use crate::error::LaunchpadError;
 use crate::AVAILABLE_TOKENS;
 use anchor_spl::metadata::{
     create_metadata_accounts_v3, mpl_token_metadata::types::DataV2, CreateMetadataAccountsV3,
@@ -85,7 +84,7 @@ pub struct InitializeLaunch<'info> {
 }
 
 impl InitializeLaunch<'_> {
-    pub fn validate(&self, args: &InitializeLaunchArgs) -> Result<()> {
+    pub fn validate(&self, _args: &InitializeLaunchArgs) -> Result<()> {
         Ok(())
     }
 
