@@ -32,67 +32,51 @@ const vaultProgram: ConditionalVaultClient =
 const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
 
 async function main() {
-    const keypairFile = fs.readFileSync('./target/mtn.json');
-    const keypairData = JSON.parse(keypairFile.toString());
-    const mtnKeypair = Keypair.fromSecretKey(new Uint8Array(keypairData));
+    // const keypairFile = fs.readFileSync('./target/mtn.json');
+    // const keypairData = JSON.parse(keypairFile.toString());
+    const mtnKeypair = Keypair.generate();
     console.log(mtnKeypair.publicKey.toBase58());
     
     // const MTN = await token.createMint(provider.connection, payer, payer.publicKey, null, 6, mtnKeypair);
-    const MTN = mtnKeypair.publicKey;
+    // const MTN = mtnKeypair.publicKey;
 
-    // createMetadataAccountV3(umi, {
-    //     mint: fromWeb3JsPublicKey(MTN),
-    //     mintAuthority: payer.publicKey,
-    //     data: {
-    //         name: 'Mountain Capital',
-    //         symbol: 'MTN',
-    //         uri: 'https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/launchpad/scripts/assets/MTN/MTN.json',
-    //         sellerFeeBasisPoints: 0,
-    //         creators: null,
-    //         collection: null,
-    //         uses: null,
-    //     },
-    //     isMutable: true,
-    //     collectionDetails: null,
-    // }).sendAndConfirm(umi, {
-    //     send: {
-    //         skipPreflight: true,
-    //     }
-    // });
-
-
-    const [launchAddr] = getLaunchAddr(launchpad.getProgramId(), MTN);
+    const [launchAddr] = getLaunchAddr(launchpad.getProgramId(), mtnKeypair.publicKey);
     const [launchSigner] = getLaunchSignerAddr(launchpad.getProgramId(), launchAddr);
 
-    // await launchpad.initializeLaunchIx(
-    //     new BN(10),
-    //     new BN(0),
-    //     USDC,
-    //     MTN
-    // ).preInstructions([
-    //     token.createSetAuthorityInstruction(
-    //         MTN,
-    //         payer.publicKey,
-    //         token.AuthorityType.MintTokens,
-    //         launchSigner
-    //     ),
-    //     ComputeBudgetProgram.setComputeUnitLimit({ units: 100_000 }),
-    //     ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1_000 })
-    // ]).rpc();
+    const usdcVault = await token.getOrCreateAssociatedTokenAccount(provider.connection, payer, DEVNET_MUSDC, launchSigner, true);
 
-    // await launchpad.startLaunchIx(launchAddr, payer.publicKey).rpc();
+    console.log(usdcVault.address.toBase58());
+    console.log(usdcVault.amount);
 
+    await launchpad.initializeLaunchIx(
+        "Pileks test",
+        "MTN",
+        "https://example.com",
+        new BN(10),
+        0,
+        mtnKeypair
+    ).preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1_000 })
+    ]).rpc();
 
-    // await launchpad.fundIx(launchAddr, new BN(15_000_000), USDC, payer.publicKey).rpc();
+    console.log("launched");
 
-    // await launchpad.completeLaunchIx(launchAddr, USDC, MTN)
-    //     .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 })]).rpc();
+    await launchpad.startLaunchIx(launchAddr, payer.publicKey).rpc();
 
+    console.log("started");
+    await launchpad.fundIx(launchAddr, new BN(5), payer.publicKey).rpc();
 
-    // await launchpad.refundIx(launchAddr, DEVNET_MUSDC, pORE, payer.publicKey).rpc();
-    await launchpad.claimIx(launchAddr, MTN, payer.publicKey).rpc();
+    console.log("funded");
 
+    await launchpad.completeLaunchIx(launchAddr, mtnKeypair.publicKey, true)
+        .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 })]).rpc();
 
+    console.log("completed");
+    await launchpad.refundIx(launchAddr, payer.publicKey).rpc();
+    // await launchpad.claimIx(launchAddr, mtnKeypair.publicKey, payer.publicKey).rpc();
+
+    console.log("claimed");
     console.log(launchAddr.toBase58());
 
     return;
