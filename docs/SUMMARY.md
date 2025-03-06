@@ -7,7 +7,7 @@
 * [Creating a DAO](using-the-platform/creating-a-dao.md)
 * [Creating Proposals](using-the-platform/creating-proposals.md)
 * [Trading Proposals](using-the-platform/trading-proposals.md)
-* [Value Resolved Decision Markets](using-the-platform/value-resolved-decision-markets.md)
+* [Metric Markets](using-the-platform/value-resolved-decision-markets.md)
 
 ## Futarchy
 
