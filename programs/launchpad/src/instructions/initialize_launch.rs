@@ -89,6 +89,7 @@ pub struct InitializeLaunch<'info> {
 
 impl InitializeLaunch<'_> {
     pub fn validate(&self, args: &InitializeLaunchArgs) -> Result<()> {
+        #[cfg(not(feature = "devnet"))]
         require_gte!(
             args.seconds_for_launch,
             60 * 60,

@@ -70,7 +70,7 @@ async function main() {
         "MTN",
         "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/launchpad/scripts/assets/MTN/MTN.json",
         new BN(10),
-        60 * 60,
+        60,
         mtnKeypair,
         payer.publicKey,
         true
