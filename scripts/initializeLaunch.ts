@@ -34,7 +34,8 @@ const launchpad: LaunchpadClient = LaunchpadClient.createClient({ provider });
 async function main() {
     const keypairFile = fs.readFileSync('./target/mtn.json');
     const keypairData = JSON.parse(keypairFile.toString());
-    const mtnKeypair = Keypair.fromSecretKey(new Uint8Array(keypairData));
+    // const mtnKeypair = Keypair.fromSecretKey(new Uint8Array(keypairData));
+    const mtnKeypair = Keypair.generate();
     console.log(mtnKeypair.publicKey.toBase58());
     
     // const MTN = await token.createMint(provider.connection, payer, payer.publicKey, null, 6, mtnKeypair);
@@ -64,33 +65,32 @@ async function main() {
     const [launchAddr] = getLaunchAddr(launchpad.getProgramId(), MTN);
     const [launchSigner] = getLaunchSignerAddr(launchpad.getProgramId(), launchAddr);
 
-    // await launchpad.initializeLaunchIx(
-    //     new BN(10),
-    //     new BN(0),
-    //     USDC,
-    //     MTN
-    // ).preInstructions([
-    //     token.createSetAuthorityInstruction(
-    //         MTN,
-    //         payer.publicKey,
-    //         token.AuthorityType.MintTokens,
-    //         launchSigner
-    //     ),
-    //     ComputeBudgetProgram.setComputeUnitLimit({ units: 100_000 }),
-    //     ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1_000 })
-    // ]).rpc();
+    await launchpad.initializeLaunchIx(
+        "MTN",
+        "MTN",
+        "https://raw.githubusercontent.com/metaDAOproject/futarchy/refs/heads/launchpad/scripts/assets/MTN/MTN.json",
+        new BN(10),
+        60 * 60,
+        mtnKeypair,
+        payer.publicKey,
+        true
+    ).preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }),
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1_000 })
+    ]).rpc();
 
-    // await launchpad.startLaunchIx(launchAddr, payer.publicKey).rpc();
+    await launchpad.startLaunchIx(launchAddr, payer.publicKey).rpc();
+    
 
 
-    // await launchpad.fundIx(launchAddr, new BN(15_000_000), USDC, payer.publicKey).rpc();
+    await launchpad.fundIx(launchAddr, new BN(10), payer.publicKey, true).rpc();
 
     // await launchpad.completeLaunchIx(launchAddr, USDC, MTN)
     //     .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 })]).rpc();
 
 
     // await launchpad.refundIx(launchAddr, DEVNET_MUSDC, pORE, payer.publicKey).rpc();
-    await launchpad.claimIx(launchAddr, MTN, payer.publicKey).rpc();
+    // await launchpad.claimIx(launchAddr, MTN, payer.publicKey).rpc();
 
 
     console.log(launchAddr.toBase58());

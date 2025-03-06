@@ -18,6 +18,7 @@ import {
   DEVNET_RAYDIUM_CREATE_POOL_FEE_RECEIVE,
   MPL_TOKEN_METADATA_PROGRAM_ID,
   MAINNET_USDC,
+  DEVNET_USDC,
 } from "./constants.js";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
@@ -113,8 +114,11 @@ export class LaunchpadClient {
     minimumRaiseAmount: BN,
     secondsForLaunch: number,
     tokenMintKp: Keypair,
-    launchAuthority: PublicKey = this.provider.publicKey
+    launchAuthority: PublicKey = this.provider.publicKey,
+    isDevnet: boolean = false
   ) {
+    const USDC = isDevnet ? DEVNET_USDC : MAINNET_USDC;
+
     const [launch] = getLaunchAddr(
       this.launchpad.programId,
       tokenMintKp.publicKey
@@ -123,11 +127,7 @@ export class LaunchpadClient {
       this.launchpad.programId,
       launch
     );
-    const usdcVault = getAssociatedTokenAddressSync(
-      MAINNET_USDC,
-      launchSigner,
-      true
-    );
+    const usdcVault = getAssociatedTokenAddressSync(USDC, launchSigner, true);
 
     const tokenVault = getAssociatedTokenAddressSync(
       tokenMintKp.publicKey,
@@ -150,7 +150,7 @@ export class LaunchpadClient {
         usdcVault,
         tokenVault,
         launchAuthority,
-        usdcMint: MAINNET_USDC,
+        usdcMint: USDC,
         tokenMint: tokenMintKp.publicKey,
         tokenMetadata,
         tokenMetadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
@@ -158,9 +158,9 @@ export class LaunchpadClient {
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(
           launchAuthority,
-          getAssociatedTokenAddressSync(MAINNET_USDC, launchSigner, true),
+          getAssociatedTokenAddressSync(USDC, launchSigner, true),
           launchSigner,
-          MAINNET_USDC
+          USDC
         ),
       ])
       .signers([tokenMintKp]);
@@ -179,21 +179,21 @@ export class LaunchpadClient {
   fundIx(
     launch: PublicKey,
     amount: BN,
-    funder: PublicKey = this.provider.publicKey
+    funder: PublicKey = this.provider.publicKey,
+    isDevnet: boolean = false
   ) {
+    const USDC = isDevnet ? DEVNET_USDC : MAINNET_USDC;
+
     const [launchSigner] = getLaunchSignerAddr(
       this.launchpad.programId,
       launch
     );
     const launchUsdcVault = getAssociatedTokenAddressSync(
-      MAINNET_USDC,
+      USDC,
       launchSigner,
       true
     );
-    const funderUsdcAccount = getAssociatedTokenAddressSync(
-      MAINNET_USDC,
-      funder
-    );
+    const funderUsdcAccount = getAssociatedTokenAddressSync(USDC, funder);
     const [fundingRecord] = getFundingRecordAddr(
       this.launchpad.programId,
       launch,
@@ -215,12 +215,14 @@ export class LaunchpadClient {
     tokenMint: PublicKey,
     isDevnet: boolean = false
   ) {
+    const USDC = isDevnet ? DEVNET_USDC : MAINNET_USDC;
+
     const [launchSigner] = getLaunchSignerAddr(
       this.launchpad.programId,
       launch
     );
     const launchUsdcVault = getAssociatedTokenAddressSync(
-      MAINNET_USDC,
+      USDC,
       launchSigner,
       true
     );
@@ -237,7 +239,7 @@ export class LaunchpadClient {
       dao
     );
     const treasuryUsdcAccount = getAssociatedTokenAddressSync(
-      MAINNET_USDC,
+      USDC,
       daoTreasury,
       true
     );
@@ -271,7 +273,7 @@ export class LaunchpadClient {
       [
         anchor.utils.bytes.utf8.encode("pool_vault"),
         poolStateKp.publicKey.toBuffer(),
-        MAINNET_USDC.toBuffer(),
+        USDC.toBuffer(),
       ],
       cpSwapProgramId
     );
@@ -298,7 +300,7 @@ export class LaunchpadClient {
         dao,
         daoTreasury,
         treasuryUsdcAccount,
-        usdcMint: MAINNET_USDC,
+        usdcMint: USDC,
         tokenMint,
         lpMint,
         lpVault,
@@ -323,7 +325,7 @@ export class LaunchpadClient {
           this.provider.publicKey,
           treasuryUsdcAccount,
           daoTreasury,
-          MAINNET_USDC
+          USDC
         ),
       ]);
   }
