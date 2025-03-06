@@ -27,9 +27,12 @@
 * [What is META?](metadao/meta.md)
 * [Legal](metadao/legal.md)
 
+***
+
+* [Media Kit](metadao-1.md)
+
 ## Media Kit
 
-* [MetaDAO](media-kit/metadao.md)
 * [FaaS](media-kit/faas.md)
 
 ## 🔗 Links
@@ -38,7 +41,6 @@
 * [X](https://x.com/MetaDAOProject)
 * [Blog](https://blog.metadao.fi/)
 * [GitHub](https://github.com/metaDAOproject)
-* [Whitepaper](https://github.com/metaDAOproject/Manifesto/blob/main/Manifesto.pdf)
 * [YouTube](https://www.youtube.com/@metaDAOproject)
 
 ## Careers
