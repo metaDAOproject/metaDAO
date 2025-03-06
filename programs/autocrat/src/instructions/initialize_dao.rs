@@ -4,6 +4,7 @@ pub use super::*;
 pub struct InitializeDaoParams {
     pub twap_initial_observation: u128,
     pub twap_max_observation_change_per_update: u128,
+    pub twap_start_delay_slots: u64,
     pub min_quote_futarchic_liquidity: u64,
     pub min_base_futarchic_liquidity: u64,
     pub pass_threshold_bps: Option<u16>,
@@ -32,6 +33,7 @@ impl InitializeDAO<'_> {
         let InitializeDaoParams {
             twap_initial_observation,
             twap_max_observation_change_per_update,
+            twap_start_delay_slots,
             min_base_futarchic_liquidity,
             min_quote_futarchic_liquidity,
             pass_threshold_bps,
@@ -53,6 +55,7 @@ impl InitializeDAO<'_> {
             slots_per_proposal: slots_per_proposal.unwrap_or(THREE_DAYS_IN_SLOTS),
             twap_initial_observation,
             twap_max_observation_change_per_update,
+            twap_start_delay_slots,
             min_base_futarchic_liquidity,
             min_quote_futarchic_liquidity,
         });
