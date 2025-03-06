@@ -24,7 +24,7 @@
 ## MetaDAO
 
 * [Overview](metadao/overview.md)
-* [$META](metadao/meta.md)
+* [What is META?](metadao/meta.md)
 * [Legal](metadao/legal.md)
 
 ## Media Kit
