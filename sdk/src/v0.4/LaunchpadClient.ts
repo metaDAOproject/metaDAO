@@ -330,7 +330,13 @@ export class LaunchpadClient {
       ]);
   }
 
-  refundIx(launch: PublicKey, funder: PublicKey = this.provider.publicKey) {
+  refundIx(
+    launch: PublicKey,
+    funder: PublicKey = this.provider.publicKey,
+    isDevnet: boolean = false
+  ) {
+    const USDC = isDevnet ? DEVNET_USDC : MAINNET_USDC;
+
     const [launchSigner] = getLaunchSignerAddr(
       this.launchpad.programId,
       launch
@@ -343,14 +349,11 @@ export class LaunchpadClient {
     );
 
     const launchUsdcVault = getAssociatedTokenAddressSync(
-      MAINNET_USDC,
+      USDC,
       launchSigner,
       true
     );
-    const funderUsdcAccount = getAssociatedTokenAddressSync(
-      MAINNET_USDC,
-      funder
-    );
+    const funderUsdcAccount = getAssociatedTokenAddressSync(USDC, funder);
 
     return this.launchpad.methods.refund().accounts({
       launch,
