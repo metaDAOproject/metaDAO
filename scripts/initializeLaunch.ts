@@ -53,8 +53,10 @@ async function main() {
         "MTN",
         "https://example.com",
         new BN(10),
-        0,
-        mtnKeypair
+        5,
+        mtnKeypair,
+        payer.publicKey,
+        true
     ).preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
         ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1_000 })
@@ -65,9 +67,11 @@ async function main() {
     await launchpad.startLaunchIx(launchAddr, payer.publicKey).rpc();
 
     console.log("started");
-    await launchpad.fundIx(launchAddr, new BN(5), payer.publicKey).rpc();
+    await launchpad.fundIx(launchAddr, new BN(5), payer.publicKey, true).rpc();
 
     console.log("funded");
+
+    await new Promise(resolve => setTimeout(resolve, 5000));
 
     await launchpad.completeLaunchIx(launchAddr, mtnKeypair.publicKey, true)
         .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 })]).rpc();

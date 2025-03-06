@@ -26,6 +26,10 @@ pub const AVAILABLE_TOKENS: u64 = 10_000_000 * 1_000_000;
 pub mod usdc_mint {
     use anchor_lang::prelude::declare_id;
 
+    #[cfg(feature = "devnet")]
+    declare_id!("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU");
+
+    #[cfg(not(feature = "devnet"))]
     declare_id!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
 }
 

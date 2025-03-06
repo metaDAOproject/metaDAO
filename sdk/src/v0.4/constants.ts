@@ -31,6 +31,10 @@ export const MAINNET_USDC = new PublicKey(
   "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
 );
 
+export const DEVNET_USDC = new PublicKey(
+  "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"
+);
+
 export const USDC_DECIMALS = 6;
 
 export const AUTOCRAT_LUTS: PublicKey[] = [];
