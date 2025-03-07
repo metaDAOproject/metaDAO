@@ -16,13 +16,11 @@ import {
   createSetAuthorityInstruction,
   AuthorityType,
 } from "@solana/spl-token";
+import { initializeMintWithSeeds } from "../utils.js";
 
 export default function suite() {
   let autocratClient: AutocratClient;
   let launchpadClient: LaunchpadClient;
-  let dao: PublicKey;
-  let daoTreasury: PublicKey;
-  let METAKP: Keypair;
   let META: PublicKey;
   let launch: PublicKey;
   let launchSigner: PublicKey;
@@ -39,27 +37,22 @@ export default function suite() {
   });
 
   beforeEach(async function () {
-    // Create test tokens
-    METAKP = Keypair.generate();
-    META = METAKP.publicKey;
-    // Get accounts
-    [launch] = getLaunchAddr(launchpadClient.getProgramId(), META);
-    [launchSigner] = getLaunchSignerAddr(
-      launchpadClient.getProgramId(),
-      launch
-    );
-    tokenVault = getAssociatedTokenAddressSync(META, launchSigner, true);
-    usdcVault = getAssociatedTokenAddressSync(MAINNET_USDC, launchSigner, true);
-    funderTokenAccount = getAssociatedTokenAddressSync(
-      META,
-      this.payer.publicKey
-    );
-    funderUsdcAccount = getAssociatedTokenAddressSync(
-      MAINNET_USDC,
-      this.payer.publicKey
+    const result = await initializeMintWithSeeds(
+      this.banksClient,
+      this.launchpadClient,
+      this.payer
     );
 
-    // // Initialize launch
+    META = result.tokenMint;
+    launch = result.launch;
+    launchSigner = result.launchSigner;
+
+    tokenVault = getAssociatedTokenAddressSync(META, launchSigner, true);
+    usdcVault = getAssociatedTokenAddressSync(MAINNET_USDC, launchSigner, true);
+    funderTokenAccount = getAssociatedTokenAddressSync(META, this.payer.publicKey);
+    funderUsdcAccount = getAssociatedTokenAddressSync(MAINNET_USDC, this.payer.publicKey);
+
+    // Initialize launch
     await launchpadClient
       .initializeLaunchIx(
         "MTN",
@@ -67,7 +60,7 @@ export default function suite() {
         "https://example.com",
         minRaise,
         60 * 60,
-        METAKP
+        META
       )
       .rpc();
   });

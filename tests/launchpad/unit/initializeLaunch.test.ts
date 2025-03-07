@@ -1,4 +1,4 @@
-import { PublicKey, Keypair } from "@solana/web3.js";
+import { PublicKey, Keypair, SystemProgram, Transaction } from "@solana/web3.js";
 import { assert } from "chai";
 import {
   AutocratClient,
@@ -19,14 +19,14 @@ import {
   MAINNET_USDC,
   MPL_TOKEN_METADATA_PROGRAM_ID,
 } from "@metadaoproject/futarchy/v0.4";
+import { initializeMintWithSeeds } from "../utils.js";
 
 export default function suite() {
   let autocratClient: AutocratClient;
   let launchpadClient: LaunchpadClient;
-  let METAKP: Keypair;
   let META: PublicKey;
-  let USDC: PublicKey;
   let launch: PublicKey;
+  let launchSigner: PublicKey;
 
   before(async function () {
     autocratClient = this.autocratClient;
@@ -34,16 +34,23 @@ export default function suite() {
   });
 
   beforeEach(async function () {
-    METAKP = Keypair.generate();
-    META = METAKP.publicKey;
-    [launch] = getLaunchAddr(launchpadClient.getProgramId(), META);
+    const result = await initializeMintWithSeeds(
+      this.banksClient,
+      this.launchpadClient,
+      this.payer
+    );
+    
+    META = result.tokenMint;
+    launch = result.launch;
+    launchSigner = result.launchSigner;
   });
 
   it("initializes a launch with valid parameters", async function () {
     const minRaise = new BN(1000_000000); // 1000 USDC
     const secondsForLaunch = 60 * 60 * 24 * 7; // 1 week
+
     const [, pdaBump] = getLaunchAddr(launchpadClient.getProgramId(), META);
-    const [launchSigner, launchSignerPdaBump] = getLaunchSignerAddr(
+    const [, launchSignerPdaBump] = getLaunchSignerAddr(
       launchpadClient.getProgramId(),
       launch
     );
@@ -55,7 +62,7 @@ export default function suite() {
         "https://example.com",
         minRaise,
         secondsForLaunch,
-        METAKP
+        META
       )
       .rpc();
 
@@ -92,6 +99,34 @@ export default function suite() {
     const minimumRaiseAmount = new BN(1000_000000); // 1000 USDC
     const secondsForLaunch = 60 * 60 * 24 * 7; // 1 week
     const fakeLaunchSigner = Keypair.generate();
+
+    META = await PublicKey.createWithSeed(
+      this.payer.publicKey,
+      "fake-launch-signer",
+      token.TOKEN_PROGRAM_ID
+    );
+
+    const rent = await this.banksClient.getRent();
+
+    const lamports = Number(await rent.minimumBalance(BigInt(token.MINT_SIZE)));
+
+    const tx = new Transaction().add(
+      SystemProgram.createAccountWithSeed({
+        fromPubkey: this.payer.publicKey,
+        newAccountPubkey: META,
+        basePubkey: this.payer.publicKey,
+        seed: "fake-launch-signer",
+        lamports: lamports,
+        space: token.MINT_SIZE,
+        programId: token.TOKEN_PROGRAM_ID,
+      }),
+      token.createInitializeMint2Instruction(META, 6, fakeLaunchSigner.publicKey, null)
+    );
+    tx.recentBlockhash = (await this.banksClient.getLatestBlockhash())[0];
+    tx.feePayer = this.payer.publicKey;
+    tx.sign(this.payer);
+
+    await this.banksClient.processTransaction(tx);
 
     const [tokenMetadata] = getMetadataAddr(META);
 
@@ -142,7 +177,7 @@ export default function suite() {
             isSigner: true,
           },
         ])
-        .signers([fakeLaunchSigner, METAKP])
+        .signers([fakeLaunchSigner])
         .rpc();
       assert.fail("Should have thrown error");
     } catch (e) {

@@ -34,8 +34,7 @@ pub struct InitializeLaunch<'info> {
     pub launch: Account<'info, Launch>,
 
     #[account(
-        init,
-        payer = payer,
+        mut,
         mint::decimals = 6,
         mint::authority = launch_signer,
     )]
@@ -58,13 +57,15 @@ pub struct InitializeLaunch<'info> {
     pub launch_signer: UncheckedAccount<'info>,
 
     #[account(
+        init_if_needed,
+        payer = payer,
         associated_token::mint = usdc_mint,
         associated_token::authority = launch_signer
     )]
     pub usdc_vault: Account<'info, TokenAccount>,
 
     #[account(
-        init,
+        init_if_needed,
         payer = payer,
         associated_token::mint = token_mint,
         associated_token::authority = launch_signer
@@ -89,6 +90,7 @@ pub struct InitializeLaunch<'info> {
 
 impl InitializeLaunch<'_> {
     pub fn validate(&self, args: &InitializeLaunchArgs) -> Result<()> {
+        
         #[cfg(not(feature = "devnet"))]
         require_gte!(
             args.seconds_for_launch,
@@ -101,6 +103,23 @@ impl InitializeLaunch<'_> {
             args.seconds_for_launch,
             LaunchpadError::InvalidSecondsForLaunch
         );
+
+        require!(
+            self.token_mint.freeze_authority.is_none(),
+            LaunchpadError::FreezeAuthoritySet
+        );
+
+        require!(
+            self.token_mint.supply == 0,
+            LaunchpadError::SupplyNonZero
+        );
+
+        #[cfg(feature = "production")]
+        {
+            let token_key: String = self.token_mint.key().to_string();
+            let last_4_chars = &token_key[token_key.len() - 4..];
+            require_eq!("meta", last_4_chars, LaunchpadError::InvalidTokenKey);
+        }
 
         Ok(())
     }

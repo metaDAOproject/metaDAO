@@ -34,6 +34,10 @@ test_no_build() {
     find programs tests sdk | entr -sc '(cd sdk && yarn build) && RUST_LOG= anchor test --skip-build'
 }
 
+test_logs_no_build() {
+    find programs tests sdk | entr -sc '(cd sdk && yarn build) && anchor test --skip-build'
+}
+
 # ./test.sh build_verifiable autocrat
 build_verifiable() {
     PROGRAM_NAME=$1
@@ -121,6 +125,7 @@ case "$1" in
     build_launchpad) build_launchpad ;;
     test) test ;;
     test_logs) test_logs ;;
+    test_logs_no_build) test_logs_no_build ;;
     vault) test_vault ;;
     build_vault) build_vault ;;
     test_no_build) test_no_build ;;

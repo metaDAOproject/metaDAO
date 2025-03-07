@@ -115,16 +115,13 @@ export class LaunchpadClient {
     tokenUri: string,
     minimumRaiseAmount: BN,
     secondsForLaunch: number,
-    tokenMintKp: Keypair,
+    tokenMint: PublicKey,
     launchAuthority: PublicKey = this.provider.publicKey,
     isDevnet: boolean = false
   ) {
     const USDC = isDevnet ? DEVNET_USDC : MAINNET_USDC;
 
-    const [launch] = getLaunchAddr(
-      this.launchpad.programId,
-      tokenMintKp.publicKey
-    );
+    const [launch] = getLaunchAddr(this.launchpad.programId, tokenMint);
     const [launchSigner] = getLaunchSignerAddr(
       this.launchpad.programId,
       launch
@@ -132,11 +129,11 @@ export class LaunchpadClient {
     const usdcVault = getAssociatedTokenAddressSync(USDC, launchSigner, true);
 
     const tokenVault = getAssociatedTokenAddressSync(
-      tokenMintKp.publicKey,
+      tokenMint,
       launchSigner,
       true
     );
-    const [tokenMetadata] = getMetadataAddr(tokenMintKp.publicKey);
+    const [tokenMetadata] = getMetadataAddr(tokenMint);
 
     return this.launchpad.methods
       .initializeLaunch({
@@ -153,7 +150,7 @@ export class LaunchpadClient {
         tokenVault,
         launchAuthority,
         usdcMint: USDC,
-        tokenMint: tokenMintKp.publicKey,
+        tokenMint,
         tokenMetadata,
         tokenMetadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
       })
@@ -164,8 +161,8 @@ export class LaunchpadClient {
           launchSigner,
           USDC
         ),
-      ])
-      .signers([tokenMintKp]);
+      ]);
+    // .signers([tokenMintKp]);
   }
 
   startLaunchIx(

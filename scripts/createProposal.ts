@@ -24,12 +24,14 @@ const autocratProgram: AutocratClient = AutocratClient.createClient({
 const USDC = new PublicKey("CRWxbGNtVrTr9FAJX6SZpsvPZyi9R7VetuqecoZ1jCdD");
 
 async function main() {
-  const dao = new PublicKey("F3VsVaRaZFyfaSzyjhwNmdhzkZH1XZ5DU11uxNjbjFnZ");
+  const dao = new PublicKey("33Pi6Dxur8Q87K7DmG8JAdZoiTwSRi2HCP6ZjLAPn2sE");
 
   const storedDao = await autocratProgram.getDao(dao);
 
   console.log(storedDao.tokenMint);
   console.log(storedDao.usdcMint);
+  console.log(storedDao);
+  return;
 
   const myTokenAccount = token.getAssociatedTokenAddressSync(
     storedDao.tokenMint,

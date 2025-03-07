@@ -1,11 +1,6 @@
 export type Launchpad = {
   version: "0.4.0";
   name: "launchpad";
-  docs: [
-    "TODO:",
-    "- Use unix timestamp over slots",
-    "- Check that current time is within funding period"
-  ];
   instructions: [
     {
       name: "initializeLaunch";
@@ -18,7 +13,7 @@ export type Launchpad = {
         {
           name: "tokenMint";
           isMut: true;
-          isSigner: true;
+          isSigner: false;
         },
         {
           name: "tokenMetadata";
@@ -32,7 +27,7 @@ export type Launchpad = {
         },
         {
           name: "usdcVault";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
@@ -967,31 +962,36 @@ export type Launchpad = {
     },
     {
       code: 6004;
+      name: "InvalidTokenKey";
+      msg: "Token mint key must end in 'meta'";
+    },
+    {
+      code: 6005;
       name: "InvalidLaunchState";
       msg: "Invalid launch state";
     },
     {
-      code: 6005;
+      code: 6006;
       name: "LaunchPeriodNotOver";
       msg: "Launch period not over";
     },
     {
-      code: 6006;
+      code: 6007;
       name: "LaunchExpired";
       msg: "Launch is complete, no more funding allowed";
     },
     {
-      code: 6007;
+      code: 6008;
       name: "LaunchNotRefunding";
       msg: "Launch needs to be in refunding state to get a refund";
     },
     {
-      code: 6008;
+      code: 6009;
       name: "LaunchNotInitialized";
       msg: "Launch must be initialized to be started";
     },
     {
-      code: 6009;
+      code: 6010;
       name: "FreezeAuthoritySet";
       msg: "Freeze authority can't be set on launchpad tokens";
     }
@@ -1001,11 +1001,6 @@ export type Launchpad = {
 export const IDL: Launchpad = {
   version: "0.4.0",
   name: "launchpad",
-  docs: [
-    "TODO:",
-    "- Use unix timestamp over slots",
-    "- Check that current time is within funding period",
-  ],
   instructions: [
     {
       name: "initializeLaunch",
@@ -1018,7 +1013,7 @@ export const IDL: Launchpad = {
         {
           name: "tokenMint",
           isMut: true,
-          isSigner: true,
+          isSigner: false,
         },
         {
           name: "tokenMetadata",
@@ -1032,7 +1027,7 @@ export const IDL: Launchpad = {
         },
         {
           name: "usdcVault",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
@@ -1967,31 +1962,36 @@ export const IDL: Launchpad = {
     },
     {
       code: 6004,
+      name: "InvalidTokenKey",
+      msg: "Token mint key must end in 'meta'",
+    },
+    {
+      code: 6005,
       name: "InvalidLaunchState",
       msg: "Invalid launch state",
     },
     {
-      code: 6005,
+      code: 6006,
       name: "LaunchPeriodNotOver",
       msg: "Launch period not over",
     },
     {
-      code: 6006,
+      code: 6007,
       name: "LaunchExpired",
       msg: "Launch is complete, no more funding allowed",
     },
     {
-      code: 6007,
+      code: 6008,
       name: "LaunchNotRefunding",
       msg: "Launch needs to be in refunding state to get a refund",
     },
     {
-      code: 6008,
+      code: 6009,
       name: "LaunchNotInitialized",
       msg: "Launch must be initialized to be started",
     },
     {
-      code: 6009,
+      code: 6010,
       name: "FreezeAuthoritySet",
       msg: "Freeze authority can't be set on launchpad tokens",
     },

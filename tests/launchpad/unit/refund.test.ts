@@ -14,6 +14,7 @@ import {
   createSetAuthorityInstruction,
   AuthorityType,
 } from "@solana/spl-token";
+import { initializeMintWithSeeds } from "../utils.js";
 
 export default function suite() {
   let autocratClient: AutocratClient;
@@ -33,20 +34,17 @@ export default function suite() {
   });
 
   beforeEach(async function () {
-    // Create test tokens
-    METAKP = Keypair.generate();
-    META = METAKP.publicKey;
-    // Get accounts
-    [launch] = getLaunchAddr(launchpadClient.getProgramId(), META);
-    [launchSigner] = getLaunchSignerAddr(
-      launchpadClient.getProgramId(),
-      launch
+    const result = await initializeMintWithSeeds(
+      this.banksClient,
+      this.launchpadClient,
+      this.payer
     );
+
+    META = result.tokenMint;
+    launch = result.launch;
+    launchSigner = result.launchSigner;
     usdcVault = getAssociatedTokenAddressSync(MAINNET_USDC, launchSigner, true);
-    funderUsdcAccount = getAssociatedTokenAddressSync(
-      MAINNET_USDC,
-      this.payer.publicKey
-    );
+    funderUsdcAccount = getAssociatedTokenAddressSync(MAINNET_USDC, this.payer.publicKey);
 
     // Initialize launch
     await launchpadClient
@@ -56,7 +54,7 @@ export default function suite() {
         "https://example.com",
         minRaise,
         60 * 60 * 24 * 6,
-        METAKP
+        META
       )
       .rpc();
 
