@@ -1,6 +1,7 @@
 use anchor_lang::Discriminator;
 use anchor_lang::{prelude::*, system_program};
 use anchor_spl::associated_token::{self, AssociatedToken, Create};
+use anchor_spl::metadata::UpdateMetadataAccountsV2;
 use anchor_spl::token::spl_token::instruction::AuthorityType;
 use anchor_spl::token::{self, Mint, MintTo, SetAuthority, Token, TokenAccount, Transfer};
 use anchor_spl::associated_token::get_associated_token_address;
@@ -15,14 +16,15 @@ use raydium_cpmm_cpi::{
     program::RaydiumCpmm,
     states::{AmmConfig, OBSERVATION_SEED, POOL_LP_MINT_SEED, POOL_VAULT_SEED},
 };
+use anchor_spl::metadata::{
+    update_metadata_accounts_v2,
+    mpl_token_metadata::ID as MPL_TOKEN_METADATA_PROGRAM_ID, Metadata,
+};
 
 use autocrat::program::Autocrat;
 use autocrat::InitializeDaoParams;
 
 pub const PRICE_SCALE: u128 = 1_000_000_000_000;
-
-// TODO: transfer metadata upgrade authority to DAO treasury, don't need
-//       to do this for the MVP
 
 /// Completes a launch, which if the minimum raise is met:
 /// - Creates a DAO
@@ -31,6 +33,7 @@ pub const PRICE_SCALE: u128 = 1_000_000_000_000;
 /// - Transfers 90% of the USDC to the DAO treasury
 /// - Transfers mint authority to the DAO treasury
 /// - Transfers the LP position to the DAO treasury
+/// - Updates the token metadata to point to the DAO treasury as the update authority
 #[event_cpi]
 #[derive(Accounts)]
 pub struct CompleteLaunch<'info> {
@@ -43,6 +46,15 @@ pub struct CompleteLaunch<'info> {
         has_one = usdc_mint,
     )]
     pub launch: Box<Account<'info, Launch>>,
+
+    /// CHECK: Token metadata
+    #[account(
+        mut,
+        seeds = [b"metadata", MPL_TOKEN_METADATA_PROGRAM_ID.as_ref(), token_mint.key().as_ref()],
+        seeds::program = MPL_TOKEN_METADATA_PROGRAM_ID,
+        bump
+    )]
+    pub token_metadata: UncheckedAccount<'info>,
 
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -207,6 +219,7 @@ pub struct CompleteLaunch<'info> {
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
     pub autocrat_program: Program<'info, Autocrat>,
+    pub token_metadata_program: Program<'info, Metadata>,
     /// CHECK: checked by autocrat program
     pub autocrat_event_authority: UncheckedAccount<'info>,
     pub rent: Sysvar<'info, Rent>,
@@ -467,6 +480,21 @@ impl CompleteLaunch<'_> {
                     launch_signer,
                 ),
                 lp_vault.amount,
+            )?;
+
+            update_metadata_accounts_v2(
+                CpiContext::new_with_signer(
+                    ctx.accounts.token_metadata_program.to_account_info(),
+                    UpdateMetadataAccountsV2 {
+                        metadata: ctx.accounts.token_metadata.to_account_info(),
+                        update_authority: ctx.accounts.launch_signer.to_account_info(),
+                    },
+                    launch_signer,
+                ),
+                Some(ctx.accounts.dao_treasury.key()),
+                None,
+                None,
+                None,
             )?;
 
             launch.state = LaunchState::Complete;

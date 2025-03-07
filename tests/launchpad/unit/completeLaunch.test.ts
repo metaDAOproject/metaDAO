@@ -5,11 +5,14 @@ import {
   getLaunchAddr,
   getLaunchSignerAddr,
   getLiquidityPoolAddr,
+  getMetadataAddr,
   getRaydiumCpmmLpMintAddr,
   LaunchpadClient,
   MAINNET_USDC,
 } from "@metadaoproject/futarchy/v0.4";
 import { BN } from "bn.js";
+import { deserializeMetadata, Metadata } from "@metaplex-foundation/mpl-token-metadata";
+import { fromWeb3JsPublicKey, toWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
 
 export default function suite() {
   let autocratClient: AutocratClient;
@@ -58,6 +61,15 @@ export default function suite() {
       minRaise,
     ).rpc();
 
+    const [tokenMetadata] = getMetadataAddr(META);
+
+    let rawStoredMetadata = await this.banksClient.getAccount(tokenMetadata);
+    let storedMetadata = deserializeMetadata({
+      publicKey: fromWeb3JsPublicKey(tokenMetadata),
+      ...rawStoredMetadata,
+    });
+    assert.ok(toWeb3JsPublicKey(storedMetadata.updateAuthority).equals(launchSigner));
+
     // Advance clock past 7 days
     await this.advanceBySeconds(60 * 60 * 24 * 11);
 
@@ -78,6 +90,14 @@ export default function suite() {
     const mint = await this.getMint(META);
     assert.isTrue(mint.mintAuthority.equals(launchAccount.daoTreasury));
     assert.exists(launchAccount.dao);
+
+
+    rawStoredMetadata = await this.banksClient.getAccount(tokenMetadata);
+    storedMetadata = deserializeMetadata({
+      publicKey: fromWeb3JsPublicKey(tokenMetadata),
+      ...rawStoredMetadata,
+    });
+    assert.ok(toWeb3JsPublicKey(storedMetadata.updateAuthority).equals(launchAccount.daoTreasury));
   });
 
   it("fails when launch period has not passed", async function () {

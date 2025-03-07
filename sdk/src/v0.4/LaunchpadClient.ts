@@ -283,6 +283,8 @@ export class LaunchpadClient {
       this.autocratClient.getProgramId()
     );
 
+    const [tokenMetadata] = getMetadataAddr(tokenMint);
+
     return this.launchpad.methods
       .completeLaunch()
       .accounts({
@@ -300,6 +302,7 @@ export class LaunchpadClient {
         ),
         usdcMint: USDC,
         tokenMint,
+        tokenMetadata,
         lpMint,
         lpVault,
         poolTokenVault,
@@ -315,6 +318,7 @@ export class LaunchpadClient {
           ? DEVNET_RAYDIUM_CREATE_POOL_FEE_RECEIVE
           : RAYDIUM_CREATE_POOL_FEE_RECEIVE,
         autocratProgram: this.autocratClient.getProgramId(),
+        tokenMetadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
         autocratEventAuthority,
       })
       .preInstructions([

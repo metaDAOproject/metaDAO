@@ -201,6 +201,11 @@ export type Launchpad = {
           isSigner: false;
         },
         {
+          name: "tokenMetadata";
+          isMut: true;
+          isSigner: false;
+        },
+        {
           name: "payer";
           isMut: true;
           isSigner: true;
@@ -321,6 +326,11 @@ export type Launchpad = {
         },
         {
           name: "autocratProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "tokenMetadataProgram";
           isMut: false;
           isSigner: false;
         },
@@ -1191,6 +1201,11 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
+          name: "tokenMetadata",
+          isMut: true,
+          isSigner: false,
+        },
+        {
           name: "payer",
           isMut: true,
           isSigner: true,
@@ -1311,6 +1326,11 @@ export const IDL: Launchpad = {
         },
         {
           name: "autocratProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "tokenMetadataProgram",
           isMut: false,
           isSigner: false,
         },
