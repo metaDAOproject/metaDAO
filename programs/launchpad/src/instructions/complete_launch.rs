@@ -306,8 +306,6 @@ impl CompleteLaunch<'_> {
                 Some(ctx.accounts.dao_treasury.key()),
             )?;
 
-            msg!("{:?}", ctx.accounts.amm_config);
-
             system_program::transfer(
                 CpiContext::new(
                     ctx.accounts.system_program.to_account_info(),
