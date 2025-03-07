@@ -17,7 +17,7 @@ pub struct Fund<'info> {
 
     #[account(
         init_if_needed,
-        payer = funder,
+        payer = payer,
         space = 8 + std::mem::size_of::<FundingRecord>(),
         seeds = [b"funding_record", launch.key().as_ref(), funder.key().as_ref()],
         bump
@@ -30,8 +30,9 @@ pub struct Fund<'info> {
     #[account(mut)]
     pub launch_usdc_vault: Account<'info, TokenAccount>,
 
-    #[account(mut)]
     pub funder: Signer<'info>,
+    #[account(mut)]
+    pub payer: Signer<'info>,
 
     #[account(
         mut,

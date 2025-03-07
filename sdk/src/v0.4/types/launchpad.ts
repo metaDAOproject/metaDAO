@@ -151,6 +151,11 @@ export type Launchpad = {
         },
         {
           name: "funder";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "payer";
           isMut: true;
           isSigner: true;
         },
@@ -1131,6 +1136,11 @@ export const IDL: Launchpad = {
         },
         {
           name: "funder",
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: "payer",
           isMut: true,
           isSigner: true,
         },
