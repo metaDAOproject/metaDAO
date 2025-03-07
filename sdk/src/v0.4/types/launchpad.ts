@@ -231,6 +231,11 @@ export type Launchpad = {
           isSigner: false;
         },
         {
+          name: "treasuryLpAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
           name: "ammConfig";
           isMut: true;
           isSigner: false;
@@ -241,7 +246,7 @@ export type Launchpad = {
         {
           name: "poolState";
           isMut: true;
-          isSigner: true;
+          isSigner: false;
         },
         {
           name: "tokenMint";
@@ -1216,6 +1221,11 @@ export const IDL: Launchpad = {
           isSigner: false,
         },
         {
+          name: "treasuryLpAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
           name: "ammConfig",
           isMut: true,
           isSigner: false,
@@ -1226,7 +1236,7 @@ export const IDL: Launchpad = {
         {
           name: "poolState",
           isMut: true,
-          isSigner: true,
+          isSigner: false,
         },
         {
           name: "tokenMint",

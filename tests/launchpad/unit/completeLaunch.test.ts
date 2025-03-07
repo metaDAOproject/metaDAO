@@ -4,6 +4,8 @@ import {
   AutocratClient,
   getLaunchAddr,
   getLaunchSignerAddr,
+  getLiquidityPoolAddr,
+  getRaydiumCpmmLpMintAddr,
   LaunchpadClient,
   MAINNET_USDC,
 } from "@metadaoproject/futarchy/v0.4";
@@ -59,15 +61,20 @@ export default function suite() {
     // Advance clock past 7 days
     await this.advanceBySeconds(60 * 60 * 24 * 11);
 
-    // Complete the launch
-    await launchpadClient.completeLaunchIx(launch, META).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 })]).rpc();
+    await launchpadClient
+      .completeLaunchIx(launch, META)
+      .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 500_000 }), ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 })]).rpc();
 
     const launchAccount = await launchpadClient.fetchLaunch(launch);
-    const treasuryBalance = await this.getTokenBalance(MAINNET_USDC, launchAccount.daoTreasury);
+    const [poolState] = getLiquidityPoolAddr(launchpadClient.getProgramId(), launchAccount.dao);
+    const [lpMint] = getRaydiumCpmmLpMintAddr(poolState, false);
+
+    const treasuryUSDCBalance = await this.getTokenBalance(MAINNET_USDC, launchAccount.daoTreasury);
+    const treasuryLpBalance = await this.getTokenBalance(lpMint, launchAccount.daoTreasury);
 
     assert.exists(launchAccount.state.complete);
-    assert.equal(treasuryBalance.toString(), minRaise.muln(9).divn(10).toString());
-
+    assert.equal(treasuryUSDCBalance.toString(), minRaise.muln(9).divn(10).toString());
+    assert.isAbove(Number(treasuryLpBalance.toString()), 1000);
     const mint = await this.getMint(META);
     assert.isTrue(mint.mintAuthority.equals(launchAccount.daoTreasury));
     assert.exists(launchAccount.dao);
