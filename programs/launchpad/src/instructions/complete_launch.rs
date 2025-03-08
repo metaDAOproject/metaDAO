@@ -1,24 +1,23 @@
 use anchor_lang::Discriminator;
 use anchor_lang::{prelude::*, system_program};
+use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::associated_token::{self, AssociatedToken, Create};
 use anchor_spl::metadata::UpdateMetadataAccountsV2;
 use anchor_spl::token::spl_token::instruction::AuthorityType;
 use anchor_spl::token::{self, Mint, MintTo, SetAuthority, Token, TokenAccount, Transfer};
-use anchor_spl::associated_token::get_associated_token_address;
 use raydium_cpmm_cpi::states::AMM_CONFIG_SEED;
 
 use crate::error::LaunchpadError;
 use crate::events::{CommonFields, LaunchCompletedEvent};
 use crate::state::{Launch, LaunchState};
 use crate::AVAILABLE_TOKENS;
+use anchor_spl::metadata::{
+    mpl_token_metadata::ID as MPL_TOKEN_METADATA_PROGRAM_ID, update_metadata_accounts_v2, Metadata,
+};
 use raydium_cpmm_cpi::{
     cpi, instruction,
     program::RaydiumCpmm,
     states::{AmmConfig, OBSERVATION_SEED, POOL_LP_MINT_SEED, POOL_VAULT_SEED},
-};
-use anchor_spl::metadata::{
-    update_metadata_accounts_v2,
-    mpl_token_metadata::ID as MPL_TOKEN_METADATA_PROGRAM_ID, Metadata,
 };
 
 use autocrat::program::Autocrat;
@@ -418,7 +417,9 @@ impl CompleteLaunch<'_> {
                     .zip(cpi_accounts.to_account_infos())
                     .map(|mut pair| {
                         pair.0.is_signer = pair.1.is_signer;
-                        if pair.0.pubkey == ctx.accounts.launch_signer.key() || pair.0.pubkey == ctx.accounts.pool_state.key() {
+                        if pair.0.pubkey == ctx.accounts.launch_signer.key()
+                            || pair.0.pubkey == ctx.accounts.pool_state.key()
+                        {
                             pair.0.is_signer = true;
                         }
                         pair.0
@@ -429,12 +430,13 @@ impl CompleteLaunch<'_> {
 
             let dao_key = ctx.accounts.dao.key();
             let pool_seeds = &[b"pool_state", dao_key.as_ref(), &[ctx.bumps.pool_state]];
-            let raydium_signer = &[
-                &launch_signer_seeds[..],
-                &pool_seeds[..],
-            ];
+            let raydium_signer = &[&launch_signer_seeds[..], &pool_seeds[..]];
 
-            solana_program::program::invoke_signed(&ix, &cpi_accounts.to_account_infos(), raydium_signer)?;
+            solana_program::program::invoke_signed(
+                &ix,
+                &cpi_accounts.to_account_infos(),
+                raydium_signer,
+            )?;
 
             token::transfer(
                 CpiContext::new_with_signer(
@@ -452,22 +454,21 @@ impl CompleteLaunch<'_> {
             // We don't need to do this idempotently because the LP mint is only
             // created in the Raydium IX, which means that the account couldn't
             // exist yet.
-            associated_token::create(
-                CpiContext::new(
-                    ctx.accounts.associated_token_program.to_account_info(),
-                    Create {
-                        payer: ctx.accounts.payer.to_account_info(),
-                        associated_token: ctx.accounts.treasury_lp_account.to_account_info(),
-                        authority: ctx.accounts.dao_treasury.to_account_info(),
-                        mint: ctx.accounts.lp_mint.to_account_info(),
-                        system_program: ctx.accounts.system_program.to_account_info(),
-                        token_program: ctx.accounts.token_program.to_account_info(),
-                    },
-                ),
-            )?;
+            associated_token::create(CpiContext::new(
+                ctx.accounts.associated_token_program.to_account_info(),
+                Create {
+                    payer: ctx.accounts.payer.to_account_info(),
+                    associated_token: ctx.accounts.treasury_lp_account.to_account_info(),
+                    authority: ctx.accounts.dao_treasury.to_account_info(),
+                    mint: ctx.accounts.lp_mint.to_account_info(),
+                    system_program: ctx.accounts.system_program.to_account_info(),
+                    token_program: ctx.accounts.token_program.to_account_info(),
+                },
+            ))?;
 
             let lp_vault = ctx.accounts.lp_vault.to_account_info();
-            let lp_vault: TokenAccount = TokenAccount::try_deserialize(&mut &lp_vault.data.borrow()[..])?;
+            let lp_vault: TokenAccount =
+                TokenAccount::try_deserialize(&mut &lp_vault.data.borrow()[..])?;
 
             token::transfer(
                 CpiContext::new_with_signer(
