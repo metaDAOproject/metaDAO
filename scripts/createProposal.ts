@@ -18,41 +18,53 @@ const payer = provider.wallet["payer"];
 const vaultProgram: ConditionalVaultClient =
   ConditionalVaultClient.createClient({ provider });
 const ammProgram: AmmClient = AmmClient.createClient({ provider });
-const autocratProgram: AutocratClient = AutocratClient.createClient({ provider });
+const autocratProgram: AutocratClient = AutocratClient.createClient({
+  provider,
+});
 const USDC = new PublicKey("CRWxbGNtVrTr9FAJX6SZpsvPZyi9R7VetuqecoZ1jCdD");
 
 async function main() {
-  const dao = new PublicKey("F3VsVaRaZFyfaSzyjhwNmdhzkZH1XZ5DU11uxNjbjFnZ");
+  const dao = new PublicKey("33Pi6Dxur8Q87K7DmG8JAdZoiTwSRi2HCP6ZjLAPn2sE");
 
   const storedDao = await autocratProgram.getDao(dao);
 
   console.log(storedDao.tokenMint);
   console.log(storedDao.usdcMint);
+  console.log(storedDao);
+  return;
 
-  const myTokenAccount = token.getAssociatedTokenAddressSync(storedDao.tokenMint, payer.publicKey);
+  const myTokenAccount = token.getAssociatedTokenAddressSync(
+    storedDao.tokenMint,
+    payer.publicKey
+  );
 
-  const mintToIx = token.createMintToInstruction(storedDao.tokenMint, myTokenAccount, storedDao.treasury, 1000 * 10 ** 6);
+  const mintToIx = token.createMintToInstruction(
+    storedDao.tokenMint,
+    myTokenAccount,
+    storedDao.treasury,
+    1000 * 10 ** 6
+  );
 
   const ix = {
     programId: mintToIx.programId,
     data: mintToIx.data,
     accounts: mintToIx.keys,
-  }
+  };
 
-  const proposal = await autocratProgram.initializeProposal(dao, "https://www.google.com", ix, storedDao.minBaseFutarchicLiquidity, storedDao.minQuoteFutarchicLiquidity);
+  const proposal = await autocratProgram.initializeProposal(
+    dao,
+    "https://www.google.com",
+    ix,
+    storedDao.minBaseFutarchicLiquidity,
+    storedDao.minQuoteFutarchicLiquidity
+  );
 
   // console.log(proposal);
-
-
 
   // const metaAccount = await token.getOrCreateAssociatedTokenAccount(provider.connection, payer, META, payer.publicKey);
   // console.log(metaAccount);
 
-
-
   return;
-
-
 
   // const outcomeQuestionId = sha256(
   //   new TextEncoder().encode(
@@ -157,7 +169,6 @@ async function main() {
   console.log("Metric Vault");
   console.log(metricVault);
   console.log(storedMetricVault);
-
 
   // await vaultProgram.splitTokensIx(outcomeQuestion, outcomeVault, USDC, new BN(1000 * 10 ** 6), 2).rpc();
   // await vaultProgram.splitTokensIx(metricQuestion, metricVault, pUSDC, new BN(1000 * 10 ** 6), 2).rpc();

@@ -10,6 +10,8 @@ pub enum LaunchpadError {
     InvalidSecondsForLaunch,
     #[msg("Insufficient funds")]
     InsufficientFunds,
+    #[msg("Token mint key must end in 'meta'")]
+    InvalidTokenKey,
     #[msg("Invalid launch state")]
     InvalidLaunchState,
     #[msg("Launch period not over")]

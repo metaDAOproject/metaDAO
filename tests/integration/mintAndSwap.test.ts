@@ -41,14 +41,7 @@ export default async function test() {
   const NO = storedVault.conditionalTokenMints[1];
 
   // Initialize AMM
-  await ammClient
-    .initializeAmmIx(
-      YES,
-      NO,
-      new BN(100), 
-      new BN(1000)
-    )
-    .rpc();
+  await ammClient.initializeAmmIx(YES, NO, new BN(100), new BN(1000)).rpc();
   const amm = getAmmAddr(ammClient.getProgramId(), YES, NO)[0];
 
   // Create token accounts for Alice
@@ -131,77 +124,98 @@ export default async function test() {
     1000 * 10 ** 6,
     "Alice's YES balance should be less than 1000"
   );
-  assert.equal(
-    Number(noBalance),
-    0,
-    "Alice's NO balance should be 0"
-  );
-  
+  assert.equal(Number(noBalance), 0, "Alice's NO balance should be 0");
 
   const storedAmm = await ammClient.fetchAmm(amm);
 
-  let { optimalSwapAmount, userInAfterSwap, expectedOut, minimumExpectedOut } = AmmMath.calculateOptimalSwapForMerge(
-    new BN(yesBalance),
-    storedAmm.baseAmount,
-    storedAmm.quoteAmount,
-    new BN(100), //1% slippage
+  let { optimalSwapAmount, userInAfterSwap, expectedOut, minimumExpectedOut } =
+    AmmMath.calculateOptimalSwapForMerge(
+      new BN(yesBalance),
+      storedAmm.baseAmount,
+      storedAmm.quoteAmount,
+      new BN(100) //1% slippage
+    );
+
+  let swapIx2 = ammClient.swapIx(
+    amm,
+    YES,
+    NO,
+    { sell: {} },
+    optimalSwapAmount,
+    new BN(0),
+    alice.publicKey
   );
-
-
-  let swapIx2 = ammClient.swapIx(amm, YES, NO, { sell: {} }, optimalSwapAmount, new BN(0), alice.publicKey);
 
   await swapIx2.signers([alice]).rpc();
 
   yesBalance = await this.getTokenBalance(YES, alice.publicKey);
   noBalance = await this.getTokenBalance(NO, alice.publicKey);
 
-
   //test edge cases for calculateOptimalSwapForMerge
   //small reserves, large balance
-  ({ optimalSwapAmount, userInAfterSwap, expectedOut, minimumExpectedOut } = AmmMath.calculateOptimalSwapForMerge(
-    new BN(1_000_000_000*1e6),
-    new BN(10),
-    new BN(20),
-    new BN(100), //1% slippage
-  ));
-  assert.isTrue(Number(expectedOut) - 1 <= Number(userInAfterSwap) && Number(userInAfterSwap) <= Number(expectedOut) + 1);
+  ({ optimalSwapAmount, userInAfterSwap, expectedOut, minimumExpectedOut } =
+    AmmMath.calculateOptimalSwapForMerge(
+      new BN(1_000_000_000 * 1e6),
+      new BN(10),
+      new BN(20),
+      new BN(100) //1% slippage
+    ));
+  assert.isTrue(
+    Number(expectedOut) - 1 <= Number(userInAfterSwap) &&
+      Number(userInAfterSwap) <= Number(expectedOut) + 1
+  );
 
   //large reserves, small balance
-  ({ optimalSwapAmount, userInAfterSwap, expectedOut, minimumExpectedOut } = AmmMath.calculateOptimalSwapForMerge(
-    new BN(100),
-    new BN(1_000_000_000*1e6),
-    new BN(2_000_000_000*1e6),
-    new BN(100), //1% slippage
-  ));
-  assert.isTrue(Number(expectedOut) - 1 <= Number(userInAfterSwap) && Number(userInAfterSwap) <= Number(expectedOut) + 1);
+  ({ optimalSwapAmount, userInAfterSwap, expectedOut, minimumExpectedOut } =
+    AmmMath.calculateOptimalSwapForMerge(
+      new BN(100),
+      new BN(1_000_000_000 * 1e6),
+      new BN(2_000_000_000 * 1e6),
+      new BN(100) //1% slippage
+    ));
+  assert.isTrue(
+    Number(expectedOut) - 1 <= Number(userInAfterSwap) &&
+      Number(userInAfterSwap) <= Number(expectedOut) + 1
+  );
 
   //small reserves, small balance
-  ({ optimalSwapAmount, userInAfterSwap, expectedOut, minimumExpectedOut } = AmmMath.calculateOptimalSwapForMerge(
-    new BN(10),
-    new BN(20),
-    new BN(30),
-    new BN(100), //1% slippage
-  ));
-  assert.isTrue(Number(expectedOut) - 1 <= Number(userInAfterSwap) && Number(userInAfterSwap) <= Number(expectedOut) + 1);
+  ({ optimalSwapAmount, userInAfterSwap, expectedOut, minimumExpectedOut } =
+    AmmMath.calculateOptimalSwapForMerge(
+      new BN(10),
+      new BN(20),
+      new BN(30),
+      new BN(100) //1% slippage
+    ));
+  assert.isTrue(
+    Number(expectedOut) - 1 <= Number(userInAfterSwap) &&
+      Number(userInAfterSwap) <= Number(expectedOut) + 1
+  );
 
   //large reserves, large balance
-  ({ optimalSwapAmount, userInAfterSwap, expectedOut, minimumExpectedOut } = AmmMath.calculateOptimalSwapForMerge(
-    new BN(1_000_000_000*1e6),
-    new BN(1_000_000_000*1e6),
-    new BN(2_000_000_000*1e6),
-    new BN(100), //1% slippage
-  ));
-  assert.isTrue(Number(expectedOut) - 1 <= Number(userInAfterSwap) && Number(userInAfterSwap) <= Number(expectedOut) + 1);
+  ({ optimalSwapAmount, userInAfterSwap, expectedOut, minimumExpectedOut } =
+    AmmMath.calculateOptimalSwapForMerge(
+      new BN(1_000_000_000 * 1e6),
+      new BN(1_000_000_000 * 1e6),
+      new BN(2_000_000_000 * 1e6),
+      new BN(100) //1% slippage
+    ));
+  assert.isTrue(
+    Number(expectedOut) - 1 <= Number(userInAfterSwap) &&
+      Number(userInAfterSwap) <= Number(expectedOut) + 1
+  );
 
   //skewed reserves (one reserve large, one small)
-  ({ optimalSwapAmount, userInAfterSwap, expectedOut, minimumExpectedOut } = AmmMath.calculateOptimalSwapForMerge(
-    new BN(1_000_000_000*1e6),
-    new BN(10),
-    new BN(1_000_000_000*1e6),
-    new BN(100), //1% slippage
-  ));
-  assert.isTrue(Number(expectedOut) - 1 <= Number(userInAfterSwap) && Number(userInAfterSwap) <= Number(expectedOut) + 1);
-
+  ({ optimalSwapAmount, userInAfterSwap, expectedOut, minimumExpectedOut } =
+    AmmMath.calculateOptimalSwapForMerge(
+      new BN(1_000_000_000 * 1e6),
+      new BN(10),
+      new BN(1_000_000_000 * 1e6),
+      new BN(100) //1% slippage
+    ));
+  assert.isTrue(
+    Number(expectedOut) - 1 <= Number(userInAfterSwap) &&
+      Number(userInAfterSwap) <= Number(expectedOut) + 1
+  );
 
   // now we do the trecherous part: selling Alice's YES for USDC
 }

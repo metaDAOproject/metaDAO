@@ -1,6 +1,8 @@
 use anchor_lang::Discriminator;
 use anchor_lang::{prelude::*, system_program};
-use anchor_spl::associated_token::AssociatedToken;
+use anchor_spl::associated_token::get_associated_token_address;
+use anchor_spl::associated_token::{self, AssociatedToken, Create};
+use anchor_spl::metadata::UpdateMetadataAccountsV2;
 use anchor_spl::token::spl_token::instruction::AuthorityType;
 use anchor_spl::token::{self, Mint, MintTo, SetAuthority, Token, TokenAccount, Transfer};
 use raydium_cpmm_cpi::states::AMM_CONFIG_SEED;
@@ -9,6 +11,9 @@ use crate::error::LaunchpadError;
 use crate::events::{CommonFields, LaunchCompletedEvent};
 use crate::state::{Launch, LaunchState};
 use crate::AVAILABLE_TOKENS;
+use anchor_spl::metadata::{
+    mpl_token_metadata::ID as MPL_TOKEN_METADATA_PROGRAM_ID, update_metadata_accounts_v2, Metadata,
+};
 use raydium_cpmm_cpi::{
     cpi, instruction,
     program::RaydiumCpmm,
@@ -20,9 +25,14 @@ use autocrat::InitializeDaoParams;
 
 pub const PRICE_SCALE: u128 = 1_000_000_000_000;
 
-// TODO: transfer metadata upgrade authority to DAO treasury, don't need
-//       to do this for the MVP
-
+/// Completes a launch, which if the minimum raise is met:
+/// - Creates a DAO
+/// - Mints an additional 1M tokens
+/// - Pairs the 1M tokens against 10% of the USDC on Raydium
+/// - Transfers 90% of the USDC to the DAO treasury
+/// - Transfers mint authority to the DAO treasury
+/// - Transfers the LP position to the DAO treasury
+/// - Updates the token metadata to point to the DAO treasury as the update authority
 #[event_cpi]
 #[derive(Accounts)]
 pub struct CompleteLaunch<'info> {
@@ -35,6 +45,15 @@ pub struct CompleteLaunch<'info> {
         has_one = usdc_mint,
     )]
     pub launch: Box<Account<'info, Launch>>,
+
+    /// CHECK: Token metadata
+    #[account(
+        mut,
+        seeds = [b"metadata", MPL_TOKEN_METADATA_PROGRAM_ID.as_ref(), token_mint.key().as_ref()],
+        seeds::program = MPL_TOKEN_METADATA_PROGRAM_ID,
+        bump
+    )]
+    pub token_metadata: UncheckedAccount<'info>,
 
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -74,6 +93,16 @@ pub struct CompleteLaunch<'info> {
     )]
     pub treasury_usdc_account: Box<Account<'info, TokenAccount>>,
 
+    /// CHECK: pool lp mint not created yet so we can't initialize it before
+    #[account(
+        mut,
+        address = get_associated_token_address(
+            dao_treasury.key,
+            lp_mint.key,
+        )
+    )]
+    pub treasury_lp_account: UncheckedAccount<'info>,
+
     /// Use the lowest fee pool, can see fees at https://api-v3.raydium.io/main/cpmm-config
     #[account(
         mut,
@@ -87,8 +116,15 @@ pub struct CompleteLaunch<'info> {
     pub amm_config: Box<Account<'info, AmmConfig>>,
 
     /// CHECK: Initialize an account to store the pool state, init by cp-swap
-    #[account(mut)]
-    pub pool_state: Signer<'info>,
+    #[account(
+        mut,
+        seeds = [
+            b"pool_state",
+            dao.key().as_ref(),
+        ],
+        bump,
+    )]
+    pub pool_state: UncheckedAccount<'info>,
 
     #[account(mut)]
     pub token_mint: Box<Account<'info, Mint>>,
@@ -182,6 +218,7 @@ pub struct CompleteLaunch<'info> {
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
     pub autocrat_program: Program<'info, Autocrat>,
+    pub token_metadata_program: Program<'info, Metadata>,
     /// CHECK: checked by autocrat program
     pub autocrat_event_authority: UncheckedAccount<'info>,
     pub rent: Sysvar<'info, Rent>,
@@ -260,25 +297,12 @@ impl CompleteLaunch<'_> {
 
             let launch_key = launch.key();
 
-            let seeds = &[
+            let launch_signer_seeds = &[
                 b"launch_signer",
                 launch_key.as_ref(),
                 &[launch.launch_signer_pda_bump],
             ];
-            let signer = &[&seeds[..]];
-
-            token::transfer(
-                CpiContext::new_with_signer(
-                    ctx.accounts.token_program.to_account_info(),
-                    Transfer {
-                        from: ctx.accounts.launch_usdc_vault.to_account_info(),
-                        to: ctx.accounts.treasury_usdc_account.to_account_info(),
-                        authority: ctx.accounts.launch_signer.to_account_info(),
-                    },
-                    signer,
-                ),
-                usdc_to_dao,
-            )?;
+            let launch_signer = &[&launch_signer_seeds[..]];
 
             token::mint_to(
                 CpiContext::new_with_signer(
@@ -288,7 +312,7 @@ impl CompleteLaunch<'_> {
                         to: ctx.accounts.launch_token_vault.to_account_info(),
                         authority: ctx.accounts.launch_signer.to_account_info(),
                     },
-                    signer,
+                    launch_signer,
                 ),
                 token_to_lp,
             )?;
@@ -300,7 +324,7 @@ impl CompleteLaunch<'_> {
                         account_or_mint: ctx.accounts.token_mint.to_account_info(),
                         current_authority: ctx.accounts.launch_signer.to_account_info(),
                     },
-                    signer,
+                    launch_signer,
                 ),
                 AuthorityType::MintTokens,
                 Some(ctx.accounts.dao_treasury.key()),
@@ -393,7 +417,9 @@ impl CompleteLaunch<'_> {
                     .zip(cpi_accounts.to_account_infos())
                     .map(|mut pair| {
                         pair.0.is_signer = pair.1.is_signer;
-                        if pair.0.pubkey == ctx.accounts.launch_signer.key() {
+                        if pair.0.pubkey == ctx.accounts.launch_signer.key()
+                            || pair.0.pubkey == ctx.accounts.pool_state.key()
+                        {
                             pair.0.is_signer = true;
                         }
                         pair.0
@@ -401,7 +427,76 @@ impl CompleteLaunch<'_> {
                     .collect(),
                 data: ix_data,
             };
-            solana_program::program::invoke_signed(&ix, &cpi_accounts.to_account_infos(), signer)?;
+
+            let dao_key = ctx.accounts.dao.key();
+            let pool_seeds = &[b"pool_state", dao_key.as_ref(), &[ctx.bumps.pool_state]];
+            let raydium_signer = &[&launch_signer_seeds[..], &pool_seeds[..]];
+
+            solana_program::program::invoke_signed(
+                &ix,
+                &cpi_accounts.to_account_infos(),
+                raydium_signer,
+            )?;
+
+            token::transfer(
+                CpiContext::new_with_signer(
+                    ctx.accounts.token_program.to_account_info(),
+                    Transfer {
+                        from: ctx.accounts.launch_usdc_vault.to_account_info(),
+                        to: ctx.accounts.treasury_usdc_account.to_account_info(),
+                        authority: ctx.accounts.launch_signer.to_account_info(),
+                    },
+                    launch_signer,
+                ),
+                usdc_to_dao,
+            )?;
+
+            // We don't need to do this idempotently because the LP mint is only
+            // created in the Raydium IX, which means that the account couldn't
+            // exist yet.
+            associated_token::create(CpiContext::new(
+                ctx.accounts.associated_token_program.to_account_info(),
+                Create {
+                    payer: ctx.accounts.payer.to_account_info(),
+                    associated_token: ctx.accounts.treasury_lp_account.to_account_info(),
+                    authority: ctx.accounts.dao_treasury.to_account_info(),
+                    mint: ctx.accounts.lp_mint.to_account_info(),
+                    system_program: ctx.accounts.system_program.to_account_info(),
+                    token_program: ctx.accounts.token_program.to_account_info(),
+                },
+            ))?;
+
+            let lp_vault = ctx.accounts.lp_vault.to_account_info();
+            let lp_vault: TokenAccount =
+                TokenAccount::try_deserialize(&mut &lp_vault.data.borrow()[..])?;
+
+            token::transfer(
+                CpiContext::new_with_signer(
+                    ctx.accounts.token_program.to_account_info(),
+                    Transfer {
+                        from: ctx.accounts.lp_vault.to_account_info(),
+                        to: ctx.accounts.treasury_lp_account.to_account_info(),
+                        authority: ctx.accounts.launch_signer.to_account_info(),
+                    },
+                    launch_signer,
+                ),
+                lp_vault.amount,
+            )?;
+
+            update_metadata_accounts_v2(
+                CpiContext::new_with_signer(
+                    ctx.accounts.token_metadata_program.to_account_info(),
+                    UpdateMetadataAccountsV2 {
+                        metadata: ctx.accounts.token_metadata.to_account_info(),
+                        update_authority: ctx.accounts.launch_signer.to_account_info(),
+                    },
+                    launch_signer,
+                ),
+                Some(ctx.accounts.dao_treasury.key()),
+                None,
+                None,
+                None,
+            )?;
 
             launch.state = LaunchState::Complete;
         } else {

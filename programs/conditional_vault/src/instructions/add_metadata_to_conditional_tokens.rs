@@ -3,7 +3,7 @@ use super::*;
 pub mod proph3t_deployer {
     use anchor_lang::declare_id;
 
-    declare_id!("HfFi634cyurmVVDr9frwu4MjGLJzz9XbAJz981HdVaNz");
+    declare_id!("613BRiXuAEn7vibs2oAYzpGW9fXgjzDNuFMM4wPzLdY");
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize)]

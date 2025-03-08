@@ -33,7 +33,9 @@ import {
   getLaunchAddr,
   getLaunchDaoAddr,
   getLaunchSignerAddr,
+  getLiquidityPoolAddr,
   getMetadataAddr,
+  getRaydiumCpmmLpMintAddr,
 } from "./utils/pda.js";
 import { AutocratClient } from "./AutocratClient.js";
 import * as anchor from "@coral-xyz/anchor";
@@ -113,16 +115,13 @@ export class LaunchpadClient {
     tokenUri: string,
     minimumRaiseAmount: BN,
     secondsForLaunch: number,
-    tokenMintKp: Keypair,
+    tokenMint: PublicKey,
     launchAuthority: PublicKey = this.provider.publicKey,
     isDevnet: boolean = false
   ) {
     const USDC = isDevnet ? DEVNET_USDC : MAINNET_USDC;
 
-    const [launch] = getLaunchAddr(
-      this.launchpad.programId,
-      tokenMintKp.publicKey
-    );
+    const [launch] = getLaunchAddr(this.launchpad.programId, tokenMint);
     const [launchSigner] = getLaunchSignerAddr(
       this.launchpad.programId,
       launch
@@ -130,11 +129,11 @@ export class LaunchpadClient {
     const usdcVault = getAssociatedTokenAddressSync(USDC, launchSigner, true);
 
     const tokenVault = getAssociatedTokenAddressSync(
-      tokenMintKp.publicKey,
+      tokenMint,
       launchSigner,
       true
     );
-    const [tokenMetadata] = getMetadataAddr(tokenMintKp.publicKey);
+    const [tokenMetadata] = getMetadataAddr(tokenMint);
 
     return this.launchpad.methods
       .initializeLaunch({
@@ -151,7 +150,7 @@ export class LaunchpadClient {
         tokenVault,
         launchAuthority,
         usdcMint: USDC,
-        tokenMint: tokenMintKp.publicKey,
+        tokenMint,
         tokenMetadata,
         tokenMetadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
       })
@@ -162,8 +161,8 @@ export class LaunchpadClient {
           launchSigner,
           USDC
         ),
-      ])
-      .signers([tokenMintKp]);
+      ]);
+    // .signers([tokenMintKp]);
   }
 
   startLaunchIx(
@@ -244,26 +243,20 @@ export class LaunchpadClient {
       true
     );
 
-    const poolStateKp = Keypair.generate();
+    const [poolState] = getLiquidityPoolAddr(this.launchpad.programId, dao);
 
     const cpSwapProgramId = isDevnet
       ? DEVNET_RAYDIUM_CP_SWAP_PROGRAM_ID
       : RAYDIUM_CP_SWAP_PROGRAM_ID;
 
-    const [lpMint] = PublicKey.findProgramAddressSync(
-      [
-        anchor.utils.bytes.utf8.encode("pool_lp_mint"),
-        poolStateKp.publicKey.toBuffer(),
-      ],
-      cpSwapProgramId
-    );
+    const [lpMint] = getRaydiumCpmmLpMintAddr(poolState, isDevnet);
 
     const lpVault = getAssociatedTokenAddressSync(lpMint, launchSigner, true);
 
     const [poolTokenVault] = PublicKey.findProgramAddressSync(
       [
         anchor.utils.bytes.utf8.encode("pool_vault"),
-        poolStateKp.publicKey.toBuffer(),
+        poolState.toBuffer(),
         tokenMint.toBuffer(),
       ],
       cpSwapProgramId
@@ -272,23 +265,22 @@ export class LaunchpadClient {
     const [poolUsdcVault] = PublicKey.findProgramAddressSync(
       [
         anchor.utils.bytes.utf8.encode("pool_vault"),
-        poolStateKp.publicKey.toBuffer(),
+        poolState.toBuffer(),
         USDC.toBuffer(),
       ],
       cpSwapProgramId
     );
 
     const [observationState] = PublicKey.findProgramAddressSync(
-      [
-        anchor.utils.bytes.utf8.encode("observation"),
-        poolStateKp.publicKey.toBuffer(),
-      ],
+      [anchor.utils.bytes.utf8.encode("observation"), poolState.toBuffer()],
       cpSwapProgramId
     );
 
     const [autocratEventAuthority] = getEventAuthorityAddr(
       this.autocratClient.getProgramId()
     );
+
+    const [tokenMetadata] = getMetadataAddr(tokenMint);
 
     return this.launchpad.methods
       .completeLaunch()
@@ -300,13 +292,19 @@ export class LaunchpadClient {
         dao,
         daoTreasury,
         treasuryUsdcAccount,
+        treasuryLpAccount: getAssociatedTokenAddressSync(
+          lpMint,
+          daoTreasury,
+          true
+        ),
         usdcMint: USDC,
         tokenMint,
+        tokenMetadata,
         lpMint,
         lpVault,
         poolTokenVault,
         poolUsdcVault,
-        poolState: poolStateKp.publicKey,
+        poolState,
         observationState,
         cpSwapProgram: cpSwapProgramId,
         authority: isDevnet ? DEVNET_RAYDIUM_AUTHORITY : RAYDIUM_AUTHORITY,
@@ -317,9 +315,9 @@ export class LaunchpadClient {
           ? DEVNET_RAYDIUM_CREATE_POOL_FEE_RECEIVE
           : RAYDIUM_CREATE_POOL_FEE_RECEIVE,
         autocratProgram: this.autocratClient.getProgramId(),
+        tokenMetadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
         autocratEventAuthority,
       })
-      .signers([poolStateKp])
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(
           this.provider.publicKey,
