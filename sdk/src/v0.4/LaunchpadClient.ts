@@ -395,7 +395,7 @@ export class LaunchpadClient {
       })
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(
-          funder,
+          this.provider.publicKey,
           getAssociatedTokenAddressSync(tokenMint, funder, true),
           funder,
           tokenMint

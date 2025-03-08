@@ -47,6 +47,7 @@ const RAYDIUM_CP_SWAP_PROGRAM_ID = new PublicKey(
 
 import mintAndSwap from "./integration/mintAndSwap.test.js";
 import scalarMarkets from "./integration/scalarMarkets.test.js";
+import fullLaunch from "./integration/fullLaunch.test.js";
 
 before(async function () {
   // const version: VersionKey = "0.4";
@@ -220,7 +221,7 @@ before(async function () {
   await mintToOverride(
     this.context,
     token.getAssociatedTokenAddressSync(MAINNET_USDC, this.payer.publicKey),
-    100_000n * 10n ** 6n
+    10_000_000n * 10n ** 6n
   );
 });
 
@@ -234,4 +235,5 @@ describe("project-wide integration tests", function () {
     "tests scalar markets (mint, split, swap, redeem) with some fuzzing",
     scalarMarkets
   );
+  it("full launch", fullLaunch);
 });

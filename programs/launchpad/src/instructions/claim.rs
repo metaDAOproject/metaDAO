@@ -19,7 +19,7 @@ pub struct Claim<'info> {
 
     #[account(
         mut,
-        close = funder,
+        close = payer,
         has_one = funder,
         seeds = [b"funding_record", launch.key().as_ref(), funder.key().as_ref()],
         bump = funding_record.pda_bump
