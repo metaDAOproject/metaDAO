@@ -38,19 +38,27 @@ export default function suite() {
 
     // Get accounts
     [launch] = getLaunchAddr(launchpadClient.getProgramId(), META);
-    [launchSigner] = getLaunchSignerAddr(launchpadClient.getProgramId(), launch);
+    [launchSigner] = getLaunchSignerAddr(
+      launchpadClient.getProgramId(),
+      launch
+    );
     usdcVault = getAssociatedTokenAddressSync(MAINNET_USDC, launchSigner, true);
-    funderUsdcAccount = getAssociatedTokenAddressSync(MAINNET_USDC, this.payer.publicKey);
+    funderUsdcAccount = getAssociatedTokenAddressSync(
+      MAINNET_USDC,
+      this.payer.publicKey
+    );
 
     // Initialize launch
-    await launchpadClient.initializeLaunchIx(
-      "MTN",
-      "MTN",
-      "https://example.com",
-      minRaise,
-      60 * 60 * 24 * 2,
-      METAKP
-    ).rpc();
+    await launchpadClient
+      .initializeLaunchIx(
+        "MTN",
+        "MTN",
+        "https://example.com",
+        minRaise,
+        60 * 60 * 24 * 2,
+        METAKP
+      )
+      .rpc();
 
     await launchpadClient.startLaunchIx(launch).rpc();
 
@@ -61,24 +69,32 @@ export default function suite() {
     const fundAmount = new BN(1000_000000); // 1000 USDC
 
     // Fund the launch
-    await launchpadClient.fundIx(
-      launch,
-      fundAmount,
-    ).rpc();
+    await launchpadClient.fundIx(launch, fundAmount).rpc();
   });
 
   it("successfully claims tokens after launch completion", async function () {
     // // Advance clock and complete launch
     await this.advanceBySeconds(60 * 60 * 24 * 3);
-    await launchpadClient.completeLaunchIx(launch, META).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 })]).rpc();
+    await launchpadClient
+      .completeLaunchIx(launch, META)
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),
+      ])
+      .rpc();
 
-    const initialTokenBalance = await this.getTokenBalance(META, this.payer.publicKey);
+    const initialTokenBalance = await this.getTokenBalance(
+      META,
+      this.payer.publicKey
+    );
     console.log("initialTokenBalance", initialTokenBalance.toString());
 
     // Claim tokens
     await launchpadClient.claimIx(launch, META).rpc();
 
-    const finalTokenBalance = await this.getTokenBalance(META, this.payer.publicKey);
+    const finalTokenBalance = await this.getTokenBalance(
+      META,
+      this.payer.publicKey
+    );
     const expectedTokens = new BN(10_000_000 * 1_000_000); // full supply
 
     assert.equal(finalTokenBalance.toString(), expectedTokens.toString());
@@ -106,4 +122,4 @@ export default function suite() {
       assert.include(e.message, "InvalidLaunchState");
     }
   });
-} 
+}

@@ -9,9 +9,16 @@ import {
 } from "@metadaoproject/futarchy/v0.4";
 import { createMint, mintTo } from "spl-token-bankrun";
 import { BN } from "bn.js";
-import { createMintToInstruction, createTransferInstruction, getAssociatedTokenAddressSync } from "@solana/spl-token";
+import {
+  createMintToInstruction,
+  createTransferInstruction,
+  getAssociatedTokenAddressSync,
+} from "@solana/spl-token";
 import * as token from "@solana/spl-token";
-import { MAINNET_USDC, MPL_TOKEN_METADATA_PROGRAM_ID } from "@metadaoproject/futarchy/v0.4";
+import {
+  MAINNET_USDC,
+  MPL_TOKEN_METADATA_PROGRAM_ID,
+} from "@metadaoproject/futarchy/v0.4";
 
 export default function suite() {
   let autocratClient: AutocratClient;
@@ -36,25 +43,41 @@ export default function suite() {
     const minRaise = new BN(1000_000000); // 1000 USDC
     const secondsForLaunch = 60 * 60 * 24 * 7; // 1 week
     const [, pdaBump] = getLaunchAddr(launchpadClient.getProgramId(), META);
-    const [launchSigner, launchSignerPdaBump] = getLaunchSignerAddr(launchpadClient.getProgramId(), launch);
+    const [launchSigner, launchSignerPdaBump] = getLaunchSignerAddr(
+      launchpadClient.getProgramId(),
+      launch
+    );
 
-    await launchpadClient.initializeLaunchIx(
-      "META",
-      "META",
-      "https://example.com",
-      minRaise,
-      secondsForLaunch,
-      METAKP
-    ).rpc();
+    await launchpadClient
+      .initializeLaunchIx(
+        "META",
+        "META",
+        "https://example.com",
+        minRaise,
+        secondsForLaunch,
+        METAKP
+      )
+      .rpc();
 
     const storedLaunch = await launchpadClient.fetchLaunch(launch);
 
-    assert.equal(storedLaunch.minimumRaiseAmount.toString(), minRaise.toString());
+    assert.equal(
+      storedLaunch.minimumRaiseAmount.toString(),
+      minRaise.toString()
+    );
     assert.ok(storedLaunch.launchAuthority.equals(this.payer.publicKey));
     assert.ok(storedLaunch.launchSigner.equals(launchSigner));
     assert.equal(storedLaunch.launchSignerPdaBump, launchSignerPdaBump);
-    assert.ok(storedLaunch.launchUsdcVault.equals(token.getAssociatedTokenAddressSync(MAINNET_USDC, launchSigner, true)));
-    assert.ok(storedLaunch.launchTokenVault.equals(token.getAssociatedTokenAddressSync(META, launchSigner, true)));
+    assert.ok(
+      storedLaunch.launchUsdcVault.equals(
+        token.getAssociatedTokenAddressSync(MAINNET_USDC, launchSigner, true)
+      )
+    );
+    assert.ok(
+      storedLaunch.launchTokenVault.equals(
+        token.getAssociatedTokenAddressSync(META, launchSigner, true)
+      )
+    );
     assert.ok(storedLaunch.tokenMint.equals(META));
     assert.equal(storedLaunch.pdaBump, pdaBump);
     assert.equal(storedLaunch.totalCommittedAmount.toString(), "0");
@@ -73,36 +96,52 @@ export default function suite() {
     const [tokenMetadata] = getMetadataAddr(META);
 
     try {
-      await launchpadClient.launchpad.methods.initializeLaunch({
-        tokenName: "MetaDAO",
-        tokenSymbol: "META",
-        tokenUri: "https://example.com",
-        minimumRaiseAmount,
-        secondsForLaunch,
-      }).accounts({
-        launch,
-        launchSigner: fakeLaunchSigner.publicKey,
-        usdcVault: token.getAssociatedTokenAddressSync(MAINNET_USDC, fakeLaunchSigner.publicKey, true),
-        tokenVault: token.getAssociatedTokenAddressSync(META, fakeLaunchSigner.publicKey, true),
-        launchAuthority: this.payer.publicKey,
-        usdcMint: MAINNET_USDC,
-        tokenMint: META,
-        tokenMetadata,
-        tokenMetadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
-      })
+      await launchpadClient.launchpad.methods
+        .initializeLaunch({
+          tokenName: "MetaDAO",
+          tokenSymbol: "META",
+          tokenUri: "https://example.com",
+          minimumRaiseAmount,
+          secondsForLaunch,
+        })
+        .accounts({
+          launch,
+          launchSigner: fakeLaunchSigner.publicKey,
+          usdcVault: token.getAssociatedTokenAddressSync(
+            MAINNET_USDC,
+            fakeLaunchSigner.publicKey,
+            true
+          ),
+          tokenVault: token.getAssociatedTokenAddressSync(
+            META,
+            fakeLaunchSigner.publicKey,
+            true
+          ),
+          launchAuthority: this.payer.publicKey,
+          usdcMint: MAINNET_USDC,
+          tokenMint: META,
+          tokenMetadata,
+          tokenMetadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
+        })
         .preInstructions([
           token.createAssociatedTokenAccountIdempotentInstruction(
             this.payer.publicKey,
-            getAssociatedTokenAddressSync(MAINNET_USDC, fakeLaunchSigner.publicKey, true),
+            getAssociatedTokenAddressSync(
+              MAINNET_USDC,
+              fakeLaunchSigner.publicKey,
+              true
+            ),
             fakeLaunchSigner.publicKey,
             MAINNET_USDC
           ),
         ])
-        .remainingAccounts([{
-          pubkey: fakeLaunchSigner.publicKey,
-          isWritable: false,
-          isSigner: true,
-        }])
+        .remainingAccounts([
+          {
+            pubkey: fakeLaunchSigner.publicKey,
+            isWritable: false,
+            isSigner: true,
+          },
+        ])
         .signers([fakeLaunchSigner, METAKP])
         .rpc();
       assert.fail("Should have thrown error");

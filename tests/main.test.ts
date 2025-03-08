@@ -41,7 +41,9 @@ import { LOW_FEE_RAYDIUM_CONFIG } from "@metadaoproject/futarchy/v0.4";
 const MPL_TOKEN_METADATA_PROGRAM_ID = toWeb3JsPublicKey(
   UMI_MPL_TOKEN_METADATA_PROGRAM_ID
 );
-const RAYDIUM_CP_SWAP_PROGRAM_ID = new PublicKey("CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C");
+const RAYDIUM_CP_SWAP_PROGRAM_ID = new PublicKey(
+  "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C"
+);
 
 import mintAndSwap from "./integration/mintAndSwap.test.js";
 import scalarMarkets from "./integration/scalarMarkets.test.js";
@@ -49,8 +51,6 @@ import scalarMarkets from "./integration/scalarMarkets.test.js";
 before(async function () {
   // const version: VersionKey = "0.4";
   // const { AmmClient, AutocratClient, ConditionalVaultClient } = getVersion(version);
-
-
 
   this.context = await startAnchor(
     "./",
@@ -64,7 +64,7 @@ before(async function () {
       {
         name: "raydium_cp_swap",
         programId: RAYDIUM_CP_SWAP_PROGRAM_ID,
-      }
+      },
     ],
     [
       {
@@ -74,16 +74,18 @@ before(async function () {
           executable: false,
           owner: RAYDIUM_CP_SWAP_PROGRAM_ID,
           lamports: 1_000_000_000,
-        }
+        },
       },
       {
         address: RAYDIUM_CREATE_POOL_FEE_RECEIVE,
         info: {
-          data: fs.readFileSync("./tests/fixtures/raydium-create-pool-fee-receive"),
+          data: fs.readFileSync(
+            "./tests/fixtures/raydium-create-pool-fee-receive"
+          ),
           executable: false,
           owner: token.TOKEN_PROGRAM_ID,
-          lamports: 6858_402_039_280
-        }
+          lamports: 6858_402_039_280,
+        },
       },
       {
         address: MAINNET_USDC,
@@ -91,9 +93,9 @@ before(async function () {
           data: fs.readFileSync("./tests/fixtures/usdc"),
           executable: false,
           owner: token.TOKEN_PROGRAM_ID,
-          lamports: 377_950_832_219
-        }
-      }
+          lamports: 377_950_832_219,
+        },
+      },
     ]
   );
   this.banksClient = this.context.banksClient;
@@ -108,7 +110,9 @@ before(async function () {
   this.autocratClient = AutocratClient.createClient({
     provider: provider as any,
   });
-  this.launchpadClient = LaunchpadClient.createClient({ provider: provider as any });
+  this.launchpadClient = LaunchpadClient.createClient({
+    provider: provider as any,
+  });
   this.ammClient = AmmClient.createClient({ provider: provider as any });
   this.payer = provider.wallet.payer;
 
@@ -186,9 +190,7 @@ before(async function () {
     );
   };
 
-  this.advanceBySlots = async (
-    slots: bigint
-  ) => {
+  this.advanceBySlots = async (slots: bigint) => {
     const currentClock = await this.context.banksClient.getClock();
     this.context.setClock(
       new Clock(
@@ -201,16 +203,25 @@ before(async function () {
     );
   };
 
-  this.advanceBySeconds = async (
-    seconds: number
-  ) => {
+  this.advanceBySeconds = async (seconds: number) => {
     const currentClock = await this.context.banksClient.getClock();
-    this.context.setClock(new Clock(currentClock.slot, currentClock.epochStartTimestamp, currentClock.epoch, currentClock.leaderScheduleEpoch, BigInt(currentClock.unixTimestamp + BigInt(seconds))));
+    this.context.setClock(
+      new Clock(
+        currentClock.slot,
+        currentClock.epochStartTimestamp,
+        currentClock.epoch,
+        currentClock.leaderScheduleEpoch,
+        BigInt(currentClock.unixTimestamp + BigInt(seconds))
+      )
+    );
   };
 
   await this.createTokenAccount(MAINNET_USDC, this.payer.publicKey);
-  await mintToOverride(this.context, token.getAssociatedTokenAddressSync(MAINNET_USDC, this.payer.publicKey), 100_000n * (10n ** 6n));
-
+  await mintToOverride(
+    this.context,
+    token.getAssociatedTokenAddressSync(MAINNET_USDC, this.payer.publicKey),
+    100_000n * 10n ** 6n
+  );
 });
 
 describe("conditional_vault", conditionalVault);
@@ -219,5 +230,8 @@ describe("autocrat", autocrat);
 describe("launchpad", launchpad);
 describe("project-wide integration tests", function () {
   it("mint and swap in a single transaction", mintAndSwap);
-  it("tests scalar markets (mint, split, swap, redeem) with some fuzzing", scalarMarkets);
+  it(
+    "tests scalar markets (mint, split, swap, redeem) with some fuzzing",
+    scalarMarkets
+  );
 });

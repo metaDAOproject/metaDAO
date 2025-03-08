@@ -11,8 +11,14 @@ import {
   MAINNET_USDC,
 } from "@metadaoproject/futarchy/v0.4";
 import { BN } from "bn.js";
-import { deserializeMetadata, Metadata } from "@metaplex-foundation/mpl-token-metadata";
-import { fromWeb3JsPublicKey, toWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
+import {
+  deserializeMetadata,
+  Metadata,
+} from "@metaplex-foundation/mpl-token-metadata";
+import {
+  fromWeb3JsPublicKey,
+  toWeb3JsPublicKey,
+} from "@metaplex-foundation/umi-web3js-adapters";
 
 export default function suite() {
   let autocratClient: AutocratClient;
@@ -37,17 +43,22 @@ export default function suite() {
 
     // Get accounts
     [launch] = getLaunchAddr(launchpadClient.getProgramId(), META);
-    [launchSigner] = getLaunchSignerAddr(launchpadClient.getProgramId(), launch);
+    [launchSigner] = getLaunchSignerAddr(
+      launchpadClient.getProgramId(),
+      launch
+    );
 
     // Initialize launch
-    await launchpadClient.initializeLaunchIx(
-      "MTN",
-      "MTN",
-      "https://example.com",
-      minRaise,
-      60 * 60 * 24 * 10,
-      METAKP
-    ).rpc();
+    await launchpadClient
+      .initializeLaunchIx(
+        "MTN",
+        "MTN",
+        "https://example.com",
+        minRaise,
+        60 * 60 * 24 * 10,
+        METAKP
+      )
+      .rpc();
 
     await launchpadClient.startLaunchIx(launch).rpc();
     await this.createTokenAccount(META, this.payer.publicKey);
@@ -56,10 +67,7 @@ export default function suite() {
   it("completes launch successfully when minimum raise is met and time has passed", async function () {
     // Fund the launch with exactly minimum raise
 
-    await launchpadClient.fundIx(
-      launch,
-      minRaise,
-    ).rpc();
+    await launchpadClient.fundIx(launch, minRaise).rpc();
 
     const [tokenMetadata] = getMetadataAddr(META);
 
@@ -68,45 +76,63 @@ export default function suite() {
       publicKey: fromWeb3JsPublicKey(tokenMetadata),
       ...rawStoredMetadata,
     });
-    assert.ok(toWeb3JsPublicKey(storedMetadata.updateAuthority).equals(launchSigner));
+    assert.ok(
+      toWeb3JsPublicKey(storedMetadata.updateAuthority).equals(launchSigner)
+    );
 
     // Advance clock past 7 days
     await this.advanceBySeconds(60 * 60 * 24 * 11);
 
     await launchpadClient
       .completeLaunchIx(launch, META)
-      .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 500_000 }), ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 })]).rpc();
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 500_000 }),
+        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
+      ])
+      .rpc();
 
     const launchAccount = await launchpadClient.fetchLaunch(launch);
-    const [poolState] = getLiquidityPoolAddr(launchpadClient.getProgramId(), launchAccount.dao);
+    const [poolState] = getLiquidityPoolAddr(
+      launchpadClient.getProgramId(),
+      launchAccount.dao
+    );
     const [lpMint] = getRaydiumCpmmLpMintAddr(poolState, false);
 
-    const treasuryUSDCBalance = await this.getTokenBalance(MAINNET_USDC, launchAccount.daoTreasury);
-    const treasuryLpBalance = await this.getTokenBalance(lpMint, launchAccount.daoTreasury);
+    const treasuryUSDCBalance = await this.getTokenBalance(
+      MAINNET_USDC,
+      launchAccount.daoTreasury
+    );
+    const treasuryLpBalance = await this.getTokenBalance(
+      lpMint,
+      launchAccount.daoTreasury
+    );
 
     assert.exists(launchAccount.state.complete);
-    assert.equal(treasuryUSDCBalance.toString(), minRaise.muln(9).divn(10).toString());
+    assert.equal(
+      treasuryUSDCBalance.toString(),
+      minRaise.muln(9).divn(10).toString()
+    );
     assert.isAbove(Number(treasuryLpBalance.toString()), 1000);
     const mint = await this.getMint(META);
     assert.isTrue(mint.mintAuthority.equals(launchAccount.daoTreasury));
     assert.exists(launchAccount.dao);
-
 
     rawStoredMetadata = await this.banksClient.getAccount(tokenMetadata);
     storedMetadata = deserializeMetadata({
       publicKey: fromWeb3JsPublicKey(tokenMetadata),
       ...rawStoredMetadata,
     });
-    assert.ok(toWeb3JsPublicKey(storedMetadata.updateAuthority).equals(launchAccount.daoTreasury));
+    assert.ok(
+      toWeb3JsPublicKey(storedMetadata.updateAuthority).equals(
+        launchAccount.daoTreasury
+      )
+    );
   });
 
   it("fails when launch period has not passed", async function () {
     // Fund the launch with exactly minimum raise
 
-    await launchpadClient.fundIx(
-      launch,
-      minRaise,
-    ).rpc();
+    await launchpadClient.fundIx(launch, minRaise).rpc();
 
     // Try to complete immediately (should fail)
     try {
@@ -120,7 +146,12 @@ export default function suite() {
     await this.advanceBySeconds(60 * 60 * 24 * 9);
 
     try {
-      await launchpadClient.completeLaunchIx(launch, META).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 })]).rpc();
+      await launchpadClient
+        .completeLaunchIx(launch, META)
+        .preInstructions([
+          ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
+        ])
+        .rpc();
       assert.fail("Should have thrown error");
     } catch (e) {
       assert.include(e.message, "LaunchPeriodNotOver");
@@ -131,20 +162,19 @@ export default function suite() {
     // Fund the launch with less than minimum raise
     const partialAmount = minRaise.divn(2);
 
-    await launchpadClient.fundIx(
-      launch,
-      partialAmount,
-    ).rpc();
+    await launchpadClient.fundIx(launch, partialAmount).rpc();
 
     await this.advanceBySeconds(60 * 60 * 24 * 11);
 
     // Complete the launch
     // I'm only 5 bytes under the limit, so make sure we don't go over
-    await launchpadClient.completeLaunchIx(launch, META)
+    await launchpadClient
+      .completeLaunchIx(launch, META)
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }),
         ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
-      ]).rpc();
+      ])
+      .rpc();
 
     const launchAccount = await launchpadClient.fetchLaunch(launch);
 
@@ -161,10 +191,16 @@ export default function suite() {
     // Try to complete again
     try {
       // CU price so that the VM doesn't think it's a duplicate tx
-      await launchpadClient.completeLaunchIx(launch, META).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }), ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 })]).rpc();
+      await launchpadClient
+        .completeLaunchIx(launch, META)
+        .preInstructions([
+          ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1 }),
+          ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),
+        ])
+        .rpc();
       assert.fail("Should have thrown error");
     } catch (e) {
       assert.include(e.message, "InvalidLaunchState");
     }
   });
-} 
+}

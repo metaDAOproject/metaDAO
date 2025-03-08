@@ -240,6 +240,5 @@ export default function suite() {
       assert.equal(storedMint.supply.toString(), "2000");
       await this.assertBalance(mint, this.payer.publicKey, 2000);
     }
-    
   });
 }

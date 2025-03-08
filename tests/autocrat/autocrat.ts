@@ -551,8 +551,9 @@ export default function suite() {
       await mintToOverride(context, treasuryMetaAccount, 1_000_000_000n);
       await mintToOverride(context, treasuryUsdcAccount, 1_000_000n);
 
-
-    const [autocratEventAuthority] = getEventAuthorityAddr(autocrat.programId);
+      const [autocratEventAuthority] = getEventAuthorityAddr(
+        autocrat.programId
+      );
 
       const accounts = [
         {

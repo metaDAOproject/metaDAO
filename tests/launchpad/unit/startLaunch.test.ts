@@ -8,7 +8,11 @@ import {
 } from "@metadaoproject/futarchy/v0.4";
 import { createMint } from "spl-token-bankrun";
 import { BN } from "bn.js";
-import { createSetAuthorityInstruction, AuthorityType, getAssociatedTokenAddressSync } from "@solana/spl-token";
+import {
+  createSetAuthorityInstruction,
+  AuthorityType,
+  getAssociatedTokenAddressSync,
+} from "@solana/spl-token";
 
 export default function suite() {
   let autocratClient: AutocratClient;
@@ -32,14 +36,16 @@ export default function suite() {
     [launch] = getLaunchAddr(launchpadClient.getProgramId(), META);
 
     // Initialize launch
-    await launchpadClient.initializeLaunchIx(
-      "META",
-      "MTA",
-      "https://example.com",
-      minRaise,
-      60 * 60 * 24 * 2,
-      METAKP
-    ).rpc();
+    await launchpadClient
+      .initializeLaunchIx(
+        "META",
+        "MTA",
+        "https://example.com",
+        minRaise,
+        60 * 60 * 24 * 2,
+        METAKP
+      )
+      .rpc();
   });
 
   it("starts launch correctly", async function () {
@@ -56,7 +62,10 @@ export default function suite() {
 
     // Check final state
     launchAccount = await launchpadClient.fetchLaunch(launch);
-    assert.equal(launchAccount.unixTimestampStarted.toString(), clock.unixTimestamp.toString());
+    assert.equal(
+      launchAccount.unixTimestampStarted.toString(),
+      clock.unixTimestamp.toString()
+    );
     assert.exists(launchAccount.state.live);
   });
-} 
+}

@@ -24,8 +24,6 @@ const USDC = new PublicKey("CRWxbGNtVrTr9FAJX6SZpsvPZyi9R7VetuqecoZ1jCdD");
 async function main() {
   const dao = new PublicKey("33Pi6Dxur8Q87K7DmG8JAdZoiTwSRi2HCP6ZjLAPn2sE");
 
-
-
   // const outcomeQuestionId = sha256(
   //   new TextEncoder().encode(
   //     "Will Futarded Foundation fund a Go SDK for Anchor?/No/Yes"
@@ -129,7 +127,6 @@ async function main() {
   console.log("Metric Vault");
   console.log(metricVault);
   console.log(storedMetricVault);
-
 
   // await vaultProgram.splitTokensIx(outcomeQuestion, outcomeVault, USDC, new BN(1000 * 10 ** 6), 2).rpc();
   // await vaultProgram.splitTokensIx(metricQuestion, metricVault, pUSDC, new BN(1000 * 10 ** 6), 2).rpc();
