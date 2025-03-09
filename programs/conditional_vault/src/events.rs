@@ -85,7 +85,7 @@ pub struct ResolveQuestionEvent {
 pub struct SplitTokensEvent {
     pub common: CommonFields,
     pub user: Pubkey,
-    pub vault: Pubkey,  
+    pub vault: Pubkey,
     pub amount: u64,
     pub post_user_underlying_balance: u64,
     pub post_vault_underlying_balance: u64,
@@ -93,4 +93,3 @@ pub struct SplitTokensEvent {
     pub post_conditional_token_supplies: Vec<u64>,
     pub seq_num: u64,
 }
-

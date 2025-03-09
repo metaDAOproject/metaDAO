@@ -20,9 +20,9 @@ pub mod events;
 pub mod instructions;
 pub mod state;
 
+use crate::events::*;
 use crate::instructions::*;
 use crate::state::*;
-use crate::events::*;
 
 declare_id!("AMMyu265tkBpRW21iGQxKGLaves3gKm2JcMUqfXNSpqD");
 

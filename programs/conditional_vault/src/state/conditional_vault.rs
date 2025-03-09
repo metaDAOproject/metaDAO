@@ -52,7 +52,11 @@ impl ConditionalVault {
                 .sum::<u128>() as u64
         };
 
-        require_gte!(vault_underlying_balance, max_possible_liability, VaultError::AssertFailed);
+        require_gte!(
+            vault_underlying_balance,
+            max_possible_liability,
+            VaultError::AssertFailed
+        );
 
         Ok(())
     }

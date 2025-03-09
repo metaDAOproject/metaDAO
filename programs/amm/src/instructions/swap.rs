@@ -5,7 +5,7 @@ use crate::error::AmmError;
 use crate::generate_amm_seeds;
 use crate::state::*;
 // use crate::SwapEvent;
-use crate::events::{SwapEvent, CommonFields};
+use crate::events::{CommonFields, SwapEvent};
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct SwapArgs {

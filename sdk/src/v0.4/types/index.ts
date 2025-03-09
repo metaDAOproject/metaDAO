@@ -5,6 +5,12 @@ import { Amm as AmmProgram, IDL as AmmIDL } from "./amm.js";
 export { AmmProgram, AmmIDL };
 
 import {
+  Launchpad as LaunchpadProgram,
+  IDL as LaunchpadIDL,
+} from "./launchpad.js";
+export { LaunchpadProgram, LaunchpadIDL };
+
+import {
   ConditionalVault as ConditionalVaultProgram,
   IDL as ConditionalVaultIDL,
 } from "./conditional_vault.js";
@@ -28,6 +34,8 @@ export type ProposalInstruction =
 export type Dao = IdlAccounts<AutocratProgram>["dao"];
 export type Proposal = IdlAccounts<AutocratProgram>["proposal"];
 export type Amm = IdlAccounts<AmmProgram>["amm"];
+export type Launch = IdlAccounts<LaunchpadProgram>["launch"];
+export type FundingRecord = IdlAccounts<LaunchpadProgram>["fundingRecord"];
 
 export type SwapEvent = IdlEvents<AmmProgram>["SwapEvent"];
 export type AddLiquidityEvent = IdlEvents<AmmProgram>["AddLiquidityEvent"];
@@ -64,3 +72,22 @@ export type ConditionalVaultEvent =
   | RedeemTokensEvent
   | ResolveQuestionEvent
   | SplitTokensEvent;
+
+export type LaunchClaimEvent = IdlEvents<LaunchpadProgram>["LaunchClaimEvent"];
+export type LaunchCompletedEvent =
+  IdlEvents<LaunchpadProgram>["LaunchCompletedEvent"];
+export type LaunchFundedEvent =
+  IdlEvents<LaunchpadProgram>["LaunchFundedEvent"];
+export type LaunchInitializedEvent =
+  IdlEvents<LaunchpadProgram>["LaunchInitializedEvent"];
+export type LaunchRefundedEvent =
+  IdlEvents<LaunchpadProgram>["LaunchRefundedEvent"];
+export type LaunchStartedEvent =
+  IdlEvents<LaunchpadProgram>["LaunchStartedEvent"];
+export type LaunchpadEvent =
+  | LaunchClaimEvent
+  | LaunchCompletedEvent
+  | LaunchFundedEvent
+  | LaunchInitializedEvent
+  | LaunchRefundedEvent
+  | LaunchStartedEvent;

@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
+use crate::events::{CommonFields, CrankThatTwapEvent};
 use crate::state::*;
-use crate::events::{CrankThatTwapEvent, CommonFields};
 
 #[event_cpi]
 #[derive(Accounts)]
@@ -12,7 +12,11 @@ pub struct CrankThatTwap<'info> {
 
 impl CrankThatTwap<'_> {
     pub fn handle(ctx: Context<Self>) -> Result<()> {
-        let CrankThatTwap { amm, program: _, event_authority: _ } = ctx.accounts;
+        let CrankThatTwap {
+            amm,
+            program: _,
+            event_authority: _,
+        } = ctx.accounts;
 
         amm.update_twap(Clock::get()?.slot)?;
 

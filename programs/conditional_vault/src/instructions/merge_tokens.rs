@@ -67,13 +67,13 @@ impl<'info, 'c: 'info> InteractWithVault<'info> {
 
         require_eq!(
             ctx.accounts.user_underlying_token_account.amount,
-                pre_user_underlying_balance + amount,
-                VaultError::AssertFailed
+            pre_user_underlying_balance + amount,
+            VaultError::AssertFailed
         );
         require_eq!(
             ctx.accounts.vault_underlying_token_account.amount,
-                pre_vault_underlying_balance - amount,
-                VaultError::AssertFailed
+            pre_vault_underlying_balance - amount,
+            VaultError::AssertFailed
         );
 
         for (mint, expected_supply) in conditional_token_mints
@@ -113,8 +113,14 @@ impl<'info, 'c: 'info> InteractWithVault<'info> {
             amount,
             post_user_underlying_balance: ctx.accounts.user_underlying_token_account.amount,
             post_vault_underlying_balance: ctx.accounts.vault_underlying_token_account.amount,
-            post_user_conditional_token_balances: user_conditional_token_accounts.iter().map(|account| account.amount).collect(),
-            post_conditional_token_supplies: conditional_token_mints.iter().map(|mint| mint.supply).collect(),
+            post_user_conditional_token_balances: user_conditional_token_accounts
+                .iter()
+                .map(|account| account.amount)
+                .collect(),
+            post_conditional_token_supplies: conditional_token_mints
+                .iter()
+                .map(|mint| mint.supply)
+                .collect(),
             seq_num: ctx.accounts.vault.seq_num,
         });
 

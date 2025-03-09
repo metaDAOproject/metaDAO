@@ -8,8 +8,16 @@ test() {
     find programs tests sdk | entr -sc 'anchor build && (cd sdk && yarn build) && RUST_LOG= anchor test --skip-build'
 }
 
+test_logs() {
+    find programs tests sdk | entr -sc 'anchor build && (cd sdk && yarn build) && anchor test --skip-build'
+}
+
 build_vault() {
     find programs | entr -sc 'anchor build -p conditional_vault'
+}
+
+build_launchpad() {
+    find programs | entr -sc 'anchor build -p launchpad'
 }
 
 test_vault() {
@@ -24,6 +32,10 @@ test_vault() {
 
 test_no_build() {
     find programs tests sdk | entr -sc '(cd sdk && yarn build) && RUST_LOG= anchor test --skip-build'
+}
+
+test_logs_no_build() {
+    find programs tests sdk | entr -sc '(cd sdk && yarn build) && anchor test --skip-build'
 }
 
 # ./test.sh build_verifiable autocrat
@@ -58,6 +70,27 @@ upgrade_idl() {
     anchor idl upgrade --filepath ./target/idl/"$PROGRAM_NAME".json "$PROGRAM_ID" --provider.cluster "$CLUSTER"
 }
 
+# this is for if our program isn't big enough, must be in solana 1.18.x
+show_size_diff() {
+    PROGRAM_NAME=$1
+    PROGRAM_ID=$2
+    CLUSTER=$3
+
+    EXISTING_SIZE=$(solana program show "$PROGRAM_ID" -u "$CLUSTER" | awk '/Data Length:/ {print $3}')
+
+    NEW_SIZE=$(wc -c < ./target/deploy/"$PROGRAM_NAME".so)
+
+    echo "Existing size: $EXISTING_SIZE bytes"
+    echo "New size: $NEW_SIZE bytes"
+
+    DIFF=$((NEW_SIZE - EXISTING_SIZE))
+    echo "Size difference: $DIFF bytes"
+
+    if [ "$NEW_SIZE" -gt "$EXISTING_SIZE" ]; then
+        echo "New program is larger than existing one. You may need to run: solana program extend $PROGRAM_ID $DIFF -u \"$CLUSTER\""
+    fi
+}
+
 bankrun() {
     (find programs && find tests) | entr -csr 'anchor build -p autocrat && RUST_LOG= yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/autocrat.ts'
 }
@@ -89,7 +122,10 @@ bankrun_logs() {
 
 case "$1" in
     build) build ;;
+    build_launchpad) build_launchpad ;;
     test) test ;;
+    test_logs) test_logs ;;
+    test_logs_no_build) test_logs_no_build ;;
     vault) test_vault ;;
     build_vault) build_vault ;;
     test_no_build) test_no_build ;;
@@ -106,5 +142,6 @@ case "$1" in
     bankrun_timelock) bankrun_timelock ;;
     bankrun_vault_logs) bankrun_vault_logs ;;
     bankrun_logs) bankrun_logs ;;
+    show_size_diff) show_size_diff "$2" "$3" "$4" ;;
     *) echo "Unknown command: $1" ;;
 esac

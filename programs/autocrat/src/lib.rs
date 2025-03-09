@@ -33,12 +33,14 @@ use conditional_vault::Question;
 // use conditional_vault::VaultStatus;
 
 pub mod error;
+pub mod events;
 pub mod instructions;
 pub mod state;
 
-pub use crate::error::AutocratError;
-pub use crate::instructions::*;
-pub use crate::state::*;
+pub use error::AutocratError;
+pub use events::*;
+pub use instructions::*;
+pub use state::*;
 
 use amm::state::Amm;
 
@@ -83,8 +85,8 @@ pub const DEFAULT_MAX_OBSERVATION_CHANGE_PER_UPDATE_LOTS: u64 = 5_000;
 pub mod autocrat {
     use super::*;
 
-    pub fn initialize_dao(ctx: Context<InitializeDAO>, params: InitializeDaoParams) -> Result<()> {
-        InitializeDAO::handle(ctx, params)
+    pub fn initialize_dao(ctx: Context<InitializeDao>, params: InitializeDaoParams) -> Result<()> {
+        InitializeDao::handle(ctx, params)
     }
 
     #[access_control(ctx.accounts.validate())]
