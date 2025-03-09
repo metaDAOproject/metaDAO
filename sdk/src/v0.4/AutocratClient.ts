@@ -39,8 +39,6 @@ import {
   getProposalAddr,
   getQuestionAddr,
   getVaultAddr,
-  getVaultFinalizeMintAddr,
-  getVaultRevertMintAddr,
 } from "./utils/index.js";
 import { ConditionalVaultClient } from "./ConditionalVaultClient.js";
 import { AmmClient } from "./AmmClient.js";

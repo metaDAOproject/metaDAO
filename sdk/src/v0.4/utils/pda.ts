@@ -84,11 +84,14 @@ export const getDownAndUpMintAddrs = (
   };
 };
 
-export const getVaultFinalizeMintAddr = (
+export const getFailAndPassMintAddrs = (
   programId: PublicKey,
   vault: PublicKey
-) => {
-  return getVaultMintAddr(programId, vault, "conditional_on_finalize_mint");
+): { fail: PublicKey; pass: PublicKey } => {
+  return {
+    fail: getConditionalTokenMintAddr(programId, vault, 0)[0],
+    pass: getConditionalTokenMintAddr(programId, vault, 1)[0],
+  };
 };
 
 export const getMetadataAddr = (mint: PublicKey) => {
@@ -99,24 +102,6 @@ export const getMetadataAddr = (mint: PublicKey) => {
       mint.toBuffer(),
     ],
     MPL_TOKEN_METADATA_PROGRAM_ID
-  );
-};
-
-export const getVaultRevertMintAddr = (
-  programId: PublicKey,
-  vault: PublicKey
-) => {
-  return getVaultMintAddr(programId, vault, "conditional_on_revert_mint");
-};
-
-const getVaultMintAddr = (
-  programId: PublicKey,
-  vault: PublicKey,
-  seed: string
-) => {
-  return PublicKey.findProgramAddressSync(
-    [utils.bytes.utf8.encode(seed), vault.toBuffer()],
-    programId
   );
 };
 
