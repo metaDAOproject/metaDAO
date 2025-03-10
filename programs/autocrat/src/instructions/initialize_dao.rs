@@ -1,4 +1,4 @@
-pub use super::*;
+use super::*;
 
 #[derive(Debug, Clone, Copy, AnchorSerialize, AnchorDeserialize, PartialEq, Eq)]
 pub struct InitializeDaoParams {
@@ -12,7 +12,8 @@ pub struct InitializeDaoParams {
 }
 
 #[derive(Accounts)]
-pub struct InitializeDAO<'info> {
+#[event_cpi]
+pub struct InitializeDao<'info> {
     #[account(
         init,
         payer = payer,
@@ -28,7 +29,7 @@ pub struct InitializeDAO<'info> {
     pub usdc_mint: Account<'info, Mint>,
 }
 
-impl InitializeDAO<'_> {
+impl InitializeDao<'_> {
     pub fn handle(ctx: Context<Self>, params: InitializeDaoParams) -> Result<()> {
         let InitializeDaoParams {
             twap_initial_observation,
@@ -58,6 +59,22 @@ impl InitializeDAO<'_> {
             twap_start_delay_slots,
             min_base_futarchic_liquidity,
             min_quote_futarchic_liquidity,
+            seq_num: 0,
+        });
+
+        let clock = Clock::get()?;
+        emit_cpi!(InitializeDaoEvent {
+            common: CommonFields::new(&clock),
+            dao: dao.key(),
+            token_mint: ctx.accounts.token_mint.key(),
+            usdc_mint: ctx.accounts.usdc_mint.key(),
+            treasury,
+            pass_threshold_bps: dao.pass_threshold_bps,
+            slots_per_proposal: dao.slots_per_proposal,
+            twap_initial_observation: dao.twap_initial_observation,
+            twap_max_observation_change_per_update: dao.twap_max_observation_change_per_update,
+            min_quote_futarchic_liquidity: dao.min_quote_futarchic_liquidity,
+            min_base_futarchic_liquidity: dao.min_base_futarchic_liquidity,
         });
 
         Ok(())

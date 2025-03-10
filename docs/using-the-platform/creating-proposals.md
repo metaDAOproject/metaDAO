@@ -1,3 +1,7 @@
+---
+hidden: true
+---
+
 # Creating Proposals
 
 [Introduction To MetaDAO](https://blog.metadao.fi/a-futards-guide-to-the-meta-dao-7a6b8d66443a)
@@ -8,10 +12,21 @@ Business projects are how MetaDAO converts financial capital into revenue-genera
 
 Each of these four proposal types has its own template. These are listed here:
 
-{% content-ref url="../proposal-templates/business-project.md" %} . {% endcontent-ref %}
-{% content-ref url="../proposal-templates/business-direct-action.md" %} Business direct action {% endcontent-ref %}
-{% content-ref url="../proposal-templates/operations-project.md" %} Operations project {% endcontent-ref %}
-{% content-ref url="../proposal-templates/operations-direct-action.md" %} Operations direct action {% endcontent-ref %}
+{% content-ref url="../proposal-templates/business-project.md" %}
+[business-project.md](../proposal-templates/business-project.md)
+{% endcontent-ref %}
+
+{% content-ref url="../proposal-templates/business-direct-action.md" %}
+[business-direct-action.md](../proposal-templates/business-direct-action.md)
+{% endcontent-ref %}
+
+{% content-ref url="../proposal-templates/operations-project.md" %}
+[operations-project.md](../proposal-templates/operations-project.md)
+{% endcontent-ref %}
+
+{% content-ref url="../proposal-templates/operations-direct-action.md" %}
+[operations-direct-action.md](../proposal-templates/operations-direct-action.md)
+{% endcontent-ref %}
 
 Project proposals should generally be raised by entrepreneurs who are accountable to the DAO for their execution. Direct action proposals can be raised by anyone.
 

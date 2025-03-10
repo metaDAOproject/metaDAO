@@ -29,6 +29,16 @@ export type Autocrat = {
           name: "usdcMint";
           isMut: false;
           isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
         }
       ];
       args: [
@@ -122,6 +132,16 @@ export type Autocrat = {
           name: "systemProgram";
           isMut: false;
           isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
         }
       ];
       args: [
@@ -200,6 +220,16 @@ export type Autocrat = {
           name: "vaultEventAuthority";
           isMut: false;
           isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
         }
       ];
       args: [];
@@ -214,6 +244,16 @@ export type Autocrat = {
         },
         {
           name: "dao";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
           isMut: false;
           isSigner: false;
         }
@@ -232,6 +272,16 @@ export type Autocrat = {
           name: "treasury";
           isMut: false;
           isSigner: true;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
         }
       ];
       args: [
@@ -324,6 +374,10 @@ export type Autocrat = {
           {
             name: "minBaseFutarchicLiquidity";
             type: "u64";
+          },
+          {
+            name: "seqNum";
+            type: "u64";
           }
         ];
       };
@@ -412,6 +466,22 @@ export type Autocrat = {
     }
   ];
   types: [
+    {
+      name: "CommonFields";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "slot";
+            type: "u64";
+          },
+          {
+            name: "unixTimestamp";
+            type: "i64";
+          }
+        ];
+      };
+    },
     {
       name: "InitializeDaoParams";
       type: {
@@ -591,6 +661,277 @@ export type Autocrat = {
       };
     }
   ];
+  events: [
+    {
+      name: "InitializeDaoEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "dao";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "tokenMint";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "usdcMint";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "treasury";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "passThresholdBps";
+          type: "u16";
+          index: false;
+        },
+        {
+          name: "slotsPerProposal";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "twapInitialObservation";
+          type: "u128";
+          index: false;
+        },
+        {
+          name: "twapMaxObservationChangePerUpdate";
+          type: "u128";
+          index: false;
+        },
+        {
+          name: "minQuoteFutarchicLiquidity";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "minBaseFutarchicLiquidity";
+          type: "u64";
+          index: false;
+        }
+      ];
+    },
+    {
+      name: "UpdateDaoEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "dao";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "passThresholdBps";
+          type: "u16";
+          index: false;
+        },
+        {
+          name: "slotsPerProposal";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "twapInitialObservation";
+          type: "u128";
+          index: false;
+        },
+        {
+          name: "twapMaxObservationChangePerUpdate";
+          type: "u128";
+          index: false;
+        },
+        {
+          name: "minQuoteFutarchicLiquidity";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "minBaseFutarchicLiquidity";
+          type: "u64";
+          index: false;
+        }
+      ];
+    },
+    {
+      name: "InitializeProposalEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "proposal";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "dao";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "question";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "quoteVault";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "baseVault";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "passAmm";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "failAmm";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "passLpMint";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "failLpMint";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "proposer";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "nonce";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "number";
+          type: "u32";
+          index: false;
+        },
+        {
+          name: "passLpTokensLocked";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "failLpTokensLocked";
+          type: "u64";
+          index: false;
+        },
+        {
+          name: "pdaBump";
+          type: "u8";
+          index: false;
+        },
+        {
+          name: "instruction";
+          type: {
+            defined: "ProposalInstruction";
+          };
+          index: false;
+        }
+      ];
+    },
+    {
+      name: "FinalizeProposalEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "proposal";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "dao";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "passMarketTwap";
+          type: "u128";
+          index: false;
+        },
+        {
+          name: "failMarketTwap";
+          type: "u128";
+          index: false;
+        },
+        {
+          name: "threshold";
+          type: "u128";
+          index: false;
+        },
+        {
+          name: "state";
+          type: {
+            defined: "ProposalState";
+          };
+          index: false;
+        }
+      ];
+    },
+    {
+      name: "ExecuteProposalEvent";
+      fields: [
+        {
+          name: "common";
+          type: {
+            defined: "CommonFields";
+          };
+          index: false;
+        },
+        {
+          name: "proposal";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "dao";
+          type: "publicKey";
+          index: false;
+        }
+      ];
+    }
+  ];
   errors: [
     {
       code: 6000;
@@ -687,6 +1028,16 @@ export const IDL: Autocrat = {
           isMut: false,
           isSigner: false,
         },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
       ],
       args: [
         {
@@ -780,6 +1131,16 @@ export const IDL: Autocrat = {
           isMut: false,
           isSigner: false,
         },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
       ],
       args: [
         {
@@ -858,6 +1219,16 @@ export const IDL: Autocrat = {
           isMut: false,
           isSigner: false,
         },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
+        },
       ],
       args: [],
     },
@@ -871,6 +1242,16 @@ export const IDL: Autocrat = {
         },
         {
           name: "dao",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
           isMut: false,
           isSigner: false,
         },
@@ -889,6 +1270,16 @@ export const IDL: Autocrat = {
           name: "treasury",
           isMut: false,
           isSigner: true,
+        },
+        {
+          name: "eventAuthority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "program",
+          isMut: false,
+          isSigner: false,
         },
       ],
       args: [
@@ -982,6 +1373,10 @@ export const IDL: Autocrat = {
             name: "minBaseFutarchicLiquidity",
             type: "u64",
           },
+          {
+            name: "seqNum",
+            type: "u64",
+          },
         ],
       },
     },
@@ -1069,6 +1464,22 @@ export const IDL: Autocrat = {
     },
   ],
   types: [
+    {
+      name: "CommonFields",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "slot",
+            type: "u64",
+          },
+          {
+            name: "unixTimestamp",
+            type: "i64",
+          },
+        ],
+      },
+    },
     {
       name: "InitializeDaoParams",
       type: {
@@ -1246,6 +1657,277 @@ export const IDL: Autocrat = {
           },
         ],
       },
+    },
+  ],
+  events: [
+    {
+      name: "InitializeDaoEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "dao",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "tokenMint",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "usdcMint",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "treasury",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "passThresholdBps",
+          type: "u16",
+          index: false,
+        },
+        {
+          name: "slotsPerProposal",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "twapInitialObservation",
+          type: "u128",
+          index: false,
+        },
+        {
+          name: "twapMaxObservationChangePerUpdate",
+          type: "u128",
+          index: false,
+        },
+        {
+          name: "minQuoteFutarchicLiquidity",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "minBaseFutarchicLiquidity",
+          type: "u64",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "UpdateDaoEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "dao",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "passThresholdBps",
+          type: "u16",
+          index: false,
+        },
+        {
+          name: "slotsPerProposal",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "twapInitialObservation",
+          type: "u128",
+          index: false,
+        },
+        {
+          name: "twapMaxObservationChangePerUpdate",
+          type: "u128",
+          index: false,
+        },
+        {
+          name: "minQuoteFutarchicLiquidity",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "minBaseFutarchicLiquidity",
+          type: "u64",
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "InitializeProposalEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "proposal",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "dao",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "question",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "quoteVault",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "baseVault",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "passAmm",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "failAmm",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "passLpMint",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "failLpMint",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "proposer",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "nonce",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "number",
+          type: "u32",
+          index: false,
+        },
+        {
+          name: "passLpTokensLocked",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "failLpTokensLocked",
+          type: "u64",
+          index: false,
+        },
+        {
+          name: "pdaBump",
+          type: "u8",
+          index: false,
+        },
+        {
+          name: "instruction",
+          type: {
+            defined: "ProposalInstruction",
+          },
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "FinalizeProposalEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "proposal",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "dao",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "passMarketTwap",
+          type: "u128",
+          index: false,
+        },
+        {
+          name: "failMarketTwap",
+          type: "u128",
+          index: false,
+        },
+        {
+          name: "threshold",
+          type: "u128",
+          index: false,
+        },
+        {
+          name: "state",
+          type: {
+            defined: "ProposalState",
+          },
+          index: false,
+        },
+      ],
+    },
+    {
+      name: "ExecuteProposalEvent",
+      fields: [
+        {
+          name: "common",
+          type: {
+            defined: "CommonFields",
+          },
+          index: false,
+        },
+        {
+          name: "proposal",
+          type: "publicKey",
+          index: false,
+        },
+        {
+          name: "dao",
+          type: "publicKey",
+          index: false,
+        },
+      ],
     },
   ],
   errors: [

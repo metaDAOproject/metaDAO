@@ -5,7 +5,7 @@ use anchor_spl::token::*;
 use crate::error::AmmError;
 use crate::state::*;
 
-use crate::events::{CreateAmmEvent, CommonFields};
+use crate::events::{CommonFields, CreateAmmEvent};
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct CreateAmmArgs {

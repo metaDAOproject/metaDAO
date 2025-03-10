@@ -2,9 +2,9 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{self, *};
 
 use crate::error::AmmError;
+use crate::events::{AddLiquidityEvent, CommonFields};
 use crate::AddOrRemoveLiquidity;
 use crate::{generate_amm_seeds, state::*};
-use crate::events::{AddLiquidityEvent, CommonFields};
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct AddLiquidityArgs {

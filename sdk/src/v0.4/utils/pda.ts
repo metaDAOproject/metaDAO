@@ -9,7 +9,12 @@ import {
   fromWeb3JsPublicKey,
   toWeb3JsPublicKey,
 } from "@metaplex-foundation/umi-web3js-adapters";
-import { MPL_TOKEN_METADATA_PROGRAM_ID } from "../constants.js";
+import {
+  DEVNET_RAYDIUM_CP_SWAP_PROGRAM_ID,
+  MPL_TOKEN_METADATA_PROGRAM_ID,
+  RAYDIUM_CP_SWAP_PROGRAM_ID,
+} from "../constants.js";
+import { LAUNCHPAD_PROGRAM_ID } from "../constants.js";
 
 export const getEventAuthorityAddr = (programId: PublicKey) => {
   return PublicKey.findProgramAddressSync(
@@ -79,11 +84,14 @@ export const getDownAndUpMintAddrs = (
   };
 };
 
-export const getVaultFinalizeMintAddr = (
+export const getFailAndPassMintAddrs = (
   programId: PublicKey,
   vault: PublicKey
-) => {
-  return getVaultMintAddr(programId, vault, "conditional_on_finalize_mint");
+): { fail: PublicKey; pass: PublicKey } => {
+  return {
+    fail: getConditionalTokenMintAddr(programId, vault, 0)[0],
+    pass: getConditionalTokenMintAddr(programId, vault, 1)[0],
+  };
 };
 
 export const getMetadataAddr = (mint: PublicKey) => {
@@ -94,24 +102,6 @@ export const getMetadataAddr = (mint: PublicKey) => {
       mint.toBuffer(),
     ],
     MPL_TOKEN_METADATA_PROGRAM_ID
-  );
-};
-
-export const getVaultRevertMintAddr = (
-  programId: PublicKey,
-  vault: PublicKey
-) => {
-  return getVaultMintAddr(programId, vault, "conditional_on_revert_mint");
-};
-
-const getVaultMintAddr = (
-  programId: PublicKey,
-  vault: PublicKey,
-  seed: string
-) => {
-  return PublicKey.findProgramAddressSync(
-    [utils.bytes.utf8.encode(seed), vault.toBuffer()],
-    programId
   );
 };
 
@@ -158,6 +148,70 @@ export const getAmmLpMintAddr = (
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [utils.bytes.utf8.encode("amm_lp_mint"), amm.toBuffer()],
+    programId
+  );
+};
+
+export function getLaunchAddr(
+  programId: PublicKey = LAUNCHPAD_PROGRAM_ID,
+  tokenMint: PublicKey
+): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("launch"), tokenMint.toBuffer()],
+    programId
+  );
+}
+
+export const getLaunchSignerAddr = (
+  programId: PublicKey = LAUNCHPAD_PROGRAM_ID,
+  launch: PublicKey
+): [PublicKey, number] => {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("launch_signer"), launch.toBuffer()],
+    programId
+  );
+};
+
+export const getFundingRecordAddr = (
+  programId: PublicKey = LAUNCHPAD_PROGRAM_ID,
+  launch: PublicKey,
+  funder: PublicKey
+): [PublicKey, number] => {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("funding_record"), launch.toBuffer(), funder.toBuffer()],
+    programId
+  );
+};
+
+export const getLaunchDaoAddr = (
+  programId: PublicKey = LAUNCHPAD_PROGRAM_ID,
+  launch: PublicKey
+): [PublicKey, number] => {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("launch_dao"), launch.toBuffer()],
+    programId
+  );
+};
+
+export const getLiquidityPoolAddr = (
+  programId: PublicKey = LAUNCHPAD_PROGRAM_ID,
+  dao: PublicKey
+): [PublicKey, number] => {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("pool_state"), dao.toBuffer()],
+    programId
+  );
+};
+
+export const getRaydiumCpmmLpMintAddr = (
+  poolState: PublicKey,
+  isDevnet: boolean
+): [PublicKey, number] => {
+  const programId = isDevnet
+    ? DEVNET_RAYDIUM_CP_SWAP_PROGRAM_ID
+    : RAYDIUM_CP_SWAP_PROGRAM_ID;
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("pool_lp_mint"), poolState.toBuffer()],
     programId
   );
 };

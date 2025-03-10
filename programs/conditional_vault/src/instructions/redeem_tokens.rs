@@ -90,14 +90,14 @@ impl<'info, 'c: 'info> InteractWithVault<'info> {
 
         require_eq!(
             ctx.accounts.user_underlying_token_account.amount,
-                user_underlying_balance_before + total_redeemable,
-                VaultError::AssertFailed
+            user_underlying_balance_before + total_redeemable,
+            VaultError::AssertFailed
         );
 
         require_eq!(
             ctx.accounts.vault_underlying_token_account.amount,
-                vault_underlying_balance_before - total_redeemable,
-                VaultError::AssertFailed
+            vault_underlying_balance_before - total_redeemable,
+            VaultError::AssertFailed
         );
 
         for acc in user_conditional_token_accounts.iter_mut() {
@@ -135,7 +135,10 @@ impl<'info, 'c: 'info> InteractWithVault<'info> {
             amount: total_redeemable,
             post_user_underlying_balance: ctx.accounts.user_underlying_token_account.amount,
             post_vault_underlying_balance: ctx.accounts.vault_underlying_token_account.amount,
-            post_conditional_token_supplies: conditional_token_mints.iter().map(|mint| mint.supply).collect(),
+            post_conditional_token_supplies: conditional_token_mints
+                .iter()
+                .map(|mint| mint.supply)
+                .collect(),
             seq_num: ctx.accounts.vault.seq_num,
         });
 

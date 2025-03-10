@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
-      - uses: metadaoproject/anchor-verifiable-build@v0
+      - uses: metadaoproject/anchor-verifiable-build@v0.2
         with:
           program: autocrat
           anchor-version: '0.29.0'
@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
-      - uses: metadaoproject/anchor-verifiable-build@v0.1
+      - uses: metadaoproject/anchor-verifiable-build@v0.2
         with:
           program: conditional_vault
           anchor-version: '0.29.0'
@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
-      - uses: metadaoproject/anchor-verifiable-build@v0
+      - uses: metadaoproject/anchor-verifiable-build@v0.2
         with:
           program: amm
           anchor-version: '0.29.0'
@@ -56,3 +56,21 @@ jobs:
         with:
           default_author: github_actions
           message: 'Update amm verifiable build'
+  generate-verifiable-launchpad:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: metadaoproject/anchor-verifiable-build@v0.2
+        with:
+          program: launchpad
+          anchor-version: '0.29.0'
+          solana-cli-version: '1.17.16'
+          features: 'production'
+      - run: 'git pull --rebase'
+      - run: cp target/deploy/launchpad.so ./verifiable-builds
+      - name: Commit verifiable build back to mainline
+        uses: EndBug/add-and-commit@v9.1.4
+        with:
+          default_author: github_actions
+          message: 'Update launchpad verifiable build'
+

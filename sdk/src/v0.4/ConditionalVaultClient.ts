@@ -18,8 +18,6 @@ import {
   getQuestionAddr,
   getMetadataAddr,
   getVaultAddr,
-  getVaultFinalizeMintAddr,
-  getVaultRevertMintAddr,
   getConditionalTokenMintAddr,
 } from "./utils/index.js";
 import {

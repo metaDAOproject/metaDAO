@@ -167,9 +167,12 @@ impl Amm {
         ((lp_tokens as u128 * self.quote_amount as u128) / lp_total_supply as u128) as u64
     }
 
-    /// Returns the time-weighted average price since market creation in UQ64x32 form.
+    /// Returns the time-weighted average price since market creation
     pub fn get_twap(&self) -> Result<u128> {
-        let slots_passed = (self.oracle.last_updated_slot - self.created_at_slot) as u128;
+        let start_slot = self.created_at_slot + self.oracle.start_delay_slots;
+
+        require_gt!(self.oracle.last_updated_slot, start_slot, AmmError::NoSlotsPassed);
+        let slots_passed = (self.oracle.last_updated_slot - start_slot) as u128;
 
         require_neq!(slots_passed, 0, AmmError::NoSlotsPassed);
         require!(self.oracle.aggregator != 0, AmmError::AssertFailed);
@@ -260,18 +263,27 @@ impl Amm {
             start_delay_slots: oracle.start_delay_slots,
         };
 
-        require!(new_oracle.last_updated_slot > oracle.last_updated_slot, AmmError::AssertFailed);
+        require!(
+            new_oracle.last_updated_slot > oracle.last_updated_slot,
+            AmmError::AssertFailed
+        );
         // assert that the new observation is between price and last observation
         match price.cmp(&oracle.last_observation) {
             Ordering::Greater => {
-                require!(new_observation >= oracle.last_observation, AmmError::AssertFailed);
+                require!(
+                    new_observation >= oracle.last_observation,
+                    AmmError::AssertFailed
+                );
                 require!(new_observation <= price, AmmError::AssertFailed);
             }
             Ordering::Equal => {
                 require!(new_observation == price, AmmError::AssertFailed);
             }
             Ordering::Less => {
-                require!(new_observation <= oracle.last_observation, AmmError::AssertFailed);
+                require!(
+                    new_observation <= oracle.last_observation,
+                    AmmError::AssertFailed
+                );
                 require!(new_observation >= price, AmmError::AssertFailed);
             }
         }

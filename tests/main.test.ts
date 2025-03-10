@@ -1,14 +1,18 @@
 import conditionalVault from "./conditionalVault/main.test.js";
 import amm from "./amm/main.test.js";
 import autocrat from "./autocrat/autocrat.js";
+import launchpad from "./launchpad/main.test.js";
 
-import { startAnchor } from "solana-bankrun";
+import { Clock, startAnchor } from "solana-bankrun";
 import { BankrunProvider } from "anchor-bankrun";
 import * as anchor from "@coral-xyz/anchor";
 import {
   AmmClient,
   AutocratClient,
   ConditionalVaultClient,
+  LaunchpadClient,
+  MAINNET_USDC,
+  RAYDIUM_CREATE_POOL_FEE_RECEIVE,
 } from "@metadaoproject/futarchy/v0.4";
 // import {
 //   // AmmClient,
@@ -24,29 +28,34 @@ import {
   mintTo,
   getAccount,
   transfer,
+  getMint,
+  mintToOverride,
 } from "spl-token-bankrun";
 import * as token from "@solana/spl-token";
 import { assert } from "chai";
 import { MPL_TOKEN_METADATA_PROGRAM_ID as UMI_MPL_TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
 import { toWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
+import * as fs from "fs";
+import { LOW_FEE_RAYDIUM_CONFIG } from "@metadaoproject/futarchy/v0.4";
 
 const MPL_TOKEN_METADATA_PROGRAM_ID = toWeb3JsPublicKey(
   UMI_MPL_TOKEN_METADATA_PROGRAM_ID
+);
+const RAYDIUM_CP_SWAP_PROGRAM_ID = new PublicKey(
+  "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C"
 );
 
 import mintAndSwap from "./integration/mintAndSwap.test.js";
 import scalarMarkets from "./integration/scalarMarkets.test.js";
 import twap from "./integration/twap.test.js";
+import fullLaunch from "./integration/fullLaunch.test.js";
 
 before(async function () {
   // const version: VersionKey = "0.4";
   // const { AmmClient, AutocratClient, ConditionalVaultClient } = getVersion(version);
 
-
-
   this.context = await startAnchor(
     "./",
-    // [],
     [
       // even though the program is loaded into the test validator, we need
       // to tell banks test client to load it as well
@@ -54,8 +63,42 @@ before(async function () {
         name: "mpl_token_metadata",
         programId: MPL_TOKEN_METADATA_PROGRAM_ID,
       },
+      {
+        name: "raydium_cp_swap",
+        programId: RAYDIUM_CP_SWAP_PROGRAM_ID,
+      },
     ],
-    []
+    [
+      {
+        address: LOW_FEE_RAYDIUM_CONFIG,
+        info: {
+          data: fs.readFileSync("./tests/fixtures/raydium-amm-config"),
+          executable: false,
+          owner: RAYDIUM_CP_SWAP_PROGRAM_ID,
+          lamports: 1_000_000_000,
+        },
+      },
+      {
+        address: RAYDIUM_CREATE_POOL_FEE_RECEIVE,
+        info: {
+          data: fs.readFileSync(
+            "./tests/fixtures/raydium-create-pool-fee-receive"
+          ),
+          executable: false,
+          owner: token.TOKEN_PROGRAM_ID,
+          lamports: 6858_402_039_280,
+        },
+      },
+      {
+        address: MAINNET_USDC,
+        info: {
+          data: fs.readFileSync("./tests/fixtures/usdc"),
+          executable: false,
+          owner: token.TOKEN_PROGRAM_ID,
+          lamports: 377_950_832_219,
+        },
+      },
+    ]
   );
   this.banksClient = this.context.banksClient;
   let provider = new BankrunProvider(this.context);
@@ -63,16 +106,13 @@ before(async function () {
 
   // umi = createUmi(anchor.AnchorProvider.env().connection);
 
-  // vaultProgram = new Program<ConditionalVault>(
-  //   ConditionalVaultIDL,
-  //   CONDITIONAL_VAULT_PROGRAM_ID,
-  //   provider
-  // );
-
   this.vaultClient = ConditionalVaultClient.createClient({
     provider: provider as any,
   });
   this.autocratClient = AutocratClient.createClient({
+    provider: provider as any,
+  });
+  this.launchpadClient = LaunchpadClient.createClient({
     provider: provider as any,
   });
   this.ammClient = AmmClient.createClient({ provider: provider as any });
@@ -120,6 +160,10 @@ before(async function () {
     return storedTokenAccount.amount;
   };
 
+  this.getMint = async (mint: PublicKey) => {
+    return await getMint(this.banksClient, mint);
+  };
+
   this.assertBalance = async (
     mint: PublicKey,
     owner: PublicKey,
@@ -147,13 +191,48 @@ before(async function () {
       amount
     );
   };
+
+  this.advanceBySlots = async (slots: bigint) => {
+    const currentClock = await this.context.banksClient.getClock();
+    this.context.setClock(
+      new Clock(
+        currentClock.slot + slots,
+        currentClock.epochStartTimestamp,
+        currentClock.epoch,
+        currentClock.leaderScheduleEpoch,
+        50n
+      )
+    );
+  };
+
+  this.advanceBySeconds = async (seconds: number) => {
+    const currentClock = await this.context.banksClient.getClock();
+    this.context.setClock(
+      new Clock(
+        currentClock.slot,
+        currentClock.epochStartTimestamp,
+        currentClock.epoch,
+        currentClock.leaderScheduleEpoch,
+        BigInt(currentClock.unixTimestamp + BigInt(seconds))
+      )
+    );
+  };
+
+  await this.createTokenAccount(MAINNET_USDC, this.payer.publicKey);
+  await mintToOverride(
+    this.context,
+    token.getAssociatedTokenAddressSync(MAINNET_USDC, this.payer.publicKey),
+    10_000_000n * 10n ** 6n
+  );
 });
 
 describe("conditional_vault", conditionalVault);
 describe("amm", amm);
 describe("autocrat", autocrat);
+describe("launchpad", launchpad);
 describe("project-wide integration tests", function () {
   it("mint and swap in a single transaction", mintAndSwap);
   it("tests scalar markets (mint, split, swap, redeem) with some fuzzing", scalarMarkets);
   it("tests twap functionality (crankThatTwap, twapStartDelaySlots)", twap);
+  it("full launch", fullLaunch);
 });

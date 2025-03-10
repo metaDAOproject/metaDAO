@@ -1,3 +1,7 @@
+---
+hidden: true
+---
+
 # Trading Proposals
 
 Here's a guide on trading proposal markets:

@@ -39,8 +39,6 @@ import {
   getProposalAddr,
   getQuestionAddr,
   getVaultAddr,
-  getVaultFinalizeMintAddr,
-  getVaultRevertMintAddr,
 } from "./utils/index.js";
 import { ConditionalVaultClient } from "./ConditionalVaultClient.js";
 import { AmmClient } from "./AmmClient.js";
@@ -111,6 +109,10 @@ export class AutocratClient {
       ammProgramId || AMM_PROGRAM_ID,
       luts
     );
+  }
+
+  getProgramId(): PublicKey {
+    return this.autocrat.programId;
   }
 
   async getProposal(proposal: PublicKey): Promise<Proposal> {
